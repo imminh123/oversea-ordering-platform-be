@@ -1,0 +1,30 @@
+service:
+  name: npm_package_name
+  description: npm_package_description
+  baseUrl: /api/oversea-ordering
+  docsBaseUrl: /docs/oversea-ordering
+
+server:
+  host: SERVER_HOST
+  port: SERVER_PORT
+  hostname: SERVER_HOSTNAME
+  swaggerSchema: SWAGGER_SCHEMA
+
+firebase:
+  projectId: FIREBASE_PROJECT_ID
+  privateKey: FIREBASE_PRIVATE_KEY
+  clientEmail: FIREBASE_CLIENT_EMAIL
+
+oauth:
+  google:
+    clientId: GOOGLE_CLIENT_ID
+    clientSecret: GOOGLE_CLIENT_SECRET
+  facebook:
+    apiUrl: FACEBOOK_API_URL
+    clientId: FACEBOOK_CLIENT_ID
+    clientSecret: FACEBOOK_CLIENT_SECRET
+
+jwtPrivateKey: JWT_PRIVATE_KEY
+
+mongodb:
+  uri: MONGODB_URI
