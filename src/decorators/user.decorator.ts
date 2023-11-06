@@ -3,7 +3,6 @@ import { createParamDecorator } from '@nestjs/common';
 import { getUserData, getUserId } from '../middleware/user.middleware';
 
 export enum UserDataJwtProperties {
-  USERNAME = 'userName',
   USERID = 'userId',
 }
 
