@@ -247,7 +247,7 @@ export function isAfter(
 ) {
   return moment(new Date(date))
     .add(timeRangeInMinute, 'minute')
-    .isBefore(moment(new Date(compareDate)));
+    .isAfter(moment(new Date(compareDate)));
 }
 
 export function buildFilterDateParam(fromDate?: Date, toDate?: Date) {

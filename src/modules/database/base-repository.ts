@@ -17,7 +17,7 @@ export interface Repository<T extends Document> {
 
   findOne(findParams, options?: FindOptions): Promise<T>;
 
-  findAll(findParams, option?: FindOptions, sort?: any): Promise<T[]>;
+  find(findParams, option?: FindOptions, sort?: any): Promise<T[]>;
 
   findById(id: string): Promise<T>;
 
@@ -90,7 +90,7 @@ export class BaseRepository<T extends Document> implements Repository<T> {
     });
   }
 
-  async findAll(findParams, option?: FindOptions, sort?: any): Promise<T[]> {
+  async find(findParams, option?: FindOptions, sort?: any): Promise<T[]> {
     const query = this.model.find(findParams, {}, option);
 
     if (sort && Object.keys(sort).length > 0) {

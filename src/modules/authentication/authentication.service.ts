@@ -184,7 +184,7 @@ export class AuthenticationService {
       findParam.isActive = adminIndexAuthenDto.isActive;
     }
     const count = await this.authenticationRepository.count(findParam);
-    const list = await this.authenticationRepository.findAll(
+    const list = await this.authenticationRepository.find(
       findParam,
       {
         skip: pagination.startIndex,

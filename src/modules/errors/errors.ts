@@ -3,10 +3,11 @@ import { HttpStatus } from '@nestjs/common';
 import { ErrorCode } from './errors.interface';
 
 export const BASE_ERROR_CODE = '01';
-const GROUP_ERROR_CODE = '01';
+const DEFAULT_ERROR_CODE = '01';
+const TAOBAO_ERROR_CODE = '02';
 
-export const getErrorCode = (code) =>
-  `${BASE_ERROR_CODE}${GROUP_ERROR_CODE}${code}`;
+export const getErrorCode = (code, codeType = DEFAULT_ERROR_CODE) =>
+  `${BASE_ERROR_CODE}${codeType}${code}`;
 
 export const Errors = {
   PIN_EXITS: {
@@ -33,5 +34,10 @@ export const Errors = {
     message: 'Validation error',
     statusCode: HttpStatus.BAD_REQUEST,
     errorCode: getErrorCode(ErrorCode.GENERAL_VALIDATION_EXCEPTION),
+  },
+  TAOBAO_ITEM_WITH_GIVEN_ID_NOT_EXITS: {
+    message: 'Not found taobao item with given id',
+    statusCode: HttpStatus.BAD_REQUEST,
+    errorCode: getErrorCode(ErrorCode.TAOBAO_ITEM_NOT_EXITS, TAOBAO_ERROR_CODE),
   },
 };

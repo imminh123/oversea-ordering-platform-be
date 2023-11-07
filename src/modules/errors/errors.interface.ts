@@ -3,4 +3,5 @@ export enum ErrorCode {
   WRONG_OTP = '002',
   WRONG_PIN = '003',
   GENERAL_VALIDATION_EXCEPTION = '004',
+  TAOBAO_ITEM_NOT_EXITS = '005',
 }
