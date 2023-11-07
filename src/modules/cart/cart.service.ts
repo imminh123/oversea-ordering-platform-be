@@ -12,6 +12,8 @@ import {
 import { getHeaders } from '../../adapters/pagination/pagination.helper';
 import { db2api, isAfter, isBefore } from '../../shared/helpers';
 import { ItemDetailInfo } from '../../externalModules/taobao/taobao.interface';
+import { isValidObjectId } from 'mongoose';
+import { ObjectId } from 'bson';
 
 @Injectable()
 export class CartService {
@@ -131,12 +133,39 @@ export class CartService {
     return Promise.all(listUpdateVoid);
   }
 
-  update(id: number) {
-    return `This action updates a #${id} cart`;
+  async getSummaryCart(ids: string[]) {
+    const arr = [];
+    ids.forEach((id) => {
+      if (isValidObjectId(id)) {
+        arr.push(new ObjectId(id));
+      }
+    });
+    const listItem = await this.cartRepository.find({ _id: { $in: arr } });
+    if (listItem.length === 0) {
+      return 0;
+    }
+    let res = new Decimal(0);
+    for (const item of listItem) {
+      if (item.isActive) {
+        const num = new Decimal(item.price).mul(item.quantity);
+        res = res.add(num);
+      }
+    }
+    return {
+      totalInCNY: res.toDP(2),
+      exchangeRate: 3.333,
+      totalInVND: res.mul(3.333).toDP(3),
+    };
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} cart`;
+  async delete(ids: string[]) {
+    const arr = [];
+    ids.forEach((id) => {
+      if (isValidObjectId(id)) {
+        arr.push(new ObjectId(id));
+      }
+    });
+    return this.cartRepository.delete({ _id: { $in: arr } });
   }
 
   private convertResponseFromTaobaoItem({
@@ -156,7 +185,7 @@ export class CartService {
       shopName: item.shop_info.shop_name,
       shopUrl: item.shop_info.shop_url,
       quantity: volume,
-      price: new Decimal(item.sale_price).toNumber(),
+      price: new Decimal(item.sale_price).toDP(2).toNumber(),
       image: item.main_imgs,
       currency: item.currency,
       propId: item.props_ids,

@@ -5,9 +5,11 @@ import {
   Body,
   UseInterceptors,
   Put,
+  Query,
+  Delete,
 } from '@nestjs/common';
 import { CartService } from './cart.service';
-import { AddItemToCartDto } from './cart.dto';
+import { AddItemToCartDto, GetSummaryCartDto } from './cart.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { User, UserDataJwtProperties } from '../../decorators/user.decorator';
 import { CommonQueryRequest } from '../../shared/swagger.helper';
@@ -57,5 +59,25 @@ export class CartController {
   })
   refreshCart(@User(UserDataJwtProperties.USERID) userId: string) {
     return this.cartService.refreshClientCart(userId);
+  }
+
+  @Get('calculateSummaryCart')
+  @ApiOperation({
+    operationId: 'calculateSummaryCart',
+    description: 'Calculate summary cart',
+    summary: 'Calculate summary cart',
+  })
+  getSummaryCart(@Query() { ids }: GetSummaryCartDto) {
+    return this.cartService.getSummaryCart(ids);
+  }
+
+  @Delete('')
+  @ApiOperation({
+    operationId: 'deleteCartItem',
+    description: 'Delete cart item',
+    summary: 'Delete cart item',
+  })
+  deleteCartItem(@Body() { ids }: GetSummaryCartDto) {
+    return this.cartService.delete(ids);
   }
 }

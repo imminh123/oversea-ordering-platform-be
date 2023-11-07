@@ -4,6 +4,7 @@ import {
   IsOptional,
   IsNumber,
   Min,
+  IsArray,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -37,4 +38,14 @@ export class AddItemToCartDto {
     required: true,
   })
   volume?: number;
+}
+
+export class GetSummaryCartDto {
+  @IsArray()
+  @IsNotEmpty()
+  @ApiProperty({
+    type: Array,
+    example: ['64bd70033bffa3a83b0a9b57'],
+  })
+  ids: string[];
 }
