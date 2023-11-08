@@ -6,9 +6,16 @@ import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './shared/roles.guard';
 import { DiscoveryModule, DiscoveryService } from '@golevelup/nestjs-discovery';
 import { CartModule } from './modules/cart/cart.module';
+import { VariablesModule } from './modules/variables/variables.module';
 
 @Module({
-  imports: [DatabaseModule, DiscoveryModule, AuthenticationModule, CartModule],
+  imports: [
+    DatabaseModule,
+    DiscoveryModule,
+    AuthenticationModule,
+    CartModule,
+    VariablesModule,
+  ],
   providers: [
     {
       provide: APP_GUARD,

@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { AddItemToCartDto } from './cart.dto';
 import { TaobaoService } from '../../externalModules/taobao/taobao.service';
 import { ICart, ICartDocument } from './cart.interface';
@@ -10,16 +14,19 @@ import {
   IPaginationHeader,
 } from '../../adapters/pagination/pagination.interface';
 import { getHeaders } from '../../adapters/pagination/pagination.helper';
-import { db2api, isAfter, isBefore } from '../../shared/helpers';
+import { db2api, isAfter } from '../../shared/helpers';
 import { ItemDetailInfo } from '../../externalModules/taobao/taobao.interface';
 import { isValidObjectId } from 'mongoose';
 import { ObjectId } from 'bson';
+import { VariablesService } from '../variables/variables.service';
+import { Variables } from '../variables/variables.helper';
 
 @Injectable()
 export class CartService {
   constructor(
     private readonly tbService: TaobaoService,
     private readonly cartRepository: CartRepository,
+    private readonly variablesService: VariablesService,
   ) {}
   async addItemToClientCart(
     { id, pvid, volume }: AddItemToCartDto,
@@ -151,10 +158,16 @@ export class CartService {
         res = res.add(num);
       }
     }
+    const rate = await this.variablesService.getVariable(
+      Variables.EXCHANGE_RATE,
+    );
+    if (!rate) {
+      throw new NotFoundException('Can not get exchange rate');
+    }
     return {
       totalInCNY: res.toDP(2),
-      exchangeRate: 3.333,
-      totalInVND: res.mul(3.333).toDP(3),
+      exchangeRate: rate,
+      totalInVND: res.mul(rate).toDP(3),
     };
   }
 

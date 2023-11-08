@@ -4,6 +4,7 @@ import { RouteInfo } from '@nestjs/common/interfaces';
 export enum DbModel {
   Auth = 'Auth',
   Cart = 'Cart',
+  Variables = 'Variables',
 }
 
 export enum Role {
