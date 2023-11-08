@@ -16,6 +16,8 @@ import { CommonQueryRequest } from '../../shared/swagger.helper';
 import { Pagination } from '../../decorators/pagination.decorator';
 import { IPagination } from '../../adapters/pagination/pagination.interface';
 import { PaginationInterceptor } from '../../interceptors/pagination.filter';
+import { Roles } from '../../decorators/authorization.decorator';
+import { Role } from '../../shared/constant';
 
 @Controller('cart')
 @ApiTags('cart')
@@ -24,6 +26,7 @@ export class CartController {
   constructor(private readonly cartService: CartService) {}
 
   @Post()
+  @Roles(Role.Client)
   @ApiOperation({
     operationId: 'addItemToClientCart',
     description: 'Add item to client cart',
@@ -37,6 +40,7 @@ export class CartController {
   }
 
   @Get()
+  @Roles(Role.Client)
   @CommonQueryRequest()
   @UseInterceptors(PaginationInterceptor)
   @ApiOperation({
@@ -52,6 +56,7 @@ export class CartController {
   }
 
   @Put('refreshCart')
+  @Roles(Role.Client)
   @ApiOperation({
     operationId: 'refreshClientCart',
     description: 'Refresh client cart',
@@ -62,6 +67,7 @@ export class CartController {
   }
 
   @Get('calculateSummaryCart')
+  @Roles(Role.Client)
   @ApiOperation({
     operationId: 'calculateSummaryCart',
     description: 'Calculate summary cart',
@@ -72,6 +78,7 @@ export class CartController {
   }
 
   @Delete('')
+  @Roles(Role.Client)
   @ApiOperation({
     operationId: 'deleteCartItem',
     description: 'Delete cart item',

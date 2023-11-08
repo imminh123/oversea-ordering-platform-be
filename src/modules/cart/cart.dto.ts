@@ -7,6 +7,7 @@ import {
   IsArray,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 
 export class AddItemToCartDto {
   @IsString()
@@ -43,9 +44,12 @@ export class AddItemToCartDto {
 export class GetSummaryCartDto {
   @IsArray()
   @IsNotEmpty()
+  @Transform((x) => {
+    return x.value.split(',');
+  })
   @ApiProperty({
-    type: Array,
-    example: ['64bd70033bffa3a83b0a9b57'],
+    type: String,
+    example: '64bd70033bffa3a83b0a9b57',
   })
   ids: string[];
 }
