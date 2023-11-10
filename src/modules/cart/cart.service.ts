@@ -32,7 +32,7 @@ export class CartService {
     { id, pvid, volume }: AddItemToCartDto,
     userId: string,
   ): Promise<ICart> {
-    const item = this.tbService.getItemDetailById(id, pvid);
+    const item = await this.tbService.getItemDetailById(id, pvid);
     if (!item) {
       throw new BadRequestException({
         ...Errors.TAOBAO_ITEM_WITH_GIVEN_ID_NOT_EXITS,
@@ -85,7 +85,7 @@ export class CartService {
         cartItem.save();
         continue;
       }
-      const newItem = this.tbService.getItemDetailById(
+      const newItem = await this.tbService.getItemDetailById(
         cartItem.id,
         cartItem.propId,
       );
@@ -118,8 +118,8 @@ export class CartService {
     );
     const listUpdateVoid = [];
     for (const cartItem of cart) {
-      const item = this.tbService.getItemDetailById(
-        cartItem.id,
+      const item = await this.tbService.getItemDetailById(
+        cartItem.itemId,
         cartItem.propId,
       );
       if (!item) {

@@ -28,3 +28,5 @@ jwtPrivateKey: JWT_PRIVATE_KEY
 
 mongodb:
   uri: MONGODB_URI
+
+tmApiToken: TM_API_TOKEN

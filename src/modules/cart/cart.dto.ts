@@ -10,14 +10,14 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 
 export class AddItemToCartDto {
-  @IsString()
+  @IsNumber()
   @IsNotEmpty()
   @ApiProperty({
     type: String,
-    example: 'def',
+    example: 123,
     required: true,
   })
-  id: string;
+  id: number;
 
   @IsString()
   @IsNotEmpty()
