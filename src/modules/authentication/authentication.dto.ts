@@ -154,6 +154,17 @@ export class UpdateAuthDto {
   ward?: string;
 }
 
+export class UpdateOAuthDto {
+  @IsEnum(OAuthClient)
+  @IsNotEmpty()
+  @ApiProperty({
+    type: String,
+    example: OAuthClient.GOOGLE,
+    enum: OAuthClient,
+  })
+  base: string;
+}
+
 export class UserIdDto {
   @IsString()
   @IsNotEmpty()

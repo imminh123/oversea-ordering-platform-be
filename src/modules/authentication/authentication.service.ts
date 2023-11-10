@@ -225,7 +225,10 @@ export class AuthenticationService {
     }
   }
 
-  async createSessionWithOAuth2(createSessionDto: CreateSessionWithOAuth2Dto) {
+  async createSessionWithOAuth2(
+    createSessionDto: CreateSessionWithOAuth2Dto,
+    role: Role = Role.Client,
+  ) {
     const { base, token, redirect_uri } = createSessionDto;
     const isAuthenticate = await this.oauthService.verifyIdToken(
       base,
@@ -251,6 +254,7 @@ export class AuthenticationService {
     if (!user) {
       const newUser = await this.authenticationRepository.create({
         ...findParams,
+        role,
       });
       isNewUser = true;
       user = newUser;
@@ -339,6 +343,21 @@ export class AuthenticationService {
     return this.authenticationRepository.updateById(userId, {
       ...updateAuthDto,
     });
+  }
+
+  async deleteOAuthInfo({ base }, userId: string) {
+    const user = await this.authenticationRepository.findById(userId);
+
+    if (!user) {
+      throw new BadRequestException('Not found user');
+    }
+    const updateParam: any = {};
+    if (base === OAuthClient.GOOGLE) {
+      updateParam.ggId = '';
+    } else {
+      updateParam.fbId = '';
+    }
+    return this.authenticationRepository.updateById(userId, updateParam);
   }
 
   async createSessionToken({ id, role }) {
