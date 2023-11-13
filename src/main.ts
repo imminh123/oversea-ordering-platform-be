@@ -15,7 +15,7 @@ import { v4 as uuidV4 } from 'uuid';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    cors: true,
+    cors: { exposedHeaders: '*', allowedHeaders: '*' },
   });
   app.use(httpContext.middleware);
   app.use(express.urlencoded({ extended: true }));
