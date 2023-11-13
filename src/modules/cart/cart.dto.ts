@@ -4,18 +4,20 @@ import {
   IsOptional,
   IsNumber,
   Min,
+  IsArray,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 
 export class AddItemToCartDto {
-  @IsString()
+  @IsNumber()
   @IsNotEmpty()
   @ApiProperty({
     type: String,
-    example: 'def',
+    example: 123,
     required: true,
   })
-  id: string;
+  id: number;
 
   @IsString()
   @IsNotEmpty()
@@ -37,4 +39,17 @@ export class AddItemToCartDto {
     required: true,
   })
   volume?: number;
+}
+
+export class GetSummaryCartDto {
+  @IsArray()
+  @IsNotEmpty()
+  @Transform((x) => {
+    return x.value.split(',');
+  })
+  @ApiProperty({
+    type: String,
+    example: '64bd70033bffa3a83b0a9b57',
+  })
+  ids: string[];
 }

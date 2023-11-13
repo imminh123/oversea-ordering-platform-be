@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { AddItemToCartDto } from './cart.dto';
 import { TaobaoService } from '../../externalModules/taobao/taobao.service';
 import { ICart, ICartDocument } from './cart.interface';
@@ -10,20 +14,25 @@ import {
   IPaginationHeader,
 } from '../../adapters/pagination/pagination.interface';
 import { getHeaders } from '../../adapters/pagination/pagination.helper';
-import { db2api, isAfter, isBefore } from '../../shared/helpers';
+import { db2api, isAfter } from '../../shared/helpers';
 import { ItemDetailInfo } from '../../externalModules/taobao/taobao.interface';
+import { isValidObjectId } from 'mongoose';
+import { ObjectId } from 'bson';
+import { VariablesService } from '../variables/variables.service';
+import { Variables } from '../variables/variables.helper';
 
 @Injectable()
 export class CartService {
   constructor(
     private readonly tbService: TaobaoService,
     private readonly cartRepository: CartRepository,
+    private readonly variablesService: VariablesService,
   ) {}
   async addItemToClientCart(
     { id, pvid, volume }: AddItemToCartDto,
     userId: string,
   ): Promise<ICart> {
-    const item = this.tbService.getItemDetailById(id, pvid);
+    const item = await this.tbService.getItemDetailById(id, pvid);
     if (!item) {
       throw new BadRequestException({
         ...Errors.TAOBAO_ITEM_WITH_GIVEN_ID_NOT_EXITS,
@@ -76,7 +85,7 @@ export class CartService {
         cartItem.save();
         continue;
       }
-      const newItem = this.tbService.getItemDetailById(
+      const newItem = await this.tbService.getItemDetailById(
         cartItem.id,
         cartItem.propId,
       );
@@ -109,8 +118,8 @@ export class CartService {
     );
     const listUpdateVoid = [];
     for (const cartItem of cart) {
-      const item = this.tbService.getItemDetailById(
-        cartItem.id,
+      const item = await this.tbService.getItemDetailById(
+        cartItem.itemId,
         cartItem.propId,
       );
       if (!item) {
@@ -131,12 +140,45 @@ export class CartService {
     return Promise.all(listUpdateVoid);
   }
 
-  update(id: number) {
-    return `This action updates a #${id} cart`;
+  async getSummaryCart(ids: string[]) {
+    const arr = [];
+    ids.forEach((id) => {
+      if (isValidObjectId(id)) {
+        arr.push(new ObjectId(id));
+      }
+    });
+    const listItem = await this.cartRepository.find({ _id: { $in: arr } });
+    if (listItem.length === 0) {
+      return 0;
+    }
+    let res = new Decimal(0);
+    for (const item of listItem) {
+      if (item.isActive) {
+        const num = new Decimal(item.price).mul(item.quantity);
+        res = res.add(num);
+      }
+    }
+    const rate = await this.variablesService.getVariable(
+      Variables.EXCHANGE_RATE,
+    );
+    if (!rate) {
+      throw new NotFoundException('Can not get exchange rate');
+    }
+    return {
+      totalInCNY: res.toDP(2),
+      exchangeRate: rate,
+      totalInVND: res.mul(rate).toDP(3),
+    };
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} cart`;
+  async delete(ids: string[]) {
+    const arr = [];
+    ids.forEach((id) => {
+      if (isValidObjectId(id)) {
+        arr.push(new ObjectId(id));
+      }
+    });
+    return this.cartRepository.delete({ _id: { $in: arr } });
   }
 
   private convertResponseFromTaobaoItem({
@@ -156,7 +198,7 @@ export class CartService {
       shopName: item.shop_info.shop_name,
       shopUrl: item.shop_info.shop_url,
       quantity: volume,
-      price: new Decimal(item.sale_price).toNumber(),
+      price: new Decimal(item.sale_price).toDP(2).toNumber(),
       image: item.main_imgs,
       currency: item.currency,
       propId: item.props_ids,

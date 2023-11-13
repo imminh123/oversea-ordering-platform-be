@@ -16,6 +16,7 @@ import {
   UpdateAuthDto,
   AdminIndexAuthenDto,
   DeleteUserIdDto,
+  UpdateOAuthDto,
 } from '../authentication.dto';
 import { CommonQueryRequest } from '../../../shared/swagger.helper';
 import { Pagination } from '../../../decorators/pagination.decorator';
@@ -48,18 +49,6 @@ export class AuthenticationController {
     return this.authenticationService.createUser(createUserDto);
   }
 
-  @Roles(Role.Root)
-  @Post('OauthConsentScreen')
-  @ApiOperation({
-    operationId: 'OauthConsentScreen',
-    description: 'Log in consent screen to get code',
-    summary: 'Log in consent screen to get code',
-    deprecated: true,
-  })
-  OauthConsentScreen() {
-    return this.oauthService.getAuthenticatedClient();
-  }
-
   @Roles(Role.Client)
   @ApiOperation({
     operationId: 'clientUpdateAuth',
@@ -72,6 +61,20 @@ export class AuthenticationController {
     @User(UserDataJwtProperties.USERID) userId: string,
   ) {
     return this.authenticationService.updateAuthInfo(updateAuthDto, userId);
+  }
+
+  @Roles(Role.Client)
+  @ApiOperation({
+    operationId: 'clientUpdateOAuth',
+    description: 'Client update Oauth',
+    summary: 'Client update Oauth',
+  })
+  @Put('')
+  updateOAuth(
+    @Body() updateOAuthDto: UpdateOAuthDto,
+    @User(UserDataJwtProperties.USERID) userId: string,
+  ) {
+    return this.authenticationService.deleteOAuthInfo(updateOAuthDto, userId);
   }
 
   @Roles(Role.Client)
