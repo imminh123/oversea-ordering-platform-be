@@ -8,6 +8,7 @@ import { DiscoveryModule, DiscoveryService } from '@golevelup/nestjs-discovery';
 import { CartModule } from './modules/cart/cart.module';
 import { VariablesModule } from './modules/variables/variables.module';
 import { OrderModule } from './modules/order/order.module';
+import { PaymentModule } from './modules/payment/payment.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { OrderModule } from './modules/order/order.module';
     CartModule,
     VariablesModule,
     OrderModule,
+    PaymentModule,
   ],
   providers: [
     {

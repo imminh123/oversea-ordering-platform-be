@@ -1,4 +1,5 @@
 import { getBaseSchema } from '../database/database.helpers';
+import { Gender } from './authentication.const';
 import { IAuth } from './authentication.interface';
 
 export const IAuthSchema = getBaseSchema<IAuth>();
@@ -12,6 +13,7 @@ IAuthSchema.add({
   role: { type: String, required: true },
   fullname: { type: String, required: false },
   birthday: { type: String, required: false },
+  gender: { type: String, enum: Gender, required: false },
   wareHouseAddress: { type: String, required: false },
   address: { type: String, required: false },
   province: { type: String, required: false },

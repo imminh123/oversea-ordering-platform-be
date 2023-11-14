@@ -1,6 +1,7 @@
 import { SignatureType } from './vnpay.enum';
 import { createHash, createHmac } from 'crypto';
-import querystring from 'qs';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const querystring = require('qs');
 import { getConfig } from '../../modules/config/config.provider';
 
 const secretKey = getConfig().get('vnpay.hash');
@@ -17,15 +18,28 @@ export function getSignature(
   input: object,
   type: SignatureType = SignatureType.SHA256,
 ): string {
+  console.log(input);
   const strSignature = querystring.stringify(input, { encode: false });
+  console.log(strSignature);
   return type === SignatureType.SHA256
     ? signatureSha256(strSignature)
     : signatureSha512(strSignature);
 }
 
-export function sortObject(obj: any): any {
+export function sortObject(obj: any, priority?: string): any {
   return Object.keys(obj)
-    .sort()
+    .sort((a, b) => {
+      if (priority) {
+        if (a === priority) {
+          return 1;
+        }
+        if (b === priority) {
+          return -1;
+        }
+      }
+      if (a > b) return 1;
+      return -1;
+    })
     .reduce((accumulator, key) => {
       accumulator[key] = obj[key];
 

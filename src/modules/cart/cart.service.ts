@@ -86,7 +86,7 @@ export class CartService {
         continue;
       }
       const newItem = await this.tbService.getItemDetailById(
-        cartItem.id,
+        cartItem.itemId,
         cartItem.propId,
       );
       cartItem.updatedAt = current;

@@ -11,10 +11,12 @@ import { OrderService } from './order.service';
 import { User, UserDataJwtProperties } from '../../decorators/user.decorator';
 import { CreateOrderDto } from './order.dto';
 import { Roles } from '../../decorators/authorization.decorator';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Role } from '../../shared/constant';
 
 @Controller('order')
+@ApiTags('order')
+@ApiBearerAuth('access-token')
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 

@@ -41,13 +41,12 @@ export class VariablesController {
   }
 
   @Get()
-  @Roles(Role.Admin, Role.Root)
   @CommonQueryRequest()
   @UseInterceptors(PaginationInterceptor)
   @ApiOperation({
-    operationId: 'adminIndexVariables',
-    description: 'Admin index variable',
-    summary: 'Admin index variable',
+    operationId: 'indexVariables',
+    description: 'Index variables',
+    summary: 'Index variables',
   })
   adminIndexVariables(
     @Pagination() pagination: IPagination,
