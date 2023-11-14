@@ -277,8 +277,12 @@ export function buildFilterDateParam(fromDate?: Date, toDate?: Date) {
 
 export function createTimeStringWithFormat(
   date: Date | string,
-  format,
+  format?: string,
   tz = DEFAULT_TIMEZONE,
 ) {
-  return moment(new Date(date)).tz(tz).format(format);
+  const res = moment(new Date(date)).tz(tz);
+  if (format) {
+    return res.format(format);
+  }
+  return res.toISOString();
 }

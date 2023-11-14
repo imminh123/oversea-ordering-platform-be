@@ -1,8 +1,8 @@
 import { getBaseSchema } from '../database/database.helpers';
 import { Gender } from './authentication.const';
-import { IAuth } from './authentication.interface';
+import { IAuthDocument } from './authentication.interface';
 
-export const IAuthSchema = getBaseSchema<IAuth>();
+export const IAuthSchema = getBaseSchema<IAuthDocument>();
 
 IAuthSchema.add({
   mail: { type: String, required: false },
@@ -19,5 +19,6 @@ IAuthSchema.add({
   province: { type: String, required: false },
   city: { type: String, required: false },
   ward: { type: String, required: false },
+  avatar: { type: String, required: false },
   isActive: { type: Boolean, required: true, default: true },
 });

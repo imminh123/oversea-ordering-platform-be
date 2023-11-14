@@ -13,12 +13,16 @@ import * as jwt from 'jsonwebtoken';
 import * as bcrypt from 'bcrypt';
 import { IPagination } from '../../adapters/pagination/pagination.interface';
 import { getHeaders } from '../../adapters/pagination/pagination.helper';
-import { db2api, decodeJWTToken } from '../../shared/helpers';
+import {
+  createTimeStringWithFormat,
+  db2api,
+  decodeJWTToken,
+} from '../../shared/helpers';
 import { Role } from '../../shared/constant';
 import { isValidObjectId } from 'mongoose';
 import { OAuthClient, privateKey } from './authentication.const';
 import { OAuthService } from './oauth.service';
-import { IAuth } from './authentication.interface';
+import { IAuth, IAuthDocument } from './authentication.interface';
 import { ObjectId } from 'bson';
 
 @Injectable()
@@ -252,16 +256,25 @@ export class AuthenticationService {
     let isNewUser = false;
 
     if (!user) {
-      const newUser = await this.authenticationRepository.create({
+      const payload: IAuth = {
         ...findParams,
+        fullname: userInfo.name,
+        mail: userInfo.email,
+        avatar: userInfo.avatar,
+      };
+      if (userInfo.birthday) {
+        payload.birthday = userInfo.birthday;
+      }
+      if (userInfo.gender) {
+        payload.gender = userInfo.gender;
+      }
+
+      const newUser = await this.authenticationRepository.create({
+        ...payload,
         role,
       });
       isNewUser = true;
       user = newUser;
-    } else {
-      user = await this.authenticationRepository.updateById(user.id, {
-        sessionToken: new ObjectId().toString(),
-      });
     }
 
     const { accessToken, refreshToken } = await this.createSessionToken({
@@ -302,6 +315,19 @@ export class AuthenticationService {
     if (!user) {
       throw new BadRequestException('Not found user');
     }
+    let payload: IAuth = {
+      ...findParams,
+      fullname: userInfo.name,
+      mail: userInfo.email,
+      avatar: userInfo.avatar,
+    };
+    if (userInfo.birthday) {
+      payload.birthday = createTimeStringWithFormat(userInfo.birthday);
+    }
+    if (userInfo.gender) {
+      payload.gender = userInfo.gender;
+    }
+    payload = { ...user, ...payload };
 
     return !this.authenticationRepository.updateById(userId, { ...findParams });
   }

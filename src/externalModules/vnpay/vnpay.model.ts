@@ -36,6 +36,7 @@ export class GatewayServiceRequest {
       vnp_IpAddr: '',
       vnp_Locale: '',
       vnp_OrderInfo: '',
+      vnp_OrderType: '',
       vnp_ReturnUrl: '',
       vnp_TxnRef: '',
     });

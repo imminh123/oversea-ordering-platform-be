@@ -83,12 +83,13 @@ export class OAuthService {
 
   async FbGetUserInfo(token: string) {
     const params: any = {};
-    params.fields = ['id'];
+    params.fields = ['id', 'email', 'gender', 'name', 'birthday'];
     params.access_token = token;
     try {
       const { data } = await this.httpClient.axiosRef.get(
         `${fbApiUrl}me?${getParamString(params)}`,
       );
+      data.avatar = `${fbApiUrl}${data.id}/picture?type=large`;
       return data;
     } catch (error) {
       throw new BadGatewayException(`Get facebook app token failed: ${error}`);
@@ -114,6 +115,9 @@ export class OAuthService {
     return googleClient.verifyIdToken({ idToken: token }).then((data) => {
       return {
         id: data.getUserId(),
+        email: data.getPayload().email,
+        name: data.getPayload().name,
+        avatar: data.getPayload().picture,
       };
     });
   }
