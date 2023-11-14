@@ -22,4 +22,8 @@ export const getOauthConfig = () => {
   };
 };
 
+export enum Gender {
+  NAM = 'nam',
+  NU = 'nữ',
+}
 export const defaultPassword = '111111';

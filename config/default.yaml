@@ -19,3 +19,7 @@ mongodb:
 jwtPrivateKey: privateKey
 
 tmApiToken:
+vnpay:
+  merchantCode:
+  hash:
+  endpoint:

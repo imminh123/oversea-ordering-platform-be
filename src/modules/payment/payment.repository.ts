@@ -2,14 +2,16 @@ import { OnApplicationBootstrap } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { DbModel } from '../../shared/constant';
 import { Model } from 'mongoose';
-import { IAuthDocument } from './authentication.interface';
 import { BaseRepository } from '../database/base-repository';
+import { ITransactionDocument } from './payment.interface';
 
-export class AuthenticationRepository
-  extends BaseRepository<IAuthDocument>
+export class TransactionRepository
+  extends BaseRepository<ITransactionDocument>
   implements OnApplicationBootstrap
 {
-  constructor(@InjectModel(DbModel.Auth) model: Model<IAuthDocument>) {
+  constructor(
+    @InjectModel(DbModel.Transactions) model: Model<ITransactionDocument>,
+  ) {
     super(model);
   }
 
