@@ -7,6 +7,11 @@ export interface ITransaction {
   amount: number;
   status: PaymentStatus;
   orderInfo: string;
-  webhookResponse: string;
+  webhookResponse?: string;
+  bankCode?: string;
+  cardType?: string;
+  payDate?: Date;
+  bankTranNo?: string;
+  vnpayTranNo?: string;
 }
 export interface ITransactionDocument extends ITransaction, BaseDocument {}

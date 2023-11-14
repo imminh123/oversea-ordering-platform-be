@@ -35,12 +35,6 @@ export class CompletePurchaseDto {
   @ApiProperty({
     type: String,
     example: '',
-    required: false,
-  })
-  wareHouseAddress: string;
-  @ApiProperty({
-    type: String,
-    example: '',
     required: true,
   })
   vnp_PayDate: string;

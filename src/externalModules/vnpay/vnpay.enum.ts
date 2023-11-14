@@ -14,3 +14,7 @@ export enum Command {
 export const maskRequestVnpay = {
   ipAddress: '117.4.246.88',
 };
+
+export enum ResponseCode {
+  SUCCESS = '00',
+}
