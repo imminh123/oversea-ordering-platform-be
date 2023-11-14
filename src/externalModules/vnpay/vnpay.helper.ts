@@ -41,7 +41,7 @@ export function sortObject(obj: any, priority?: string): any {
       return -1;
     })
     .reduce((accumulator, key) => {
-      accumulator[key] = obj[key];
+      accumulator[key] = encodeURIComponent(obj[key]);
 
       return accumulator;
     }, {});
