@@ -5,6 +5,7 @@ export enum DbModel {
   Auth = 'Auth',
   Cart = 'Cart',
   Variables = 'Variables',
+  Order = 'Order',
 }
 
 export enum Role {
