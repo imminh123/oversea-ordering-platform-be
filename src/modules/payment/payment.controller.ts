@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { User, UserDataJwtProperties } from '../../decorators/user.decorator';
@@ -28,7 +28,7 @@ export class PaymentController {
     description: 'Complete purchase',
     summary: 'Complete purchase',
   })
-  async completePurchase(@Body() completePurchaseDto: CompletePurchaseDto) {
-    return;
+  async completePurchase(@Query() completePurchaseDto: CompletePurchaseDto) {
+    return this.paymentService.completePurchase(completePurchaseDto);
   }
 }
