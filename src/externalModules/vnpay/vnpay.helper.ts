@@ -18,9 +18,7 @@ export function getSignature(
   input: object,
   type: SignatureType = SignatureType.SHA256,
 ): string {
-  console.log(input);
   const strSignature = querystring.stringify(input, { encode: false });
-  console.log(strSignature);
   return type === SignatureType.SHA256
     ? signatureSha256(strSignature)
     : signatureSha512(strSignature);
@@ -41,7 +39,7 @@ export function sortObject(obj: any, priority?: string): any {
       return -1;
     })
     .reduce((accumulator, key) => {
-      accumulator[key] = encodeURIComponent(obj[key]);
+      accumulator[key] = encodeURIComponent(obj[key]).replace(/%20/g, '+');
 
       return accumulator;
     }, {});

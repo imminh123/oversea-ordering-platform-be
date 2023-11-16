@@ -12,7 +12,7 @@ const DetailItem = {
   shopUrl: { type: String, required: false },
   quantity: { type: Number, required: true, default: 1 },
   price: { type: Number, required: true },
-  vnPrice: { type: Number, required: true },
+  vnCost: { type: Number, required: true },
   currency: { type: String, required: true, default: 'CNY' },
   propId: { type: String, required: false },
   propName: { type: String, required: false },
