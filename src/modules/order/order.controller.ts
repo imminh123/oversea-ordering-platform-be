@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  UseInterceptors,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { User, UserDataJwtProperties } from '../../decorators/user.decorator';
@@ -13,6 +14,10 @@ import { CreateOrderDto } from './order.dto';
 import { Roles } from '../../decorators/authorization.decorator';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Role } from '../../shared/constant';
+import { Pagination } from '../../decorators/pagination.decorator';
+import { IPagination } from '../../adapters/pagination/pagination.interface';
+import { CommonQueryRequest } from '../../shared/swagger.helper';
+import { PaginationInterceptor } from '../../interceptors/pagination.filter';
 
 @Controller('order')
 @ApiTags('order')
@@ -23,27 +28,32 @@ export class OrderController {
   @Post()
   @Roles(Role.Client)
   @ApiOperation({
-    operationId: 'clientCreateOrder',
-    description: 'Client create order',
-    summary: 'Client create order',
+    operationId: 'clientCreateOrderAndPay',
+    description: 'Client create order and pay',
+    summary: 'Client create order and pay',
   })
   async create(
     @Body() createOrderDto: CreateOrderDto,
     @User(UserDataJwtProperties.USERID) userId: string,
   ) {
-    return this.orderService.createOrder(createOrderDto, userId);
+    return this.orderService.createOrderAndPay(createOrderDto, userId);
   }
 
-  // @Get()
-  // @Roles(Role.Client)
-  // @ApiOperation({
-  //   operationId: 'ClientIndexOrder',
-  //   description: 'Admin index order',
-  //   summary: 'Admin index order',
-  // })
-  // async adminIndexOrder() {
-  //   return;
-  // }
+  @Get()
+  @Roles(Role.Client)
+  @CommonQueryRequest()
+  @UseInterceptors(PaginationInterceptor)
+  @ApiOperation({
+    operationId: 'ClientIndexOrder',
+    description: 'Client index order',
+    summary: 'Client index order',
+  })
+  async clientIndexOrder(
+    @User(UserDataJwtProperties.USERID) userId: string,
+    @Pagination() pagination: IPagination,
+  ) {
+    return this.orderService.indexOrders(userId, pagination);
+  }
 
   @Get(':id')
   @Roles(Role.Client)

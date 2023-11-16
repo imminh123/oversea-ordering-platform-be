@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  forwardRef,
+} from '@nestjs/common';
 import { CompletePurchaseDto, PurchaseDto } from './payment.dto';
 import { ITransaction, ITransactionDocument } from './payment.interface';
 import { PaymentStatus, vnpayEndpoint } from './payment.enum';
@@ -13,12 +18,18 @@ import {
   ResponseCode,
   SignatureType,
 } from '../../externalModules/vnpay/vnpay.enum';
+import { OrderService } from '../order/order.service';
+import { OrderStatus } from '../order/order.enum';
+import { IPagination } from '../../adapters/pagination/pagination.interface';
+import { getHeaders } from '../../adapters/pagination/pagination.helper';
 
 @Injectable()
 export class PaymentService {
   constructor(
     private readonly vnpayService: VnpayService,
     private readonly transactionRepository: TransactionRepository,
+    @Inject(forwardRef(() => OrderService))
+    private readonly orderService: OrderService,
   ) {}
   async purchase(
     createPurchaseDto: PurchaseDto,
@@ -27,19 +38,28 @@ export class PaymentService {
     const findExitsTransaction = await this.transactionRepository.findOne({
       referenceId: createPurchaseDto.referenceId,
     });
-    if (findExitsTransaction) {
+    const order = await this.orderService.getOrderById(
+      createPurchaseDto.referenceId,
+    );
+    if (findExitsTransaction && order.status !== OrderStatus.PENDING_PAYMENT) {
       throw new BadRequestException('ReferenceId was used');
     }
-    const transactionPayload = {
-      userId,
-      referenceId: createPurchaseDto.referenceId,
-      amount: createPurchaseDto.amount,
-      orderInfo: createPurchaseDto.orderInfo,
-      status: PaymentStatus.PENDING,
-    } as ITransaction;
-    const transaction = await this.transactionRepository.create(
-      transactionPayload,
-    );
+    let transaction;
+    if (!findExitsTransaction) {
+      const transactionPayload = {
+        userId,
+        referenceId: createPurchaseDto.referenceId,
+        amount: createPurchaseDto.amount,
+        orderInfo: createPurchaseDto.orderInfo,
+        status: PaymentStatus.PENDING,
+      } as ITransaction;
+      transaction = await this.transactionRepository.create(transactionPayload);
+      await this.orderService.updateOrderStatus(createPurchaseDto.referenceId, {
+        status: OrderStatus.PENDING_PAYMENT,
+      });
+    } else {
+      transaction = findExitsTransaction;
+    }
     const paymentGatewayRequest =
       await this.vnpayService.getVnpayPaymentGatewayRequest({
         ...createPurchaseDto,
@@ -61,9 +81,14 @@ export class PaymentService {
     if (!transaction) {
       throw new BadRequestException('Transaction with referenceId not exits');
     }
-    return this.transactionRepository.updateById(transaction.id, {
-      ...payload,
-    });
+    return Promise.all([
+      this.transactionRepository.updateById(transaction.id, {
+        ...payload,
+      }),
+      this.orderService.updateOrderStatus(transaction.referenceId, {
+        status: OrderStatus.DELIVERED,
+      }),
+    ]);
   }
 
   async parseResponse(completePurchaseDto: CompletePurchaseDto) {
@@ -82,6 +107,25 @@ export class PaymentService {
         completePurchaseDto.vnp_ResponseCode === ResponseCode.SUCCESS
           ? PaymentStatus.SUCCEEDED
           : PaymentStatus.FAILED,
+    };
+  }
+
+  async indexPaymentTransactions(userId: string, pagination: IPagination) {
+    const transactions = await this.transactionRepository.find(
+      { userId },
+      {
+        skip: pagination.startIndex,
+        limit: pagination.perPage,
+        sort: { createdAt: -1 },
+      },
+    );
+
+    const listLength = await this.transactionRepository.count({ userId });
+    const responseHeader = getHeaders(pagination, listLength);
+
+    return {
+      items: db2api<ITransactionDocument[], ITransaction[]>(transactions),
+      headers: responseHeader,
     };
   }
   private checkInvalidSignature(completePurchaseDto: CompletePurchaseDto) {

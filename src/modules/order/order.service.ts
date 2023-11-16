@@ -11,6 +11,10 @@ import { OrderStatus } from './order.enum';
 import { Variables } from '../variables/variables.helper';
 import { isValidObjectId } from 'mongoose';
 import { db2api } from '../../shared/helpers';
+import { PaymentService } from '../payment/payment.service';
+import { PurchaseDto } from '../payment/payment.dto';
+import { IPagination } from '../../adapters/pagination/pagination.interface';
+import { getHeaders } from '../../adapters/pagination/pagination.helper';
 
 @Injectable()
 export class OrderService {
@@ -18,7 +22,22 @@ export class OrderService {
     private readonly orderRepository: OrderRepository,
     private readonly tbService: TaobaoService,
     private readonly variablesService: VariablesService,
+    private readonly paymentService: PaymentService,
   ) {}
+  async createOrderAndPay(createOrderDto: CreateOrderDto, userId: string) {
+    const order = await this.createOrder(createOrderDto, userId);
+    const paymentPayload: PurchaseDto = {
+      amount: order.total,
+      referenceId: order.id,
+      orderInfo: `Pay for order ${order.id}`,
+    };
+    const payment = await this.paymentService.purchase(paymentPayload, userId);
+    return {
+      order,
+      paymentGatewayUrl: payment.paymentGatewayUrl,
+    };
+  }
+
   async createOrder(
     { listItem, address, wareHouseAddress }: CreateOrderDto,
     userId: string,
@@ -55,8 +74,23 @@ export class OrderService {
     return this.orderRepository.create(order);
   }
 
-  indexOrders() {
-    return `This action returns all order`;
+  async indexOrders(userId: string, pagination: IPagination) {
+    const orders = await this.orderRepository.find(
+      { userId },
+      {
+        skip: pagination.startIndex,
+        limit: pagination.perPage,
+        sort: { createdAt: -1 },
+      },
+    );
+
+    const listLength = await this.orderRepository.count({ userId });
+    const responseHeader = getHeaders(pagination, listLength);
+
+    return {
+      items: db2api<IOrderDocument[], IOrder[]>(orders),
+      headers: responseHeader,
+    };
   }
 
   async getOrderById(id: string) {
@@ -70,12 +104,9 @@ export class OrderService {
     return db2api<IOrderDocument, IOrder>(order);
   }
 
-  update(id: number, updateOrderDto: any) {
-    return `This action updates a #${id} order`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} order`;
+  async updateOrderStatus(id: string, { status }) {
+    await this.getOrderById(id);
+    return this.orderRepository.updateById(id, { status });
   }
 
   private convertResponseFromTaobaoItem({

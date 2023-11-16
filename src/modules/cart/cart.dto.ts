@@ -1,33 +1,40 @@
 import {
-  IsString,
   IsNotEmpty,
   IsOptional,
   IsNumber,
   Min,
   IsArray,
+  ArrayNotEmpty,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
+import { BadRequestException } from '@nestjs/common';
 
 export class AddItemToCartDto {
   @IsNumber()
   @IsNotEmpty()
+  @Transform((x) => {
+    if (!Boolean(Number(x.value))) {
+      throw new BadRequestException('Invalid id');
+    }
+    return Number(x.value);
+  })
   @ApiProperty({
     type: String,
-    example: 123,
+    example: '123',
     required: true,
   })
   id: number;
 
-  @IsString()
-  @IsNotEmpty()
+  @IsArray()
+  @ArrayNotEmpty()
   @IsOptional()
   @ApiProperty({
-    type: String,
-    example: '1627207:19761432',
+    type: Array,
+    example: ['1627207:19761432'],
     required: true,
   })
-  pvid?: string;
+  pvid?: string[];
 
   @IsNumber()
   @Min(1)
