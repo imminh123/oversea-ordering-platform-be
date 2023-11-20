@@ -1,7 +1,7 @@
 /* istanbul ignore file */
 import { Injectable } from '@nestjs/common';
 import { GatewayServiceRequest } from './vnpay.model';
-import { getConfig } from '../../modules/config/config.provider';
+import { getConfig } from '../../shared/config/config.provider';
 import Decimal from 'decimal.js';
 import { createTimeStringWithFormat } from '../../shared/helpers';
 import {

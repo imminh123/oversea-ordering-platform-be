@@ -1,4 +1,4 @@
-import { getBaseSchema } from '../database/database.helpers';
+import { getBaseSchema } from '../../shared/database/database.helpers';
 import { PaymentStatus } from './payment.enum';
 import { ITransactionDocument } from './payment.interface';
 

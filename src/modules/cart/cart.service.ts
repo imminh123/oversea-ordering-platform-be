@@ -3,12 +3,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { AddItemToCartDto } from './cart.dto';
+import { AddItemToCartDto, UpdateCartItemDto } from './cart.dto';
 import { TaobaoService } from '../../externalModules/taobao/taobao.service';
 import { ICart, ICartDocument } from './cart.interface';
 import Decimal from 'decimal.js';
 import { CartRepository } from './cart.repository';
-import { Errors } from '../errors/errors';
+import { Errors } from '../../shared/errors/errors';
 import {
   IPagination,
   IPaginationHeader,
@@ -179,6 +179,26 @@ export class CartService {
       }
     });
     return this.cartRepository.delete({ _id: { $in: arr } });
+  }
+
+  async clientUpdateCartItem(
+    updateCartItemDto: UpdateCartItemDto,
+    userId: string,
+    id: string,
+  ) {
+    const findParam: any = { userId, _id: new ObjectId(id) };
+    const item = await this.cartRepository.findOne(findParam);
+    if (!item) {
+      throw new BadRequestException(
+        'Not found item with given id belong to client',
+      );
+    }
+
+    if (!item.isActive) {
+      throw new BadRequestException('This item is currently unavailable');
+    }
+
+    return this.cartRepository.updateById(id, { ...updateCartItemDto });
   }
 
   private convertResponseFromTaobaoItem({

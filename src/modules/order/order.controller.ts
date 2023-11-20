@@ -3,9 +3,7 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
-  Delete,
   UseInterceptors,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
@@ -65,14 +63,4 @@ export class OrderController {
   async getOrderById(@Param('id') id: string) {
     return this.orderService.getOrderById;
   }
-
-  // @Patch(':id')
-  // async update(@Param('id') id: string, @Body() updateOrderDto: any) {
-  //   return;
-  // }
-
-  // @Delete(':id')
-  // async remove(@Param('id') id: string) {
-  //   return;
-  // }
 }

@@ -1,4 +1,4 @@
-import { getBaseSchema } from '../database/database.helpers';
+import { getBaseSchema } from '../../shared/database/database.helpers';
 import { ICartDocument } from './cart.interface';
 
 export const ICartSchema = getBaseSchema<ICartDocument>();

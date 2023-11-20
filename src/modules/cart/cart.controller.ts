@@ -7,9 +7,14 @@ import {
   Put,
   Query,
   Delete,
+  Param,
 } from '@nestjs/common';
 import { CartService } from './cart.service';
-import { AddItemToCartDto, GetSummaryCartDto } from './cart.dto';
+import {
+  AddItemToCartDto,
+  GetSummaryCartDto,
+  UpdateCartItemDto,
+} from './cart.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { User, UserDataJwtProperties } from '../../decorators/user.decorator';
 import { CommonQueryRequest } from '../../shared/swagger.helper';
@@ -53,6 +58,21 @@ export class CartController {
     @Pagination() pagination: IPagination,
   ) {
     return this.cartService.clientGetCart(userId, pagination);
+  }
+
+  @Put(':id')
+  @Roles(Role.Client)
+  @ApiOperation({
+    operationId: 'clientUpdateCartItem',
+    description: 'Client update cart item',
+    summary: 'Client update cart item',
+  })
+  updateCartItem(
+    @User(UserDataJwtProperties.USERID) userId: string,
+    @Param('id') id: string,
+    @Body() updateCartItemDto: UpdateCartItemDto,
+  ) {
+    return this.cartService.clientUpdateCartItem(updateCartItemDto, userId, id);
   }
 
   @Put('refreshCart')

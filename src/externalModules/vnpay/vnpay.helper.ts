@@ -2,7 +2,7 @@ import { SignatureType } from './vnpay.enum';
 import { createHash, createHmac } from 'crypto';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const querystring = require('qs');
-import { getConfig } from '../../modules/config/config.provider';
+import { getConfig } from '../../shared/config/config.provider';
 
 const secretKey = getConfig().get('vnpay.hash');
 export function signatureSha256(source: string): string {

@@ -1,4 +1,4 @@
-import { BaseDocument } from '../database/database.helpers';
+import { BaseDocument } from '../../shared/database/database.helpers';
 
 export interface ICart {
   itemId: number;

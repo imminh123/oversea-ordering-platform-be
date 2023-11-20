@@ -1,4 +1,4 @@
-import { getBaseSchema } from '../database/database.helpers';
+import { getBaseSchema } from '../../shared/database/database.helpers';
 import { IVariableDocument } from './variables.interface';
 
 export const IVariableSchema = getBaseSchema<IVariableDocument>();

@@ -1,4 +1,4 @@
-import { getBaseSchema } from '../database/database.helpers';
+import { getBaseSchema } from '../../shared/database/database.helpers';
 import { Gender } from './authentication.const';
 import { IAuthDocument } from './authentication.interface';
 

@@ -60,3 +60,16 @@ export class GetSummaryCartDto {
   })
   ids: string[];
 }
+
+export class UpdateCartItemDto {
+  @IsNumber()
+  @Min(1)
+  @IsNotEmpty()
+  @IsOptional()
+  @ApiProperty({
+    type: Number,
+    example: 1,
+    required: true,
+  })
+  volume?: number;
+}

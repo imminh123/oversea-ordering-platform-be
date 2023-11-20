@@ -12,7 +12,7 @@ import { DiscoveryService } from '@golevelup/nestjs-discovery';
 import { Reflector } from '@nestjs/core';
 import { DECORATORS } from '@nestjs/swagger/dist/constants';
 import { ROLES_KEY } from '../decorators/authorization.decorator';
-import { getHost } from '../modules/config/config.provider';
+import { getHost } from './config/config.provider';
 
 export async function initializeSwagger(app: INestApplication) {
   const server = app.getHttpAdapter();

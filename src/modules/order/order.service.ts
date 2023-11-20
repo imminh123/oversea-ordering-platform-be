@@ -3,7 +3,7 @@ import { OrderRepository } from './order.repository';
 import { CreateOrderDto } from './order.dto';
 import { TaobaoService } from '../../externalModules/taobao/taobao.service';
 import { VariablesService } from '../variables/variables.service';
-import { Errors } from '../errors/errors';
+import { Errors } from '../../shared/errors/errors';
 import { ItemDetailInfo } from '../../externalModules/taobao/taobao.interface';
 import { DetailItem, IOrder, IOrderDocument } from './order.interface';
 import Decimal from 'decimal.js';

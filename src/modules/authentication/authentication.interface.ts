@@ -1,5 +1,5 @@
 import { Role } from '../../shared/constant';
-import { BaseDocument } from '../database/database.helpers';
+import { BaseDocument } from '../../shared/database/database.helpers';
 import { Gender } from './authentication.const';
 
 export interface IAuth {

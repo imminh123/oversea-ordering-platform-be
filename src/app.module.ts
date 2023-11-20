@@ -1,5 +1,5 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
-import { DatabaseModule } from './modules/database/database.module';
+import { DatabaseModule } from './shared/database/database.module';
 import { AuthenticationModule } from './modules/authentication/authentication.module';
 import { UserMiddleware } from './middleware/user.middleware';
 import { APP_GUARD } from '@nestjs/core';

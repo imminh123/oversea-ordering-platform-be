@@ -1,4 +1,4 @@
-import { getBaseSchema } from '../database/database.helpers';
+import { getBaseSchema } from '../../shared/database/database.helpers';
 import { IOrderDocument } from './order.interface';
 
 export const IOrderSchema = getBaseSchema<IOrderDocument>();

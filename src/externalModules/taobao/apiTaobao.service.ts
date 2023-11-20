@@ -1,6 +1,6 @@
 /* istanbul ignore file */
 import { Injectable, Logger } from '@nestjs/common';
-import { getConfig } from '../../modules/config/config.provider';
+import { getConfig } from '../../shared/config/config.provider';
 import axios from 'axios';
 import { EndpointEnum } from './taobao.enum';
 
