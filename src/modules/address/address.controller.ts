@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Param, Put } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Put,
+  Delete,
+} from '@nestjs/common';
 import { AddressService } from './address.service';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../decorators/authorization.decorator';
@@ -48,12 +56,27 @@ export class AddressController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() updateAddressDto: UpdateAddressDto) {
+  @Roles(Role.Client)
+  @ApiOperation({
+    operationId: 'updateAddressById',
+    description: 'Update address by id',
+    summary: 'Update address by id',
+  })
+  async update(
+    @Param('id') id: string,
+    @Body() updateAddressDto: UpdateAddressDto,
+  ) {
     return this.addressService.updateAddressById(id, updateAddressDto);
   }
 
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.addressService.remove(+id);
-  // }
+  @Delete(':id')
+  @Roles(Role.Client)
+  @ApiOperation({
+    operationId: 'removeAddressById',
+    description: 'Remove address by id',
+    summary: 'Remove address by id',
+  })
+  async remove(@Param('id') id: string) {
+    return this.addressService.removeDocumentById(id);
+  }
 }

@@ -1,8 +1,45 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import e from 'express';
 
 export class CreateAddressDto {
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({
+    type: String,
+    example: 'def',
+    required: false,
+  })
+  name?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({
+    type: String,
+    example: 'def',
+    required: false,
+  })
+  phone?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  @ApiProperty({
+    type: String,
+    example: 'def',
+    required: false,
+  })
+  mail?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  @ApiProperty({
+    type: String,
+    example: 'def',
+    required: false,
+  })
+  note?: string;
+
   @IsString()
   @IsNotEmpty()
   @ApiProperty({
@@ -99,4 +136,42 @@ export class UpdateAddressDto extends CreateAddressDto {
     required: false,
   })
   ward?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({
+    type: String,
+    example: 'def',
+    required: false,
+  })
+  name?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({
+    type: String,
+    example: 'def',
+    required: false,
+  })
+  phone?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  @ApiProperty({
+    type: String,
+    example: 'def',
+    required: false,
+  })
+  mail?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  @ApiProperty({
+    type: String,
+    example: 'def',
+    required: false,
+  })
+  note?: string;
 }
