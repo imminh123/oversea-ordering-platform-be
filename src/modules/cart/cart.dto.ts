@@ -71,5 +71,5 @@ export class UpdateCartItemDto {
     example: 1,
     required: true,
   })
-  volume?: number;
+  quantity?: number;
 }

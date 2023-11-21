@@ -1,25 +1,10 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  UseInterceptors,
-  Query,
-  Put,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put } from '@nestjs/common';
 import { AddressService } from './address.service';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../../decorators/authorization.decorator';
 import { Role } from '../../shared/constant';
-import { CommonQueryRequest } from '../../shared/swagger.helper';
-import { PaginationInterceptor } from '../../interceptors/pagination.filter';
 import { CreateAddressDto, UpdateAddressDto } from './address.dto';
 import { User, UserDataJwtProperties } from '../../decorators/user.decorator';
-import { Pagination } from '../../decorators/pagination.decorator';
-import { IPagination } from '../../adapters/pagination/pagination.interface';
 
 @Controller('address')
 @ApiTags('address')
@@ -43,23 +28,13 @@ export class AddressController {
 
   @Get()
   @Roles(Role.Client)
-  @CommonQueryRequest()
-  @UseInterceptors(PaginationInterceptor)
   @ApiOperation({
     operationId: 'ClientIndexAddress',
     description: 'Client index address',
     summary: 'Client index address',
   })
-  clientIndexAddress(
-    @Query() clientIndexOrderDto: CreateAddressDto,
-    @User(UserDataJwtProperties.USERID) userId: string,
-    @Pagination() pagination: IPagination,
-  ) {
-    return this.addressService.indexDocuments(
-      clientIndexOrderDto,
-      pagination,
-      userId,
-    );
+  clientIndexAddress(@User(UserDataJwtProperties.USERID) userId: string) {
+    return this.addressService.indexDocuments(userId);
   }
   @Get(':id')
   @Roles(Role.Client)

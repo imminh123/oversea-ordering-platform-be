@@ -1,10 +1,5 @@
 import { Document, isValidObjectId } from 'mongoose';
 import { BaseRepository } from './database/base-repository';
-import {
-  IPagination,
-  IPaginationHeader,
-} from '../adapters/pagination/pagination.interface';
-import { getHeaders } from '../adapters/pagination/pagination.helper';
 import { db2api } from './helpers';
 import { BadRequestException } from '@nestjs/common';
 
@@ -16,32 +11,17 @@ export class BaseService<T extends Document, U> {
     return db2api<T, U>(document);
   }
 
-  async indexDocuments(
-    dto: any,
-    pagination: IPagination,
-    userId?: string,
-  ): Promise<{ items: U[]; headers: IPaginationHeader }> {
+  async indexDocuments(userId?: string): Promise<U[]> {
     const findParams: any = {};
     if (userId) {
       findParams.userId = userId;
     }
-    for (const [key, value] of Object.entries(dto)) {
-      if (!Object.keys(pagination).includes(key) && value) {
-        findParams[key] = value;
-      }
-    }
+
     const listDocuments = await this.repository.find(findParams, {
-      skip: pagination.startIndex,
-      limit: pagination.perPage,
       sort: { createdAt: -1 },
     });
-    const listLength = await this.repository.count(findParams);
-    const responseHeader = getHeaders(pagination, listLength);
 
-    return {
-      items: db2api<T[], U[]>(listDocuments),
-      headers: responseHeader,
-    };
+    return db2api<T[], U[]>(listDocuments);
   }
 
   async getDocumentById(id: string): Promise<U> {
