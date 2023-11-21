@@ -61,6 +61,6 @@ export class OrderController {
     summary: 'Get order by id',
   })
   async getOrderById(@Param('id') id: string) {
-    return this.orderService.getOrderById;
+    return this.orderService.getOrderById(id);
   }
 }

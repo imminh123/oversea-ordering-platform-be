@@ -9,16 +9,23 @@ export class TaobaoService {
   async getItemDetailById(
     itemId: number,
     pvid?: string[] | string,
+    skuId?: string,
   ): Promise<ItemDetailInfo> {
     const item = await this.apiTaobaoService.getItemDetailFromTaobao(itemId);
     let skuItem = {};
-    if (pvid && item.skus && item.sku_props) {
-      const pvInRightOrder = Array.isArray(pvid)
-        ? this.getPvIdInRightOrder(pvid, item)
-        : pvid;
-      skuItem = item.skus.find((value) => {
-        return value.props_ids === pvInRightOrder;
-      });
+    if (item.skus && item.sku_props) {
+      if (skuId) {
+        skuItem = item.skus.find((value) => {
+          return value.skuid === skuId;
+        });
+      } else if (pvid) {
+        const pvInRightOrder = Array.isArray(pvid)
+          ? this.getPvIdInRightOrder(pvid, item)
+          : pvid;
+        skuItem = item.skus.find((value) => {
+          return value.props_ids === pvInRightOrder;
+        });
+      }
     }
     return {
       ...item,

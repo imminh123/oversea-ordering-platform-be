@@ -7,6 +7,7 @@ export enum DbModel {
   Variables = 'Variables',
   Order = 'Order',
   Transactions = 'Transactions',
+  Address = 'Address',
 }
 
 export enum Role {
