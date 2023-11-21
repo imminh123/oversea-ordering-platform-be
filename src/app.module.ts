@@ -9,6 +9,7 @@ import { CartModule } from './modules/cart/cart.module';
 import { VariablesModule } from './modules/variables/variables.module';
 import { OrderModule } from './modules/order/order.module';
 import { PaymentModule } from './modules/payment/payment.module';
+import { AddressModule } from './modules/address/address.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { PaymentModule } from './modules/payment/payment.module';
     VariablesModule,
     OrderModule,
     PaymentModule,
+    AddressModule,
   ],
   providers: [
     {
