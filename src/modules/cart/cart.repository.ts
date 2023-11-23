@@ -59,6 +59,7 @@ export class CartRepository
                 itemId: '$itemId',
                 itemName: '$itemName',
                 itemUrl: '$itemUrl',
+                itemImage: { $arrayElemAt: ['$image', 0] },
                 skuId: '$skuId',
                 propName: '$propName',
                 isActive: '$isActive',

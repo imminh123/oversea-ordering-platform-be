@@ -3,6 +3,7 @@ import {
   ArrayNotEmpty,
   IsArray,
   IsNotEmpty,
+  IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
@@ -26,6 +27,7 @@ export class CreateOrderDto {
 
   @IsString()
   @IsNotEmpty()
+  @IsOptional()
   @ApiProperty({
     type: String,
     example: '',

@@ -18,7 +18,7 @@ import { getHeaders } from '../../adapters/pagination/pagination.helper';
 import { AddressService } from '../address/address.service';
 import { CartService } from '../cart/cart.service';
 import { IAddress } from '../address/address.interface';
-import { ICart } from '../cart/cart.interface';
+import { ICartDocument } from '../cart/cart.interface';
 
 @Injectable()
 export class OrderService {
@@ -60,9 +60,9 @@ export class OrderService {
       address,
       wareHouseAddress,
     }: {
-      listItem: Partial<ICart>[];
+      listItem: Partial<ICartDocument>[];
       address: IAddress;
-      wareHouseAddress: string;
+      wareHouseAddress?: string;
     },
     userId: string,
   ) {
@@ -87,6 +87,7 @@ export class OrderService {
         volume: item.quantity,
         rate,
       });
+      orderItem.cartId = item.id;
       listProduct.push(orderItem);
       total = total.add(orderItem.vnCost);
     }

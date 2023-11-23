@@ -225,11 +225,9 @@ export class CartService {
     // return this.tbService.searchItem('phone', 1);
   }
 
-  async getListCartItem(ids: string[]): Promise<ICart[]> {
+  async getListCartItem(ids: string[]): Promise<ICartDocument[]> {
     ids.map((item) => new ObjectId(item));
-    return db2api<ICartDocument[], ICart[]>(
-      await this.cartRepository.find({ _id: { $in: ids } }),
-    );
+    return this.cartRepository.find({ _id: { $in: ids } });
   }
 
   async clientGetCartV2(userId: string) {
@@ -243,6 +241,10 @@ export class CartService {
     const current = new Date();
     for (const { listItem } of cart) {
       for (const cartItem of listItem) {
+        cartItem.vnPrice = new Decimal(cartItem.price)
+          .mul(rate)
+          .toDP(3)
+          .toString();
         if (isAfter(cartItem.updatedAt, current, 60)) {
           continue;
         }

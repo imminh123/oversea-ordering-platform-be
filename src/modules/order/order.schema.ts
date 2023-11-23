@@ -16,6 +16,7 @@ const DetailItem = {
   currency: { type: String, required: true, default: 'CNY' },
   propId: { type: String, required: false },
   propName: { type: String, required: false },
+  cartId: { type: String, required: true },
 };
 
 IOrderSchema.add({
@@ -23,6 +24,6 @@ IOrderSchema.add({
   userId: { type: String, required: true },
   status: { type: String, required: true },
   address: { type: Object, required: true },
-  wareHouseAddress: { type: String, required: true },
+  wareHouseAddress: { type: String, required: false },
   total: { type: Number, required: true },
 });
