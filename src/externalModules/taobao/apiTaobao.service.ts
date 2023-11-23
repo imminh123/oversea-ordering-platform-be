@@ -2,21 +2,60 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { getConfig } from '../../shared/config/config.provider';
 import axios from 'axios';
-import { EndpointEnum } from './taobao.enum';
+import { EndpointEnum, SortOption } from './taobao.enum';
 
 const config = getConfig();
-const apiToken = config.get('tmApiToken');
+const tmApiToken = config.get('tmApiToken');
+const rapidApiKey = config.get('rapidApiToken');
 @Injectable()
 export class ApiTaobaoService {
   async getItemDetailFromTaobao(id: number) {
     const options = {
       method: 'GET',
       url: EndpointEnum.GetItemDetail,
-      params: { apiToken, item_id: id },
+      params: { apiToken: tmApiToken, item_id: id },
     };
     try {
       const { data } = (await axios.request(options)).data;
       return data;
+    } catch (error) {
+      Logger.error(error);
+      return null;
+    }
+  }
+
+  async searchItemTaobao(text: string, page: number) {
+    const options = {
+      method: 'GET',
+      url: EndpointEnum.SearchItem,
+      params: { q: text, sort: SortOption.ratingDesc, page: String(page) },
+      headers: {
+        'X-RapidAPI-Key': rapidApiKey,
+        'X-RapidAPI-Host': 'taobao-advanced.p.rapidapi.com',
+      },
+    };
+    try {
+      const { data } = await axios.request(options);
+      return data;
+    } catch (error) {
+      Logger.error(error);
+      return null;
+    }
+  }
+
+  async getItemDetailFromTaobaoV2(id: string) {
+    const options = {
+      method: 'GET',
+      url: EndpointEnum.GetItemDetailV2,
+      params: { num_iid: id, api: 'item_detail' },
+      headers: {
+        'X-RapidAPI-Key': rapidApiKey,
+        'X-RapidAPI-Host': 'taobao-advanced.p.rapidapi.com',
+      },
+    };
+    try {
+      const { data } = await axios.request(options);
+      return data.result.item;
     } catch (error) {
       Logger.error(error);
       return null;

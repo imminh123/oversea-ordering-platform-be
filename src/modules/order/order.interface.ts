@@ -11,7 +11,7 @@ export interface DetailItem {
   quantity: number;
   price: number;
   currency?: string;
-  propId?: string;
+  skuId?: string;
   propName?: string;
   vnCost: number;
 }
@@ -19,7 +19,7 @@ export interface IOrder {
   listItem: DetailItem[];
   userId: string;
   status: OrderStatus;
-  address: string;
+  address: any;
   wareHouseAddress: string;
   total: number;
 }

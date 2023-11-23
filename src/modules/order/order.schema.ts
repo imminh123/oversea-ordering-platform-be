@@ -22,7 +22,7 @@ IOrderSchema.add({
   listItem: { type: [DetailItem], required: true },
   userId: { type: String, required: true },
   status: { type: String, required: true },
-  address: { type: String, required: true },
+  address: { type: Object, required: true },
   wareHouseAddress: { type: String, required: true },
   total: { type: Number, required: true },
 });

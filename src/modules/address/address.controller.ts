@@ -16,7 +16,11 @@ import { Roles } from '../../decorators/authorization.decorator';
 import { Role } from '../../shared/constant';
 import { CommonQueryRequest } from '../../shared/swagger.helper';
 import { PaginationInterceptor } from '../../interceptors/pagination.filter';
-import { CreateAddressDto, UpdateAddressDto } from './address.dto';
+import {
+  ClientIndexAddressDto,
+  CreateAddressDto,
+  UpdateAddressDto,
+} from './address.dto';
 import { User, UserDataJwtProperties } from '../../decorators/user.decorator';
 import { Pagination } from '../../decorators/pagination.decorator';
 import { IPagination } from '../../adapters/pagination/pagination.interface';
@@ -51,7 +55,7 @@ export class AddressController {
     summary: 'Client index address',
   })
   clientIndexAddress(
-    @Query() clientIndexOrderDto: CreateAddressDto,
+    @Query() clientIndexOrderDto: ClientIndexAddressDto,
     @User(UserDataJwtProperties.USERID) userId: string,
     @Pagination() pagination: IPagination,
   ) {

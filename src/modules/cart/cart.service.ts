@@ -221,7 +221,15 @@ export class CartService {
   }
 
   async clientGetDetailTaobaoItem({ id }: GetDetailTaobaoItemDto) {
-    return this.tbService.getItemDetailById(id);
+    return this.tbService.getItemDetailById(610980984514);
+    // return this.tbService.searchItem('phone', 1);
+  }
+
+  async getListCartItem(ids: string[]): Promise<ICart[]> {
+    ids.map((item) => new ObjectId(item));
+    return db2api<ICartDocument[], ICart[]>(
+      await this.cartRepository.find({ _id: { $in: ids } }),
+    );
   }
 
   async clientGetCartV2(userId: string) {

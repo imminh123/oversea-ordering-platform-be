@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import e from 'express';
 
 export class CreateAddressDto {
   @IsString()
@@ -88,13 +87,66 @@ export class CreateAddressDto {
   isDefault?: boolean;
 }
 
-export class ClientIndexAddressDto extends CreateAddressDto {
+export class ClientIndexAddressDto {
   @ApiProperty({
     type: String,
-    example: 'def',
     required: false,
   })
   userId?: string;
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  name?: string;
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  phone?: string;
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  mail?: string;
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  note?: string;
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  address?: string;
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  province?: string;
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  city?: string;
+
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  ward?: string;
+
+  @ApiProperty({
+    type: Boolean,
+    required: false,
+  })
+  isDefault?: boolean;
 }
 
 export class UpdateAddressDto extends CreateAddressDto {

@@ -33,6 +33,42 @@ export class TaobaoService {
       ...skuItem,
     };
   }
+
+  async searchItem(text: string, page: number) {
+    return this.apiTaobaoService.searchItemTaobao(text, page);
+  }
+
+  async getItemDetailByIdV2(
+    itemId: number,
+    pvid?: string[] | string,
+    skuId?: string,
+  ): Promise<ItemDetailInfo> {
+    const item = await this.apiTaobaoService.getItemDetailFromTaobaoV2(
+      '646821454917',
+    );
+    console.log(item);
+    let skuItem = {};
+    if (item.skus && item.sku_props) {
+      if (skuId) {
+        skuItem = item.skus.find((value) => {
+          return value.skuid === skuId;
+        });
+      } else if (pvid) {
+        const pvInRightOrder = Array.isArray(pvid)
+          ? this.getPvIdInRightOrder(pvid, item)
+          : pvid;
+        skuItem = item.skus.find((value) => {
+          return value.props_ids === pvInRightOrder;
+        });
+      }
+    }
+    return {
+      ...item,
+      sale_price: item.skus[0].price,
+      ...skuItem,
+    };
+  }
+
   private getPvIdInRightOrder(pvid: string[], item): string {
     const pvInRightOrderArr = [];
     const parseArr = pvid.map((x) => x.split(':')[0]);
