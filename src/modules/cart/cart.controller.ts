@@ -83,6 +83,17 @@ export class CartController {
     return this.cartService.clientGetDetailTaobaoItem(getDetailTaobaoItemDto);
   }
 
+  @Put('refreshCart')
+  @Roles(Role.Client)
+  @ApiOperation({
+    operationId: 'refreshClientCart',
+    description: 'Refresh client cart',
+    summary: 'Refresh client cart',
+  })
+  refreshCart(@User(UserDataJwtProperties.USERID) userId: string) {
+    return this.cartService.refreshClientCart(userId);
+  }
+
   @Put(':id')
   @Roles(Role.Client)
   @ApiOperation({
@@ -96,17 +107,6 @@ export class CartController {
     @Body() updateCartItemDto: UpdateCartItemDto,
   ) {
     return this.cartService.clientUpdateCartItem(updateCartItemDto, userId, id);
-  }
-
-  @Put('refreshCart')
-  @Roles(Role.Client)
-  @ApiOperation({
-    operationId: 'refreshClientCart',
-    description: 'Refresh client cart',
-    summary: 'Refresh client cart',
-  })
-  refreshCart(@User(UserDataJwtProperties.USERID) userId: string) {
-    return this.cartService.refreshClientCart(userId);
   }
 
   @Get('calculateSummaryCart')

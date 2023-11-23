@@ -23,6 +23,6 @@ IOrderSchema.add({
   userId: { type: String, required: true },
   status: { type: String, required: true },
   address: { type: Object, required: true },
-  wareHouseAddress: { type: String, required: true },
+  wareHouseAddress: { type: String, required: false },
   total: { type: Number, required: true },
 });

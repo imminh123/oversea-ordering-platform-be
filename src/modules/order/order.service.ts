@@ -62,7 +62,7 @@ export class OrderService {
     }: {
       listItem: Partial<ICart>[];
       address: IAddress;
-      wareHouseAddress: string;
+      wareHouseAddress?: string;
     },
     userId: string,
   ) {

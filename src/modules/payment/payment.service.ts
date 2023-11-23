@@ -63,6 +63,7 @@ export class PaymentService {
     const paymentGatewayRequest =
       await this.vnpayService.getVnpayPaymentGatewayRequest({
         ...createPurchaseDto,
+        transactionId: transaction.id,
       });
     const response = db2api<ITransactionDocument, ITransaction>(transaction);
     return {
@@ -81,12 +82,16 @@ export class PaymentService {
     if (!transaction) {
       throw new BadRequestException('Transaction with referenceId not exits');
     }
+    const incomingStatus =
+      payload.status === PaymentStatus.SUCCEEDED
+        ? OrderStatus.DELIVERED
+        : OrderStatus.PENDING_PAYMENT;
     return Promise.all([
       this.transactionRepository.updateById(transaction.id, {
         ...payload,
       }),
       this.orderService.updateOrderStatus(transaction.referenceId, {
-        status: OrderStatus.DELIVERED,
+        status: incomingStatus,
       }),
     ]);
   }

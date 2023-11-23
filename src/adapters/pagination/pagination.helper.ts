@@ -17,7 +17,10 @@ export enum PaginationMetadataStyle {
 
 @Injectable()
 export class PaginationHeaderHelper {
-  public getHeaders(pagination: IPagination, totalCount: number): IPaginationHeader {
+  public getHeaders(
+    pagination: IPagination,
+    totalCount: number,
+  ): IPaginationHeader {
     if (!pagination) {
       return;
     }
@@ -36,7 +39,10 @@ export class PaginationHeaderHelper {
   }
 }
 
-export const getHeaders = (pagination: IPagination, totalCount: number): IPaginationHeader => {
+export const getHeaders = (
+  pagination: IPagination,
+  totalCount: number,
+): IPaginationHeader => {
   if (!pagination) {
     return;
   }
@@ -54,7 +60,10 @@ export const getHeaders = (pagination: IPagination, totalCount: number): IPagina
   };
 };
 
-export const createPagination = (page: number, perPage: number): IPagination => {
+export const createPagination = (
+  page: number,
+  perPage: number,
+): IPagination => {
   page = +page || 1;
   perPage = +perPage || 20;
 

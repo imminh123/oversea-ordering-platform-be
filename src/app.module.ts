@@ -10,6 +10,7 @@ import { VariablesModule } from './modules/variables/variables.module';
 import { OrderModule } from './modules/order/order.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { AddressModule } from './modules/address/address.module';
+import { TaobaoModule } from './externalModules/taobao/taobao.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { AddressModule } from './modules/address/address.module';
     OrderModule,
     PaymentModule,
     AddressModule,
+    TaobaoModule,
   ],
   providers: [
     {

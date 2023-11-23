@@ -2,6 +2,8 @@
 import { Injectable } from '@nestjs/common';
 import { ItemDetailInfo } from './taobao.interface';
 import { ApiTaobaoService } from './apiTaobao.service';
+import { db2api } from '../../shared/helpers';
+import { getHeaders } from '../../adapters/pagination/pagination.helper';
 
 @Injectable()
 export class TaobaoService {
@@ -44,9 +46,8 @@ export class TaobaoService {
     skuId?: string,
   ): Promise<ItemDetailInfo> {
     const item = await this.apiTaobaoService.getItemDetailFromTaobaoV2(
-      '646821454917',
+      String(itemId),
     );
-    console.log(item);
     let skuItem = {};
     if (item.skus && item.sku_props) {
       if (skuId) {
@@ -67,6 +68,30 @@ export class TaobaoService {
       sale_price: item.skus[0].price,
       ...skuItem,
     };
+  }
+
+  async directSearchItemTaobao(id: string, page: number) {
+    const listItems = await this.apiTaobaoService.searchItemTaobao(id, page);
+    const {
+      result: {
+        resultList: items,
+        base: { pageSize: perPage, totalResults: listLength },
+      },
+    } = listItems;
+    const responseHeader = getHeaders({ page, perPage }, listLength);
+
+    return {
+      items,
+      headers: responseHeader,
+    };
+  }
+
+  async directGetDetailItemV1(id: number) {
+    return this.apiTaobaoService.getItemDetailFromTaobao(id);
+  }
+
+  async directGetDetailItemV2(id: string) {
+    return this.apiTaobaoService.getItemDetailFromTaobaoV2(id);
   }
 
   private getPvIdInRightOrder(pvid: string[], item): string {
