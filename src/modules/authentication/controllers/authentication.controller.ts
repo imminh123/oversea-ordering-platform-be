@@ -29,6 +29,7 @@ import {
   UserDataJwtProperties,
 } from '../../../decorators/user.decorator';
 import { OAuthService } from '../oauth.service';
+import { SkipJwtAuth } from '../../../decorators/skip_jwt_auth';
 
 @Controller('authentication')
 @ApiTags('authentication')
@@ -47,6 +48,17 @@ export class AuthenticationController {
   })
   create(@Body() createUserDto: CreateUserDto) {
     return this.authenticationService.createUser(createUserDto);
+  }
+
+  @Post('register/:token')
+  @ApiOperation({
+    operationId: 'activeAccount',
+    description: 'Active registered account',
+    summary: 'Active registered account',
+  })
+  @SkipJwtAuth()
+  activeAccount(@Param('token') token: string) {
+    return this.authenticationService.registerUser(token);
   }
 
   @Roles(Role.Client)

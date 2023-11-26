@@ -14,6 +14,7 @@ export interface DetailItem {
   skuId?: string;
   propName?: string;
   vnCost: number;
+  cartId?: string;
 }
 export interface IOrder {
   listItem: DetailItem[];

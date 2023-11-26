@@ -8,9 +8,6 @@ import { OAuthClient, fbApiUrl, getOauthConfig } from './authentication.const';
 import { HttpService } from '@nestjs/axios';
 import { OAuth2Client } from 'google-auth-library';
 import { getParamString } from '../../shared/helpers';
-import * as http from 'http';
-import * as open from 'open';
-import * as url from 'url';
 
 const googleConfig = getOauthConfig().google;
 const googleClient = new OAuth2Client(

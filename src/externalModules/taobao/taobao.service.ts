@@ -1,5 +1,5 @@
 /* istanbul ignore file */
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ItemDetailInfo } from './taobao.interface';
 import { ApiTaobaoService } from './apiTaobao.service';
 import { db2api } from '../../shared/helpers';
@@ -87,11 +87,19 @@ export class TaobaoService {
   }
 
   async directGetDetailItemV1(id: number) {
-    return this.apiTaobaoService.getItemDetailFromTaobao(id);
+    const item = await this.apiTaobaoService.getItemDetailFromTaobao(id);
+    if (!item) {
+      throw new BadRequestException('Not found item with given Id');
+    }
+    return item;
   }
 
   async directGetDetailItemV2(id: string) {
-    return this.apiTaobaoService.getItemDetailFromTaobaoV2(id);
+    const item = await this.apiTaobaoService.getItemDetailFromTaobaoV2(id);
+    if (!item) {
+      throw new BadRequestException('Not found item with given Id');
+    }
+    return item;
   }
 
   private getPvIdInRightOrder(pvid: string[], item): string {

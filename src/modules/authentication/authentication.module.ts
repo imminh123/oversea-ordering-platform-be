@@ -8,11 +8,13 @@ import { AuthenticationRepository } from './authentication.repository';
 import { HttpModule } from '@nestjs/axios';
 import { OAuthService } from './oauth.service';
 import { SessionController } from './controllers/session.controller';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: DbModel.Auth, schema: IAuthSchema }]),
     HttpModule,
+    MailModule,
   ],
   controllers: [AuthenticationController, SessionController],
   providers: [AuthenticationService, AuthenticationRepository, OAuthService],

@@ -7,6 +7,7 @@ import { ITransactionSchema } from './payment.schema';
 import { VnpayModule } from '../../externalModules/vnpay/vnpay.module';
 import { TransactionRepository } from './payment.repository';
 import { OrderModule } from '../order/order.module';
+import { CartModule } from '../cart/cart.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { OrderModule } from '../order/order.module';
     ]),
     VnpayModule,
     forwardRef(() => OrderModule),
+    forwardRef(() => CartModule),
   ],
   controllers: [PaymentController],
   providers: [PaymentService, TransactionRepository],

@@ -22,6 +22,7 @@ import { OrderService } from '../order/order.service';
 import { OrderStatus } from '../order/order.enum';
 import { IPagination } from '../../adapters/pagination/pagination.interface';
 import { getHeaders } from '../../adapters/pagination/pagination.helper';
+import { CartService } from '../cart/cart.service';
 
 @Injectable()
 export class PaymentService {
@@ -30,6 +31,8 @@ export class PaymentService {
     private readonly transactionRepository: TransactionRepository,
     @Inject(forwardRef(() => OrderService))
     private readonly orderService: OrderService,
+    @Inject(forwardRef(() => CartService))
+    private readonly cartService: CartService,
   ) {}
   async purchase(
     createPurchaseDto: PurchaseDto,
@@ -86,6 +89,13 @@ export class PaymentService {
       payload.status === PaymentStatus.SUCCEEDED
         ? OrderStatus.DELIVERED
         : OrderStatus.PENDING_PAYMENT;
+    const order = await this.orderService.getOrderById(transaction.referenceId);
+    const ids = [];
+    if (payload.status === PaymentStatus.SUCCEEDED) {
+      for (const item of order.listItem) {
+        ids.push(item.cartId);
+      }
+    }
     return Promise.all([
       this.transactionRepository.updateById(transaction.id, {
         ...payload,
@@ -93,6 +103,7 @@ export class PaymentService {
       this.orderService.updateOrderStatus(transaction.referenceId, {
         status: incomingStatus,
       }),
+      this.cartService.delete(ids),
     ]);
   }
 

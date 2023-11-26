@@ -16,6 +16,7 @@ const DetailItem = {
   currency: { type: String, required: true, default: 'CNY' },
   propId: { type: String, required: false },
   propName: { type: String, required: false },
+  cartId: { type: String, required: true },
 };
 
 IOrderSchema.add({

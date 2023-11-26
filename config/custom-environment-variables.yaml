@@ -10,6 +10,9 @@ server:
   hostname: SERVER_HOSTNAME
   swaggerSchema: SWAGGER_SCHEMA
 
+client:
+  host: CLIENT_HOST
+
 firebase:
   projectId: FIREBASE_PROJECT_ID
   privateKey: FIREBASE_PRIVATE_KEY
@@ -35,3 +38,6 @@ vnpay:
   merchantCode: MERCHANT_CODE
   hash: MERCHANT_HASH
   endpoint: VNP_ENDPOINT
+mail:
+  apiKey: MAILJET_API_KEY
+  secretKey: MAILJET_SECRET_KEY

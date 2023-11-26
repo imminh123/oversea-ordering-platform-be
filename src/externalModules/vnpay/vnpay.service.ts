@@ -28,8 +28,7 @@ export class VnpayService {
     request.vnp_Amount = new Decimal(params.amount).mul(100).toDP(0).toString();
     request.vnp_OrderType = 'other';
     request.vnp_ReturnUrl =
-      params.returnUrl ||
-      'https://sandbox.vnpayment.vn/tryitnow/Home/VnPayReturn';
+      params.returnUrl || 'https://app.mby.vn/order-success.html';
     request.vnp_IpAddr = params.ipAddr || maskRequestVnpay.ipAddress;
     request.vnp_CreateDate = createTimeStringWithFormat(
       new Date(),

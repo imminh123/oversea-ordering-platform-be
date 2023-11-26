@@ -21,4 +21,7 @@ IAuthSchema.add({
   ward: { type: String, required: false },
   avatar: { type: String, required: false },
   isActive: { type: Boolean, required: true, default: true },
+  registerToken: { type: String, required: false },
+  resetPasswordToken: { type: String, required: false },
+  resetPasswordSentAt: { type: Date, required: false },
 });
