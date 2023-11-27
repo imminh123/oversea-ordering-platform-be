@@ -5,7 +5,6 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  ValidateNested,
 } from 'class-validator';
 
 export class CreateOrderDto {
@@ -26,11 +25,10 @@ export class CreateOrderDto {
   addressId: string;
 
   @IsString()
-  @IsNotEmpty()
   @IsOptional()
   @ApiProperty({
     type: String,
     example: '',
   })
-  wareHouseAddress: string;
+  wareHouseAddress?: string;
 }
