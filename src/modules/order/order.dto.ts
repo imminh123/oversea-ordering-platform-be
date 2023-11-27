@@ -1,25 +1,21 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
 import {
   ArrayNotEmpty,
   IsArray,
   IsNotEmpty,
+  IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { AddItemToCartDto } from '../cart/cart.dto';
-import { mockItem } from './order.enum';
 
 export class CreateOrderDto {
   @IsArray()
   @ArrayNotEmpty()
-  @ValidateNested({ each: true })
-  @Type(() => AddItemToCartDto)
   @ApiProperty({
     type: Array,
-    example: [mockItem],
+    example: [],
   })
-  listItem: AddItemToCartDto[];
+  listItemId: string[];
 
   @IsString()
   @IsNotEmpty()
@@ -27,10 +23,11 @@ export class CreateOrderDto {
     type: String,
     example: 'def',
   })
-  address: string;
+  addressId: string;
 
   @IsString()
   @IsNotEmpty()
+  @IsOptional()
   @ApiProperty({
     type: String,
     example: '',

@@ -1,4 +1,4 @@
-import { getBaseSchema } from '../database/database.helpers';
+import { getBaseSchema } from '../../shared/database/database.helpers';
 import { ICartDocument } from './cart.interface';
 
 export const ICartSchema = getBaseSchema<ICartDocument>();
@@ -14,7 +14,7 @@ ICartSchema.add({
   price: { type: Number, required: true },
   image: { type: [String], required: false },
   currency: { type: String, required: true, default: 'CNY' },
-  propId: { type: String, required: false },
+  skuId: { type: String, required: false },
   propName: { type: String, required: false },
   isActive: { type: Boolean, required: true, default: true },
   userId: { type: String, required: true },

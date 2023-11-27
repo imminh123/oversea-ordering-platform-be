@@ -1,14 +1,14 @@
 import { MongooseModuleOptions } from '@nestjs/mongoose';
 import * as BPromise from 'bluebird';
 import * as jsonWebToken from 'jsonwebtoken';
-import { getConfig } from '../modules/config/config.provider';
+import { getConfig } from './config/config.provider';
 import { Decimal128, ObjectId } from 'bson';
 import * as _ from 'lodash';
 import { Model } from 'mongoose';
 import * as moment from 'moment-timezone';
 import { DEFAULT_TIMEZONE } from './constant';
 import { BadRequestException } from '@nestjs/common';
-import { Errors } from '../modules/errors/errors';
+import { Errors } from './errors/errors';
 
 const jwt = BPromise.promisifyAll(jsonWebToken);
 

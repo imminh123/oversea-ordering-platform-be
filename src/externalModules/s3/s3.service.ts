@@ -9,7 +9,7 @@ import {
 import { S3 } from 'aws-sdk';
 import { Promise } from 'bluebird';
 import { Stream } from 'stream';
-import { getConfig } from '../../modules/config/config.provider';
+import { getConfig } from '../../shared/config/config.provider';
 import { getAwsConfig, S3_BUCKET } from './s3.config';
 
 const config = getConfig();

@@ -7,9 +7,15 @@ import {
   Put,
   Query,
   Delete,
+  Param,
 } from '@nestjs/common';
 import { CartService } from './cart.service';
-import { AddItemToCartDto, GetSummaryCartDto } from './cart.dto';
+import {
+  AddItemToCartDto,
+  GetDetailTaobaoItemDto,
+  GetSummaryCartDto,
+  UpdateCartItemDto,
+} from './cart.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { User, UserDataJwtProperties } from '../../decorators/user.decorator';
 import { CommonQueryRequest } from '../../shared/swagger.helper';
@@ -55,6 +61,28 @@ export class CartController {
     return this.cartService.clientGetCart(userId, pagination);
   }
 
+  @Get('v2')
+  @Roles(Role.Client)
+  @ApiOperation({
+    operationId: 'clientGetCartV2',
+    description: 'Client get cart v2',
+    summary: 'Client get cart v2',
+  })
+  clientGetCartV2(@User(UserDataJwtProperties.USERID) userId: string) {
+    return this.cartService.clientGetCartV2(userId);
+  }
+
+  @Get('getTbItem')
+  @Roles(Role.Client)
+  @ApiOperation({
+    operationId: 'clientGetTaobaoItem',
+    description: 'Client get detail taobao item',
+    summary: 'Client get detail taobao item',
+  })
+  clientGetTaobaoItem(@Query() getDetailTaobaoItemDto: GetDetailTaobaoItemDto) {
+    return this.cartService.clientGetDetailTaobaoItem(getDetailTaobaoItemDto);
+  }
+
   @Put('refreshCart')
   @Roles(Role.Client)
   @ApiOperation({
@@ -64,6 +92,21 @@ export class CartController {
   })
   refreshCart(@User(UserDataJwtProperties.USERID) userId: string) {
     return this.cartService.refreshClientCart(userId);
+  }
+
+  @Put(':id')
+  @Roles(Role.Client)
+  @ApiOperation({
+    operationId: 'clientUpdateCartItem',
+    description: 'Client update cart item',
+    summary: 'Client update cart item',
+  })
+  updateCartItem(
+    @User(UserDataJwtProperties.USERID) userId: string,
+    @Param('id') id: string,
+    @Body() updateCartItemDto: UpdateCartItemDto,
+  ) {
+    return this.cartService.clientUpdateCartItem(updateCartItemDto, userId, id);
   }
 
   @Get('calculateSummaryCart')

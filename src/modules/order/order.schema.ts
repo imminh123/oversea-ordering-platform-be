@@ -1,4 +1,4 @@
-import { getBaseSchema } from '../database/database.helpers';
+import { getBaseSchema } from '../../shared/database/database.helpers';
 import { IOrderDocument } from './order.interface';
 
 export const IOrderSchema = getBaseSchema<IOrderDocument>();
@@ -16,13 +16,14 @@ const DetailItem = {
   currency: { type: String, required: true, default: 'CNY' },
   propId: { type: String, required: false },
   propName: { type: String, required: false },
+  cartId: { type: String, required: true },
 };
 
 IOrderSchema.add({
   listItem: { type: [DetailItem], required: true },
   userId: { type: String, required: true },
   status: { type: String, required: true },
-  address: { type: String, required: true },
-  wareHouseAddress: { type: String, required: true },
+  address: { type: Object, required: true },
+  wareHouseAddress: { type: String, required: false },
   total: { type: Number, required: true },
 });

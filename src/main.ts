@@ -6,7 +6,7 @@ import { AppModule } from './app.module';
 import { initializeSwagger } from './shared/swagger.helper';
 import * as config from 'config';
 import { INestApplication, Logger, ValidationPipe } from '@nestjs/common';
-import { getHost } from './modules/config/config.provider';
+import { getHost } from './shared/config/config.provider';
 import { createLightship } from 'lightship';
 import * as responseTime from 'response-time';
 import * as express from 'express';

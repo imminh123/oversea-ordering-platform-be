@@ -3,7 +3,7 @@ import { OrderRepository } from './order.repository';
 import { CreateOrderDto } from './order.dto';
 import { TaobaoService } from '../../externalModules/taobao/taobao.service';
 import { VariablesService } from '../variables/variables.service';
-import { Errors } from '../errors/errors';
+import { Errors } from '../../shared/errors/errors';
 import { ItemDetailInfo } from '../../externalModules/taobao/taobao.interface';
 import { DetailItem, IOrder, IOrderDocument } from './order.interface';
 import Decimal from 'decimal.js';
@@ -15,6 +15,10 @@ import { PaymentService } from '../payment/payment.service';
 import { PurchaseDto } from '../payment/payment.dto';
 import { IPagination } from '../../adapters/pagination/pagination.interface';
 import { getHeaders } from '../../adapters/pagination/pagination.helper';
+import { AddressService } from '../address/address.service';
+import { CartService } from '../cart/cart.service';
+import { IAddress } from '../address/address.interface';
+import { ICartDocument } from '../cart/cart.interface';
 
 @Injectable()
 export class OrderService {
@@ -23,9 +27,21 @@ export class OrderService {
     private readonly tbService: TaobaoService,
     private readonly variablesService: VariablesService,
     private readonly paymentService: PaymentService,
+    private readonly addressService: AddressService,
+    private readonly cartService: CartService,
   ) {}
   async createOrderAndPay(createOrderDto: CreateOrderDto, userId: string) {
-    const order = await this.createOrder(createOrderDto, userId);
+    const address = await this.addressService.getDocumentById(
+      createOrderDto.addressId,
+    );
+    const listItem = [];
+    listItem.push(
+      ...(await this.cartService.getListCartItem(createOrderDto.listItemId)),
+    );
+    const order = await this.createOrder(
+      { ...createOrderDto, address, listItem },
+      userId,
+    );
     const paymentPayload: PurchaseDto = {
       amount: order.total,
       referenceId: order.id,
@@ -39,7 +55,15 @@ export class OrderService {
   }
 
   async createOrder(
-    { listItem, address, wareHouseAddress }: CreateOrderDto,
+    {
+      listItem,
+      address,
+      wareHouseAddress,
+    }: {
+      listItem: Partial<ICartDocument>[];
+      address: IAddress;
+      wareHouseAddress?: string;
+    },
     userId: string,
   ) {
     const listProduct = [];
@@ -48,7 +72,10 @@ export class OrderService {
       Variables.EXCHANGE_RATE,
     );
     for (const item of listItem) {
-      const tbItem = await this.tbService.getItemDetailById(item.id, item.pvid);
+      const tbItem = await this.tbService.getItemDetailById(
+        item.itemId,
+        item.skuId,
+      );
       if (!tbItem) {
         throw new BadRequestException({
           ...Errors.TAOBAO_ITEM_WITH_GIVEN_ID_NOT_EXITS,
@@ -57,9 +84,10 @@ export class OrderService {
       }
       const orderItem = this.convertResponseFromTaobaoItem({
         item: tbItem,
-        volume: item.volume,
+        volume: item.quantity,
         rate,
       });
+      orderItem.cartId = item.id;
       listProduct.push(orderItem);
       total = total.add(orderItem.vnCost);
     }
@@ -133,7 +161,7 @@ export class OrderService {
         .mul(rate)
         .toDP(2)
         .toNumber(),
-      propId: item.props_ids,
+      skuId: item.skuid,
       propName: item.props_names,
     };
   }

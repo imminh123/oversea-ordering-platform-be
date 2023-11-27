@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { DbModel } from '../../shared/constant';
 import { Model } from 'mongoose';
 import { IAuthDocument } from './authentication.interface';
-import { BaseRepository } from '../database/base-repository';
+import { BaseRepository } from '../../shared/database/base-repository';
 
 export class AuthenticationRepository
   extends BaseRepository<IAuthDocument>

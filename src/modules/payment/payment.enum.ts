@@ -1,4 +1,4 @@
-import { getConfig } from '../config/config.provider';
+import { getConfig } from '../../shared/config/config.provider';
 
 export enum PaymentStatus {
   SUCCEEDED = 'succeeded',

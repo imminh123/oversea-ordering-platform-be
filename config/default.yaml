@@ -18,7 +18,8 @@ mongodb:
 
 jwtPrivateKey: privateKey
 
-tmApiToken:
+tmApiToken: ''
+rapidApiToken: ''
 vnpay:
   merchantCode:
   hash:

@@ -4,7 +4,7 @@ import mongoose, {
   Schema,
   QueryOptions,
 } from 'mongoose';
-import { convertObject } from '../../shared/helpers';
+import { convertObject } from '../helpers';
 import { Decimal128 } from 'bson';
 
 declare type DocumentSaveCallback<T> = (err: any, doc: T) => void;

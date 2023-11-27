@@ -1,4 +1,4 @@
-import { BaseDocument } from '../database/database.helpers';
+import { BaseDocument } from '../../shared/database/database.helpers';
 import { OrderStatus } from './order.enum';
 
 export interface DetailItem {
@@ -11,15 +11,16 @@ export interface DetailItem {
   quantity: number;
   price: number;
   currency?: string;
-  propId?: string;
+  skuId?: string;
   propName?: string;
   vnCost: number;
+  cartId?: string;
 }
 export interface IOrder {
   listItem: DetailItem[];
   userId: string;
   status: OrderStatus;
-  address: string;
+  address: any;
   wareHouseAddress: string;
   total: number;
 }

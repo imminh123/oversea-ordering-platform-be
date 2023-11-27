@@ -9,4 +9,5 @@ export interface ItemDetailInfo {
   props_names?: string;
   props_ids?: string;
   sale_price: string;
+  skuid: string;
 }

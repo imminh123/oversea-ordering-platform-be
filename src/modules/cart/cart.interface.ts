@@ -1,4 +1,4 @@
-import { BaseDocument } from '../database/database.helpers';
+import { BaseDocument } from '../../shared/database/database.helpers';
 
 export interface ICart {
   itemId: number;
@@ -11,7 +11,7 @@ export interface ICart {
   price: number;
   image: string[];
   currency?: string;
-  propId?: string;
+  skuId?: string;
   propName?: string;
   isActive: boolean;
   userId: string;

@@ -1,5 +1,5 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
-import { DatabaseModule } from './modules/database/database.module';
+import { DatabaseModule } from './shared/database/database.module';
 import { AuthenticationModule } from './modules/authentication/authentication.module';
 import { UserMiddleware } from './middleware/user.middleware';
 import { APP_GUARD } from '@nestjs/core';
@@ -9,6 +9,9 @@ import { CartModule } from './modules/cart/cart.module';
 import { VariablesModule } from './modules/variables/variables.module';
 import { OrderModule } from './modules/order/order.module';
 import { PaymentModule } from './modules/payment/payment.module';
+import { AddressModule } from './modules/address/address.module';
+import { TaobaoModule } from './externalModules/taobao/taobao.module';
+import { MailModule } from './modules/mail/mail.module';
 
 @Module({
   imports: [
@@ -19,6 +22,9 @@ import { PaymentModule } from './modules/payment/payment.module';
     VariablesModule,
     OrderModule,
     PaymentModule,
+    AddressModule,
+    TaobaoModule,
+    MailModule,
   ],
   providers: [
     {

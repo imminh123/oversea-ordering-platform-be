@@ -3,12 +3,16 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { AddItemToCartDto } from './cart.dto';
+import {
+  AddItemToCartDto,
+  GetDetailTaobaoItemDto,
+  UpdateCartItemDto,
+} from './cart.dto';
 import { TaobaoService } from '../../externalModules/taobao/taobao.service';
 import { ICart, ICartDocument } from './cart.interface';
 import Decimal from 'decimal.js';
 import { CartRepository } from './cart.repository';
-import { Errors } from '../errors/errors';
+import { Errors } from '../../shared/errors/errors';
 import {
   IPagination,
   IPaginationHeader,
@@ -29,10 +33,10 @@ export class CartService {
     private readonly variablesService: VariablesService,
   ) {}
   async addItemToClientCart(
-    { id, pvid, volume }: AddItemToCartDto,
+    { id, pvid, volume, skuId }: AddItemToCartDto,
     userId: string,
   ): Promise<ICart> {
-    const item = await this.tbService.getItemDetailById(id, pvid);
+    const item = await this.tbService.getItemDetailById(id, pvid, skuId);
     if (!item) {
       throw new BadRequestException({
         ...Errors.TAOBAO_ITEM_WITH_GIVEN_ID_NOT_EXITS,
@@ -45,7 +49,7 @@ export class CartService {
       userId,
     });
     const findItem = await this.cartRepository.findOne(
-      { userId, itemId: cartItem.itemId, propId: cartItem.propId },
+      { userId, itemId: cartItem.itemId, skuId: cartItem.skuId },
       { sort: { createdAt: -1 } },
     );
 
@@ -74,7 +78,7 @@ export class CartService {
         continue;
       }
       const item = await this.cartRepository.findOne(
-        { itemId: cartItem.itemId, propId: cartItem.propId },
+        { itemId: cartItem.itemId, skuId: cartItem.skuId },
         { sort: { updatedAt: -1 } },
       );
       if (item && isAfter(item.updatedAt, current, 60)) {
@@ -87,7 +91,8 @@ export class CartService {
       }
       const newItem = await this.tbService.getItemDetailById(
         cartItem.itemId,
-        cartItem.propId,
+        undefined,
+        cartItem.skuId,
       );
       cartItem.updatedAt = current;
       if (!newItem) {
@@ -99,12 +104,25 @@ export class CartService {
       cartItem.propName = newItem.props_names;
       cartItem.save();
     }
+    const rate = await this.variablesService.getVariable(
+      Variables.EXCHANGE_RATE,
+    );
+    if (!rate) {
+      throw new NotFoundException('Can not get exchange rate');
+    }
+    const itemsResponse: any[] = [];
+    for (const item of db2api<ICartDocument[], ICart[]>(cart)) {
+      itemsResponse.push({
+        ...item,
+        vnPrice: new Decimal(item.price).mul(rate).toDP(3).toString(),
+      });
+    }
 
     const cartLength = await this.cartRepository.count({ userId });
     const responseHeader = getHeaders(pagination, cartLength);
 
     return {
-      items: db2api<ICartDocument[], ICart[]>(cart),
+      items: itemsResponse,
       headers: responseHeader,
     };
   }
@@ -120,7 +138,8 @@ export class CartService {
     for (const cartItem of cart) {
       const item = await this.tbService.getItemDetailById(
         cartItem.itemId,
-        cartItem.propId,
+        undefined,
+        cartItem.skuId,
       );
       if (!item) {
         listUpdateVoid.push(
@@ -181,6 +200,90 @@ export class CartService {
     return this.cartRepository.delete({ _id: { $in: arr } });
   }
 
+  async clientUpdateCartItem(
+    updateCartItemDto: UpdateCartItemDto,
+    userId: string,
+    id: string,
+  ) {
+    const findParam: any = { userId, _id: new ObjectId(id) };
+    const item = await this.cartRepository.findOne(findParam);
+    if (!item) {
+      throw new BadRequestException(
+        'Not found item with given id belong to client',
+      );
+    }
+
+    if (!item.isActive) {
+      throw new BadRequestException('This item is currently unavailable');
+    }
+
+    return this.cartRepository.updateById(id, { ...updateCartItemDto });
+  }
+
+  async clientGetDetailTaobaoItem({ id }: GetDetailTaobaoItemDto) {
+    return this.tbService.getItemDetailById(610980984514);
+    // return this.tbService.searchItem('phone', 1);
+  }
+
+  async getListCartItem(ids: string[]): Promise<ICartDocument[]> {
+    ids.map((item) => new ObjectId(item));
+    return this.cartRepository.find({ _id: { $in: ids } });
+  }
+
+  async clientGetCartV2(userId: string) {
+    const cart = await this.cartRepository.getClientCart(userId);
+    const rate = await this.variablesService.getVariable(
+      Variables.EXCHANGE_RATE,
+    );
+    if (!rate) {
+      throw new NotFoundException('Can not get exchange rate');
+    }
+    const current = new Date();
+    for (const { listItem } of cart) {
+      for (const cartItem of listItem) {
+        cartItem.vnPrice = new Decimal(cartItem.price)
+          .mul(rate)
+          .toDP(3)
+          .toString();
+        if (isAfter(cartItem.updatedAt, current, 60)) {
+          continue;
+        }
+        const item = await this.cartRepository.findOne(
+          { itemId: cartItem.itemId, skuId: cartItem.skuId },
+          { sort: { updatedAt: -1 } },
+        );
+        if (item && isAfter(item.updatedAt, current, 60)) {
+          cartItem.updatedAt = item.updatedAt;
+          cartItem.price = item.price;
+          cartItem.propName = item.propName;
+          cartItem.isActive = item.isActive;
+          cartItem.vnPrice = new Decimal(item.price)
+            .mul(rate)
+            .toDP(3)
+            .toString();
+          this.cartRepository.updateById(cartItem.id, cartItem);
+          continue;
+        }
+        const newItem = await this.tbService.getItemDetailById(
+          cartItem.itemId,
+          undefined,
+          cartItem.skuId,
+        );
+        cartItem.updatedAt = current;
+        if (!newItem) {
+          cartItem.isActive = false;
+          this.cartRepository.updateById(cartItem.id, cartItem);
+          continue;
+        }
+        cartItem.price = new Decimal(newItem.sale_price).toNumber();
+        cartItem.propName = newItem.props_names;
+        cartItem.vnPrice = new Decimal(item.price).mul(rate).toDP(3).toString();
+        this.cartRepository.updateById(cartItem.id, cartItem);
+      }
+    }
+    return cart;
+  }
+
   private convertResponseFromTaobaoItem({
     item,
     volume,
@@ -201,7 +304,7 @@ export class CartService {
       price: new Decimal(item.sale_price).toDP(2).toNumber(),
       image: item.main_imgs,
       currency: item.currency,
-      propId: item.props_ids,
+      skuId: item.skuid,
       propName: item.props_names,
       isActive: true,
       userId,

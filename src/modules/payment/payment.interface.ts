@@ -1,4 +1,4 @@
-import { BaseDocument } from '../database/database.helpers';
+import { BaseDocument } from '../../shared/database/database.helpers';
 import { PaymentStatus } from './payment.enum';
 
 export interface ITransaction {
