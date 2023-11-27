@@ -19,5 +19,8 @@ export interface IAuth {
   ward?: string;
   avatar?: string;
   isActive: boolean;
+  registerToken: string;
+  resetPasswordToken: string;
+  resetPasswordSentAt: Date;
 }
 export interface IAuthDocument extends IAuth, BaseDocument {}

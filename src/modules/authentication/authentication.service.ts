@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   CreateSessionTokenDto,
   CreateUserDto,
@@ -22,14 +26,17 @@ import { Role } from '../../shared/constant';
 import { isValidObjectId } from 'mongoose';
 import { OAuthClient, privateKey } from './authentication.const';
 import { OAuthService } from './oauth.service';
-import { IAuth, IAuthDocument } from './authentication.interface';
+import { IAuth } from './authentication.interface';
 import { ObjectId } from 'bson';
+import { v4 as uuidv4 } from 'uuid';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class AuthenticationService {
   constructor(
     private readonly authenticationRepository: AuthenticationRepository,
     private readonly oauthService: OAuthService,
+    private readonly mailService: MailService,
   ) {}
   async createUser(
     createAuthenticationDto: CreateUserDto,
@@ -58,9 +65,27 @@ export class AuthenticationService {
     const newUser = await this.authenticationRepository.create({
       ...createAuthenticationDto,
       password: await bcrypt.hash(password, 10),
+      registerToken: uuidv4(),
+      isActive: false,
       role,
     });
-    return db2api(newUser);
+
+    await this.mailService.sendRequestActiveAccount(newUser);
+
+    return 'SUCCESS';
+  }
+
+  async registerUser(token: string) {
+    const user = await this.authenticationRepository.findOne({
+      registerToken: token,
+    });
+    if (!user) {
+      throw new NotFoundException(`Not found user`);
+    }
+    user.isActive = true;
+    return this.authenticationRepository.updateById(user.id, {
+      ...user,
+    });
   }
 
   async createSession(createSessionDto: CreateSessionTokenDto) {
