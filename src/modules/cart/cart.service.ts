@@ -69,7 +69,7 @@ export class CartService {
       {
         skip: pagination.startIndex,
         limit: pagination.perPage,
-        sort: { createdAt: -1 },
+        sort: { shopName: 1, createdAt: -1 },
       },
     );
     const current = new Date();

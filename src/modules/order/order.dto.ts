@@ -9,7 +9,7 @@ import {
 
 export class CreateOrderDto {
   @IsArray()
-  @ArrayNotEmpty()
+  @ArrayNotEmpty({ message: 'Vui lòng chọn danh sách sản phẩm' })
   @ApiProperty({
     type: Array,
     example: [],
@@ -17,7 +17,7 @@ export class CreateOrderDto {
   listItemId: string[];
 
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Vui lòng chọn địa chỉ giao hàng' })
   @ApiProperty({
     type: String,
     example: 'def',
