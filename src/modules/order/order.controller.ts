@@ -30,11 +30,25 @@ export class OrderController {
     description: 'Client create order and pay',
     summary: 'Client create order and pay',
   })
+  async clientCreateOrderAndPay(
+    @Body() createOrderDto: CreateOrderDto,
+    @User(UserDataJwtProperties.USERID) userId: string,
+  ) {
+    return this.orderService.clientCreateOrderAndPay(createOrderDto, userId);
+  }
+
+  @Post('createOrder')
+  @Roles(Role.Client)
+  @ApiOperation({
+    operationId: 'clientCreateOrder',
+    description: 'Client create order',
+    summary: 'Client create order',
+  })
   async create(
     @Body() createOrderDto: CreateOrderDto,
     @User(UserDataJwtProperties.USERID) userId: string,
   ) {
-    return this.orderService.createOrderAndPay(createOrderDto, userId);
+    return this.orderService.clientCreateOrder(createOrderDto, userId);
   }
 
   @Get()

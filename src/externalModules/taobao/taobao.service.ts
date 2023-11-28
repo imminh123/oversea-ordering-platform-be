@@ -72,6 +72,7 @@ export class TaobaoService {
 
   async directSearchItemTaobao(id: string, page: number) {
     const listItems = await this.apiTaobaoService.searchItemTaobao(id, page);
+    console.log(listItems);
     const {
       result: {
         resultList: items,

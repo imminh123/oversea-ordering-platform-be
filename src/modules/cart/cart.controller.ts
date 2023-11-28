@@ -72,16 +72,16 @@ export class CartController {
     return this.cartService.clientGetCartV2(userId);
   }
 
-  @Get('getTbItem')
-  @Roles(Role.Client)
-  @ApiOperation({
-    operationId: 'clientGetTaobaoItem',
-    description: 'Client get detail taobao item',
-    summary: 'Client get detail taobao item',
-  })
-  clientGetTaobaoItem(@Query() getDetailTaobaoItemDto: GetDetailTaobaoItemDto) {
-    return this.cartService.clientGetDetailTaobaoItem(getDetailTaobaoItemDto);
-  }
+  // @Get('getTbItem')
+  // @Roles(Role.Client)
+  // @ApiOperation({
+  //   operationId: 'clientGetTaobaoItem',
+  //   description: 'Client get detail taobao item',
+  //   summary: 'Client get detail taobao item',
+  // })
+  // clientGetTaobaoItem(@Query() getDetailTaobaoItemDto: GetDetailTaobaoItemDto) {
+  //   return this.cartService.clientGetDetailTaobaoItem(getDetailTaobaoItemDto);
+  // }
 
   @Put('refreshCart')
   @Roles(Role.Client)
