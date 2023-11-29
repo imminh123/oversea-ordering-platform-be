@@ -31,11 +31,10 @@ export class CreateAddressDto {
   mail?: string;
 
   @IsString()
-  @IsNotEmpty()
   @IsOptional()
   @ApiProperty({
     type: String,
-    example: 'def',
+    example: 'Giao giờ hành chính',
     required: false,
   })
   note?: string;
