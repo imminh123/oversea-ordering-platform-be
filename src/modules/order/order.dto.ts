@@ -5,12 +5,11 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  ValidateNested,
 } from 'class-validator';
 
 export class CreateOrderDto {
   @IsArray()
-  @ArrayNotEmpty()
+  @ArrayNotEmpty({ message: 'Vui lòng chọn danh sách sản phẩm' })
   @ApiProperty({
     type: Array,
     example: [],
@@ -18,7 +17,7 @@ export class CreateOrderDto {
   listItemId: string[];
 
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Vui lòng chọn địa chỉ giao hàng' })
   @ApiProperty({
     type: String,
     example: 'def',
@@ -26,11 +25,10 @@ export class CreateOrderDto {
   addressId: string;
 
   @IsString()
-  @IsNotEmpty()
   @IsOptional()
   @ApiProperty({
     type: String,
     example: '',
   })
-  wareHouseAddress: string;
+  wareHouseAddress?: string;
 }
