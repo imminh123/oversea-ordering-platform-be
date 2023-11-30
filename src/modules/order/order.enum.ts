@@ -9,4 +9,5 @@ export enum OrderStatus {
   PENDING_PAYMENT = 'pending_payment',
   DELIVERED = 'delivered',
   SUCCEEDED = 'succeeded',
+  TIMEOUT = 'timeout',
 }

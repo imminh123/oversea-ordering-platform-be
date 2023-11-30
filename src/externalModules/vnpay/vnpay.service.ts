@@ -10,6 +10,7 @@ import {
   LocaleCode,
   maskRequestVnpay,
 } from './vnpay.enum';
+import { returnUrl } from './vnpay.helper';
 
 @Injectable()
 export class VnpayService {
@@ -27,8 +28,7 @@ export class VnpayService {
     request.vnp_OrderInfo = params.orderInfo || '';
     request.vnp_Amount = new Decimal(params.amount).mul(100).toDP(0).toString();
     request.vnp_OrderType = 'other';
-    request.vnp_ReturnUrl =
-      params.returnUrl || 'https://app.mby.vn/order-success.html';
+    request.vnp_ReturnUrl = returnUrl;
     request.vnp_IpAddr = params.ipAddr || maskRequestVnpay.ipAddress;
     request.vnp_CreateDate = createTimeStringWithFormat(
       new Date(),

@@ -38,33 +38,36 @@ export class PaymentService {
     createPurchaseDto: PurchaseDto,
     userId: string,
   ): Promise<{ transaction: ITransaction; paymentGatewayUrl: string }> {
-    const findExitsTransaction = await this.transactionRepository.findOne({
-      referenceId: createPurchaseDto.referenceId,
-    });
-    const order = await this.verifyOrderBeforePurchase(
-      createPurchaseDto.referenceId,
-    );
+    const { order, findExitsTransaction } =
+      await this.verifyOrderBeforePurchase(createPurchaseDto.referenceId);
     let transaction;
-    if (!findExitsTransaction) {
+    if (
+      !findExitsTransaction ||
+      findExitsTransaction.status === PaymentStatus.FAILED
+    ) {
       const transactionPayload = {
         userId,
         referenceId: createPurchaseDto.referenceId,
         amount: order.total,
-        orderInfo: createPurchaseDto.orderInfo,
+        orderInfo: `Pay for order ${order.id}`,
         status: PaymentStatus.PENDING,
       } as ITransaction;
       transaction = await this.transactionRepository.create(transactionPayload);
-      await this.orderService.updateOrderStatus(createPurchaseDto.referenceId, {
-        status: OrderStatus.PENDING_PAYMENT,
-      });
     } else {
       transaction = findExitsTransaction;
     }
+
     const paymentGatewayRequest =
       await this.vnpayService.getVnpayPaymentGatewayRequest({
         ...createPurchaseDto,
+        amount: order.total,
         transactionId: transaction.id,
       });
+    if (order.status === OrderStatus.CREATED) {
+      await this.orderService.updateOrderStatus(createPurchaseDto.referenceId, {
+        status: OrderStatus.PENDING_PAYMENT,
+      });
+    }
     const response = db2api<ITransactionDocument, ITransaction>(transaction);
     return {
       transaction: { ...response },
@@ -142,15 +145,25 @@ export class PaymentService {
   }
   private async verifyOrderBeforePurchase(orderId: string) {
     const order = await this.orderService.getOrderById(orderId);
+    const findExitsTransaction = await this.transactionRepository.findOne({
+      referenceId: orderId,
+    });
     if (
-      [OrderStatus.CREATED, OrderStatus.PENDING_PAYMENT].includes(order.status)
+      ![OrderStatus.CREATED, OrderStatus.PENDING_PAYMENT].includes(order.status)
     ) {
-      throw new BadRequestException('Order already pay');
+      throw new BadRequestException('Can not pay for this order');
     }
     if (!isAfter(order.createdAt, new Date(), 5)) {
+      await this.orderService.updateOrderStatus(orderId, {
+        status: OrderStatus.TIMEOUT,
+      });
+      if (findExitsTransaction) {
+        findExitsTransaction.status = PaymentStatus.FAILED;
+        findExitsTransaction.save();
+      }
       throw new BadRequestException('Order timeout to pay');
     }
-    return order;
+    return { order, findExitsTransaction };
   }
 
   private checkInvalidSignature(completePurchaseDto: CompletePurchaseDto) {

@@ -78,7 +78,6 @@ export class OrderService {
     );
     const paymentPayload: PurchaseDto = {
       referenceId: order.id,
-      orderInfo: `Pay for order ${order.id}`,
     };
     const payment = await this.paymentService.purchase(paymentPayload, userId);
     return {
@@ -175,11 +174,9 @@ export class OrderService {
     listItemId: string[],
   ): Promise<{ address: IAddress; listItem: ICartDocument[] }> {
     const listItem = [];
-    const result = Promise.all([
-      this.addressService.getDocumentById(addressId),
-      listItem.push(this.cartService.getListCartItem(listItemId)),
-    ]);
-    return { address: result[0], listItem: result[1] };
+    const address = await this.addressService.getDocumentById(addressId);
+    listItem.push(...(await this.cartService.getListCartItem(listItemId)));
+    return { address, listItem };
   }
 
   private convertResponseFromTaobaoItem({
@@ -208,7 +205,7 @@ export class OrderService {
         .toNumber(),
       skuId: item.skuid,
       propName: item.props_names,
-      image: item.main_imgs,
+      image: item.main_imgs[0],
     };
   }
 }

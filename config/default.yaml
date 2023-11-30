@@ -24,3 +24,4 @@ vnpay:
   merchantCode:
   hash:
   endpoint:
+  returnUrl: https://app.mby.vn/order-success.html

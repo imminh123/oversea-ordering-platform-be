@@ -91,13 +91,4 @@ export class PurchaseDto {
     required: true,
   })
   referenceId: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @IsOptional()
-  @ApiProperty({
-    type: String,
-    example: '',
-  })
-  orderInfo: string;
 }
