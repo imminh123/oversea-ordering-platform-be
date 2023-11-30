@@ -62,7 +62,6 @@ export class PaymentService {
         ...createPurchaseDto,
         amount: order.total,
         transactionId: transaction.id,
-        orderInfo: `Pay for order ${order.id}`,
       });
     if (order.status === OrderStatus.CREATED) {
       await this.orderService.updateOrderStatus(createPurchaseDto.referenceId, {
