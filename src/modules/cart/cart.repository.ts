@@ -77,6 +77,11 @@ export class CartRepository
             },
           },
         },
+        {
+          $sort: {
+            _id: 1,
+          },
+        },
       ])
       .exec();
   }

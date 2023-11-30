@@ -286,3 +286,12 @@ export function createTimeStringWithFormat(
   }
   return res.toISOString();
 }
+
+export function addTime(
+  date: Date | string,
+  amount: number,
+  unit: moment.unitOfTime.DurationConstructor,
+  tz = DEFAULT_TIMEZONE,
+) {
+  return moment(new Date(date)).add(amount, unit).tz(tz).toDate();
+}
