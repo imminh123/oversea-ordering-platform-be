@@ -17,10 +17,7 @@ export class CartRepository
     await this.createCollection();
   }
 
-  async getClientCart(
-    userId: string,
-    arr: any[],
-  ): Promise<
+  async getClientCart(userId: string): Promise<
     {
       _id: string;
       shopName: string;
@@ -45,7 +42,6 @@ export class CartRepository
         {
           $match: {
             userId,
-            _id: { $in: arr },
           },
         },
         {

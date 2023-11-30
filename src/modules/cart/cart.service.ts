@@ -6,7 +6,6 @@ import {
 import {
   AddItemToCartDto,
   GetDetailTaobaoItemDto,
-  GetSummaryCartDto,
   UpdateCartItemDto,
 } from './cart.dto';
 import { TaobaoService } from '../../externalModules/taobao/taobao.service';
@@ -221,16 +220,8 @@ export class CartService {
     return this.cartRepository.find({ _id: { $in: ids } });
   }
 
-  async clientGetCartV2({ ids }: GetSummaryCartDto, userId: string) {
-    const arr = [];
-    if (ids && ids.length > 0) {
-      for (const id of ids) {
-        if (isValidObjectId(id)) {
-          arr.push(new ObjectId(id));
-        }
-      }
-    }
-    const cart = await this.cartRepository.getClientCart(userId, arr);
+  async clientGetCartV2(userId: string) {
+    const cart = await this.cartRepository.getClientCart(userId);
     const rate = await this.variablesService.getVariable(
       Variables.EXCHANGE_RATE,
     );
