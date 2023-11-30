@@ -1,5 +1,5 @@
 /* istanbul ignore file */
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { getConfig } from '../../shared/config/config.provider';
 import axios from 'axios';
 import { EndpointEnum, SortOption } from './taobao.enum';
@@ -7,6 +7,12 @@ import { EndpointEnum, SortOption } from './taobao.enum';
 const config = getConfig();
 const tmApiToken = config.get('tmApiToken');
 const rapidApiKey = config.get('rapidApiToken');
+const emptyResult = {
+  result: {
+    resultList: [],
+    base: { pageSize: 0, totalResults: 0 },
+  },
+};
 @Injectable()
 export class ApiTaobaoService {
   async getItemDetailFromTaobao(id: number) {
@@ -36,10 +42,14 @@ export class ApiTaobaoService {
     };
     try {
       const { data } = await axios.request(options);
+      console.log(JSON.stringify(data));
+      if (data.result.status.data === 'error') {
+        return emptyResult;
+      }
       return data;
     } catch (error) {
       Logger.error(error);
-      return null;
+      return emptyResult;
     }
   }
 

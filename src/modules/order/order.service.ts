@@ -30,16 +30,50 @@ export class OrderService {
     private readonly addressService: AddressService,
     private readonly cartService: CartService,
   ) {}
-  async createOrderAndPay(createOrderDto: CreateOrderDto, userId: string) {
-    const address = await this.addressService.getDocumentById(
+  async clientCreateOrderAndPay(
+    createOrderDto: CreateOrderDto,
+    userId: string,
+  ) {
+    const { address, listItem } = await this.prepareListItemAndAddress(
       createOrderDto.addressId,
+      createOrderDto.listItemId,
     );
-    const listItem = [];
-    listItem.push(
-      ...(await this.cartService.getListCartItem(createOrderDto.listItemId)),
+    return this.createOrderAndPay({
+      ...createOrderDto,
+      address,
+      listItem,
+      userId,
+    });
+  }
+
+  async clientCreateOrder(createOrderDto: CreateOrderDto, userId: string) {
+    const { address, listItem } = await this.prepareListItemAndAddress(
+      createOrderDto.addressId,
+      createOrderDto.listItemId,
     );
+    return this.createOrder(
+      {
+        ...createOrderDto,
+        address,
+        listItem,
+      },
+      userId,
+    );
+  }
+
+  async createOrderAndPay({
+    address,
+    listItem,
+    userId,
+    wareHouseAddress,
+  }: {
+    address: IAddress;
+    listItem: ICartDocument[];
+    userId: string;
+    wareHouseAddress: string;
+  }) {
     const order = await this.createOrder(
-      { ...createOrderDto, address, listItem },
+      { wareHouseAddress, address, listItem },
       userId,
     );
     const paymentPayload: PurchaseDto = {
@@ -135,6 +169,18 @@ export class OrderService {
   async updateOrderStatus(id: string, { status }) {
     await this.getOrderById(id);
     return this.orderRepository.updateById(id, { status });
+  }
+
+  private async prepareListItemAndAddress(
+    addressId: string,
+    listItemId: string[],
+  ): Promise<{ address: IAddress; listItem: ICartDocument[] }> {
+    const listItem = [];
+    const result = Promise.all([
+      this.addressService.getDocumentById(addressId),
+      listItem.push(this.cartService.getListCartItem(listItemId)),
+    ]);
+    return { address: result[0], listItem: result[1] };
   }
 
   private convertResponseFromTaobaoItem({

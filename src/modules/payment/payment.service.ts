@@ -45,7 +45,7 @@ export class PaymentService {
       createPurchaseDto.referenceId,
     );
     if (findExitsTransaction && order.status !== OrderStatus.PENDING_PAYMENT) {
-      throw new BadRequestException('ReferenceId was used');
+      throw new BadRequestException('Transaction not ready to pay');
     }
     let transaction;
     if (!findExitsTransaction) {

@@ -45,6 +45,13 @@ export class CartRepository
           },
         },
         {
+          $sort: {
+            shopId: 1,
+            itemId: 1,
+            skuId: 1,
+          },
+        },
+        {
           $group: {
             _id: '$shopId',
             shopName: {
