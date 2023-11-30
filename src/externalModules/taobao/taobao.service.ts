@@ -4,6 +4,7 @@ import { ItemDetailInfo } from './taobao.interface';
 import { ApiTaobaoService } from './apiTaobao.service';
 import { db2api } from '../../shared/helpers';
 import { getHeaders } from '../../adapters/pagination/pagination.helper';
+import { SearchItemDtoV2 } from './tabao.dto';
 
 @Injectable()
 export class TaobaoService {
@@ -72,12 +73,24 @@ export class TaobaoService {
 
   async directSearchItemTaobao(id: string, page: number) {
     const listItems = await this.apiTaobaoService.searchItemTaobao(id, page);
-    console.log(listItems);
     const {
       result: {
         resultList: items,
         base: { pageSize: perPage, totalResults: listLength },
       },
+    } = listItems;
+    const responseHeader = getHeaders({ page, perPage }, listLength);
+
+    return {
+      items,
+      headers: responseHeader,
+    };
+  }
+
+  async directSearchItemTaobaoV2(searchDto: SearchItemDtoV2) {
+    const listItems = await this.apiTaobaoService.searchItemTaobaoV2(searchDto);
+    const {
+      result: { item: items, page, perPage, totalResults: listLength },
     } = listItems;
     const responseHeader = getHeaders({ page, perPage }, listLength);
 

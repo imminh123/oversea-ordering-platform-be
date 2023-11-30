@@ -2,7 +2,8 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { getConfig } from '../../shared/config/config.provider';
 import axios from 'axios';
-import { EndpointEnum, SortOption } from './taobao.enum';
+import { EndpointEnum, SortOption, SortOptionV2 } from './taobao.enum';
+import { SearchItemDtoV2 } from './tabao.dto';
 
 const config = getConfig();
 const tmApiToken = config.get('tmApiToken');
@@ -69,6 +70,31 @@ export class ApiTaobaoService {
     } catch (error) {
       Logger.error(error);
       return null;
+    }
+  }
+
+  async searchItemTaobaoV2(params: SearchItemDtoV2) {
+    const options = {
+      method: 'GET',
+      url: EndpointEnum.SearchItemV2,
+      params: {
+        api: 'item_search',
+        ...params,
+      },
+      headers: {
+        'X-RapidAPI-Key': rapidApiKey,
+        'X-RapidAPI-Host': 'taobao-api.p.rapidapi.com',
+      },
+    };
+    try {
+      const { data } = await axios.request(options);
+      if (data.result.status.data === 'error') {
+        return emptyResult;
+      }
+      return data;
+    } catch (error) {
+      Logger.error(error);
+      return emptyResult;
     }
   }
 }
