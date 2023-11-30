@@ -33,11 +33,15 @@ mongodb:
   uri: MONGODB_URI
 
 tmApiToken: TM_API_TOKEN
+
 rapidApiToken: RAPID_API_TOKEN
+
 vnpay:
   merchantCode: MERCHANT_CODE
   hash: MERCHANT_HASH
   endpoint: VNP_ENDPOINT
+  returnUrl: VNP_RETURN_URL
+
 mail:
   apiKey: MAILJET_API_KEY
   secretKey: MAILJET_SECRET_KEY

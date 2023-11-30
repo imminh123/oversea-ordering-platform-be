@@ -44,3 +44,5 @@ export function sortObject(obj: any, priority?: string): any {
       return accumulator;
     }, {});
 }
+
+export const returnUrl = getConfig().get('vnpay.returnUrl');

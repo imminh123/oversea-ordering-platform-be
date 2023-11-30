@@ -15,7 +15,7 @@ export interface DetailItem {
   propName?: string;
   vnCost: number;
   cartId?: string;
-  image: string[];
+  image: string;
 }
 export interface IOrder {
   listItem: DetailItem[];
