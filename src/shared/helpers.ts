@@ -295,3 +295,10 @@ export function addTime(
 ) {
   return moment(new Date(date)).add(amount, unit).tz(tz).toDate();
 }
+
+export function getParamsFromArrayQuery(input: string) {
+  if (_.isString(input)) {
+    return input.split(',');
+  }
+  return input;
+}

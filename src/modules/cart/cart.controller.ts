@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Body,
-  UseInterceptors,
   Put,
   Query,
   Delete,
@@ -12,18 +11,14 @@ import {
 import { CartService } from './cart.service';
 import {
   AddItemToCartDto,
-  GetDetailTaobaoItemDto,
   GetSummaryCartDto,
   UpdateCartItemDto,
 } from './cart.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { User, UserDataJwtProperties } from '../../decorators/user.decorator';
-import { CommonQueryRequest } from '../../shared/swagger.helper';
-import { Pagination } from '../../decorators/pagination.decorator';
-import { IPagination } from '../../adapters/pagination/pagination.interface';
-import { PaginationInterceptor } from '../../interceptors/pagination.filter';
 import { Roles } from '../../decorators/authorization.decorator';
 import { Role } from '../../shared/constant';
+import { CartListingFilter } from './cart.interface';
 
 @Controller('cart')
 @ApiTags('cart')
@@ -47,18 +42,16 @@ export class CartController {
 
   @Get()
   @Roles(Role.Client)
-  @CommonQueryRequest()
-  @UseInterceptors(PaginationInterceptor)
   @ApiOperation({
     operationId: 'clientGetCart',
     description: 'Client get cart',
     summary: 'Client get cart',
   })
   clientGetCart(
+    @Query() filters: CartListingFilter,
     @User(UserDataJwtProperties.USERID) userId: string,
-    @Pagination() pagination: IPagination,
   ) {
-    return this.cartService.clientGetCart(userId, pagination);
+    return this.cartService.clientGetCart(filters, userId);
   }
 
   @Get('v2')

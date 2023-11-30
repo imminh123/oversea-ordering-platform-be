@@ -10,15 +10,11 @@ import {
   UpdateCartItemDto,
 } from './cart.dto';
 import { TaobaoService } from '../../externalModules/taobao/taobao.service';
-import { ICart, ICartDocument } from './cart.interface';
+import { CartListingFilter, ICart, ICartDocument } from './cart.interface';
 import Decimal from 'decimal.js';
+import * as _ from 'lodash';
 import { CartRepository } from './cart.repository';
 import { Errors } from '../../shared/errors/errors';
-import {
-  IPagination,
-  IPaginationHeader,
-} from '../../adapters/pagination/pagination.interface';
-import { getHeaders } from '../../adapters/pagination/pagination.helper';
 import { db2api, isAfter } from '../../shared/helpers';
 import { ItemDetailInfo } from '../../externalModules/taobao/taobao.interface';
 import { isValidObjectId } from 'mongoose';
@@ -62,17 +58,17 @@ export class CartService {
   }
 
   async clientGetCart(
+    filters: CartListingFilter,
     userId: string,
-    pagination: IPagination,
-  ): Promise<{ items: ICart[]; headers: IPaginationHeader }> {
-    const cart = await this.cartRepository.find(
-      { userId },
-      {
-        skip: pagination.startIndex,
-        limit: pagination.perPage,
-        sort: { createdAt: -1 },
-      },
-    );
+  ): Promise<ICart[]> {
+    const { cartIds } = filters;
+    const findParam: any = { userId };
+    if (!_.isEmpty(cartIds)) {
+      findParam._id = { $in: cartIds };
+    }
+    const cart = await this.cartRepository.find(findParam, {
+      sort: { createdAt: -1 },
+    });
     const current = new Date();
     for (const cartItem of cart) {
       if (isAfter(cartItem.updatedAt, current, 60)) {
@@ -119,13 +115,7 @@ export class CartService {
       });
     }
 
-    const cartLength = await this.cartRepository.count({ userId });
-    const responseHeader = getHeaders(pagination, cartLength);
-
-    return {
-      items: itemsResponse,
-      headers: responseHeader,
-    };
+    return itemsResponse;
   }
 
   async refreshClientCart(userId: string): Promise<ICart[]> {
