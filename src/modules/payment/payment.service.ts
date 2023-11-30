@@ -9,7 +9,7 @@ import { ITransaction, ITransactionDocument } from './payment.interface';
 import { PaymentStatus, vnpayEndpoint } from './payment.enum';
 import { VnpayService } from '../../externalModules/vnpay/vnpay.service';
 import { TransactionRepository } from './payment.repository';
-import { db2api } from '../../shared/helpers';
+import { db2api, isAfter } from '../../shared/helpers';
 import {
   getSignature,
   sortObject,
@@ -41,18 +41,15 @@ export class PaymentService {
     const findExitsTransaction = await this.transactionRepository.findOne({
       referenceId: createPurchaseDto.referenceId,
     });
-    const order = await this.orderService.getOrderById(
+    const order = await this.verifyOrderBeforePurchase(
       createPurchaseDto.referenceId,
     );
-    if (findExitsTransaction && order.status !== OrderStatus.PENDING_PAYMENT) {
-      throw new BadRequestException('Transaction not ready to pay');
-    }
     let transaction;
     if (!findExitsTransaction) {
       const transactionPayload = {
         userId,
         referenceId: createPurchaseDto.referenceId,
-        amount: createPurchaseDto.amount,
+        amount: order.total,
         orderInfo: createPurchaseDto.orderInfo,
         status: PaymentStatus.PENDING,
       } as ITransaction;
@@ -78,9 +75,8 @@ export class PaymentService {
   async completePurchase(completePurchaseDto: CompletePurchaseDto) {
     const vnpayResponse = await this.parseResponse(completePurchaseDto);
     const payload: Partial<ITransaction> = { ...vnpayResponse };
-    const transaction = await this.transactionRepository.findOne(
-      { referenceId: vnpayResponse.txnRef },
-      { sort: { createdAt: -1 } },
+    const transaction = await this.transactionRepository.findById(
+      vnpayResponse.txnRef,
     );
     if (!transaction) {
       throw new BadRequestException('Transaction with referenceId not exits');
@@ -144,6 +140,19 @@ export class PaymentService {
       headers: responseHeader,
     };
   }
+  private async verifyOrderBeforePurchase(orderId: string) {
+    const order = await this.orderService.getOrderById(orderId);
+    if (
+      [OrderStatus.CREATED, OrderStatus.PENDING_PAYMENT].includes(order.status)
+    ) {
+      throw new BadRequestException('Order already pay');
+    }
+    if (!isAfter(order.createdAt, new Date(), 5)) {
+      throw new BadRequestException('Order timeout to pay');
+    }
+    return order;
+  }
+
   private checkInvalidSignature(completePurchaseDto: CompletePurchaseDto) {
     const signatureInput = completePurchaseDto.vnp_SecureHash;
     delete completePurchaseDto.vnp_SecureHash;

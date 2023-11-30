@@ -100,13 +100,4 @@ export class PurchaseDto {
     example: '',
   })
   orderInfo: string;
-
-  @IsNumber()
-  @IsNotEmpty()
-  @ApiProperty({
-    type: Number,
-    example: '',
-    required: true,
-  })
-  amount: number;
 }

@@ -17,6 +17,7 @@ const DetailItem = {
   propId: { type: String, required: false },
   propName: { type: String, required: false },
   cartId: { type: String, required: true },
+  image: { type: String, required: true },
 };
 
 IOrderSchema.add({

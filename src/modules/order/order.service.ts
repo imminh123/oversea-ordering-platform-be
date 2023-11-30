@@ -70,14 +70,13 @@ export class OrderService {
     address: IAddress;
     listItem: ICartDocument[];
     userId: string;
-    wareHouseAddress: string;
+    wareHouseAddress?: string;
   }) {
     const order = await this.createOrder(
       { wareHouseAddress, address, listItem },
       userId,
     );
     const paymentPayload: PurchaseDto = {
-      amount: order.total,
       referenceId: order.id,
       orderInfo: `Pay for order ${order.id}`,
     };
@@ -163,7 +162,7 @@ export class OrderService {
     if (!order) {
       throw new BadRequestException('Not found order with given id');
     }
-    return db2api<IOrderDocument, IOrder>(order);
+    return order;
   }
 
   async updateOrderStatus(id: string, { status }) {
@@ -209,6 +208,7 @@ export class OrderService {
         .toNumber(),
       skuId: item.skuid,
       propName: item.props_names,
+      image: item.main_imgs,
     };
   }
 }
