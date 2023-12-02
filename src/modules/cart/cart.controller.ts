@@ -61,8 +61,11 @@ export class CartController {
     description: 'Client get cart v2',
     summary: 'Client get cart v2',
   })
-  clientGetCartV2(@User(UserDataJwtProperties.USERID) userId: string) {
-    return this.cartService.clientGetCartV2(userId);
+  clientGetCartV2(
+    @User(UserDataJwtProperties.USERID) userId: string,
+    @Query() clientGetCartV2Dto: GetSummaryCartDto,
+  ) {
+    return this.cartService.clientGetCartV2(clientGetCartV2Dto, userId);
   }
 
   // @Get('getTbItem')
