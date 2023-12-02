@@ -3,7 +3,9 @@ import {
   ArrayNotEmpty,
   IsArray,
   IsBoolean,
+  IsEnum,
   IsNotEmpty,
+  IsObject,
   IsOptional,
   IsString,
 } from 'class-validator';
@@ -81,4 +83,21 @@ export class ClientIndexOrderDto {
     required: false,
   })
   onlyCount?: boolean;
+}
+export class UpdateStatusOrderDto {
+  @IsString()
+  @IsEnum(OrderStatus)
+  @ApiProperty({
+    type: String,
+    enum: OrderStatus,
+    example: OrderStatus.ON_HOLD,
+  })
+  status: OrderStatus;
+
+  @IsObject()
+  @ApiProperty({
+    type: Object,
+    example: {},
+  })
+  meta: any;
 }

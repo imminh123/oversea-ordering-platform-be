@@ -6,3 +6,5 @@ export enum PaymentStatus {
   PENDING = 'pending',
 }
 export const vnpayEndpoint = getConfig().get('vnpay.endpoint');
+
+export const orderTimeOutInMinutes = getConfig().get('orderTimeoutInMinutes');

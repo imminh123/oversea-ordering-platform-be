@@ -17,6 +17,12 @@ export interface DetailItem {
   cartId?: string;
   image: string;
 }
+
+export interface OrderHistoryDetail {
+  status: OrderStatus;
+  updatedBy?: string;
+  meta?: any;
+}
 export interface IOrder {
   listItem: DetailItem[];
   userId: string;
@@ -24,5 +30,6 @@ export interface IOrder {
   address: any;
   wareHouseAddress: string;
   total: number;
+  orderHistories: OrderHistoryDetail[];
 }
 export interface IOrderDocument extends IOrder, BaseDocument {}

@@ -20,6 +20,12 @@ const DetailItem = {
   image: { type: String, required: true },
 };
 
+const OrderHistoryDetail = {
+  status: { type: String, required: true },
+  updatedBy: { type: String, required: false },
+  meta: { type: Object, required: false },
+};
+
 IOrderSchema.add({
   listItem: { type: [DetailItem], required: true },
   userId: { type: String, required: true },
@@ -27,4 +33,5 @@ IOrderSchema.add({
   address: { type: Object, required: true },
   wareHouseAddress: { type: String, required: false },
   total: { type: Number, required: true },
+  orderHistories: { type: [OrderHistoryDetail], required: true, default: [] },
 });

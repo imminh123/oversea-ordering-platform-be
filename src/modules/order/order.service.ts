@@ -173,6 +173,7 @@ export class OrderService {
       address,
       wareHouseAddress,
       total: total.toDP(2).toNumber(),
+      orderHistories: [{ status: OrderStatus.CREATED, updatedBy: userId }],
     } as IOrder;
     return this.orderRepository.create(order);
   }
@@ -221,9 +222,25 @@ export class OrderService {
     return order;
   }
 
-  async updateOrderStatus(id: string, { status }) {
-    await this.getOrderById(id);
-    return this.orderRepository.updateById(id, { status });
+  async updateOrderStatus(
+    id: string,
+    {
+      status,
+      updatedBy,
+      meta,
+    }: { status: OrderStatus; updatedBy?: string; meta?: any },
+  ) {
+    const order = await this.getOrderById(id);
+    if (order.status === status) {
+      return order;
+    }
+    const orderHistories = order.orderHistories || [];
+    orderHistories.push({
+      status,
+      updatedBy,
+      meta,
+    });
+    return this.orderRepository.updateById(id, { status, orderHistories });
   }
 
   private async prepareListItemAndAddress(
