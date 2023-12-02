@@ -106,6 +106,7 @@ export class OrderService {
     for (const item of listItem) {
       const tbItem = await this.tbService.getItemDetailById(
         item.itemId,
+        undefined,
         item.skuId,
       );
       if (!tbItem) {

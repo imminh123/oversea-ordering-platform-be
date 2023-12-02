@@ -6,6 +6,7 @@ import {
 import {
   AddItemToCartDto,
   GetDetailTaobaoItemDto,
+  GetSummaryCartDto,
   UpdateCartItemDto,
 } from './cart.dto';
 import { TaobaoService } from '../../externalModules/taobao/taobao.service';
@@ -210,18 +211,24 @@ export class CartService {
     return this.cartRepository.updateById(id, { ...updateCartItemDto });
   }
 
-  async clientGetDetailTaobaoItem({ id }: GetDetailTaobaoItemDto) {
-    return this.tbService.getItemDetailById(610980984514);
-    // return this.tbService.searchItem('phone', 1);
-  }
-
   async getListCartItem(ids: string[]): Promise<ICartDocument[]> {
     ids.map((item) => new ObjectId(item));
     return this.cartRepository.find({ _id: { $in: ids } });
   }
 
-  async clientGetCartV2(userId: string) {
-    const cart = await this.cartRepository.getClientCart(userId);
+  async clientGetCartV2({ ids }: GetSummaryCartDto, userId: string) {
+    const arr = [];
+    if (ids && ids.length > 0) {
+      for (const id of ids) {
+        if (isValidObjectId(id)) {
+          arr.push(new ObjectId(id));
+        }
+      }
+    }
+    const cart = await this.cartRepository.getClientCart(
+      userId,
+      arr.length > 0 ? arr : undefined,
+    );
     const rate = await this.variablesService.getVariable(
       Variables.EXCHANGE_RATE,
     );

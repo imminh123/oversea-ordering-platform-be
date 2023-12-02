@@ -2,7 +2,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ItemDetailInfo } from './taobao.interface';
 import { ApiTaobaoService } from './apiTaobao.service';
-import { db2api } from '../../shared/helpers';
 import { getHeaders } from '../../adapters/pagination/pagination.helper';
 import { SearchItemDtoV2 } from './tabao.dto';
 
@@ -15,7 +14,7 @@ export class TaobaoService {
     skuId?: string,
   ): Promise<ItemDetailInfo> {
     const item = await this.apiTaobaoService.getItemDetailFromTaobao(itemId);
-    let skuItem = {};
+    let skuItem;
     if (item.skus && item.sku_props) {
       if (skuId) {
         skuItem = item.skus.find((value) => {
@@ -28,6 +27,11 @@ export class TaobaoService {
         skuItem = item.skus.find((value) => {
           return value.props_ids === pvInRightOrder;
         });
+      }
+      if ((skuId || pvid) && !skuItem) {
+        throw new BadRequestException(
+          'Can find item and variant with given id',
+        );
       }
     }
     return {
@@ -49,7 +53,7 @@ export class TaobaoService {
     const item = await this.apiTaobaoService.getItemDetailFromTaobaoV2(
       String(itemId),
     );
-    let skuItem = {};
+    let skuItem;
     if (item.skus && item.sku_props) {
       if (skuId) {
         skuItem = item.skus.find((value) => {
@@ -62,6 +66,11 @@ export class TaobaoService {
         skuItem = item.skus.find((value) => {
           return value.props_ids === pvInRightOrder;
         });
+      }
+      if ((skuId || pvid) && !skuItem) {
+        throw new BadRequestException(
+          'Can find item and variant with given id',
+        );
       }
     }
     return {
@@ -90,9 +99,17 @@ export class TaobaoService {
   async directSearchItemTaobaoV2(searchDto: SearchItemDtoV2) {
     const listItems = await this.apiTaobaoService.searchItemTaobaoV2(searchDto);
     const {
-      result: { item: items, page, perPage, totalResults: listLength },
+      result: {
+        item: items,
+        page,
+        page_size: perPage,
+        total_results: listLength,
+      },
     } = listItems;
-    const responseHeader = getHeaders({ page, perPage }, listLength);
+    const responseHeader = getHeaders(
+      { page: Number(page), perPage: Number(perPage) },
+      Number(listLength),
+    );
 
     return {
       items,

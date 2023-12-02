@@ -65,9 +65,11 @@ export class GetSummaryCartDto {
   @Transform((x) => {
     return x.value.split(',');
   })
+  @IsOptional()
   @ApiProperty({
     type: String,
     example: '64bd70033bffa3a83b0a9b57',
+    required: false,
   })
   ids: string[];
 }
