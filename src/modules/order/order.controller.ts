@@ -13,6 +13,7 @@ import {
   ClientIndexOrderDto,
   CreateOrderDto,
   ReCreateOrderDto,
+  UpdateStatusOrderDto,
 } from './order.dto';
 import { Roles } from '../../decorators/authorization.decorator';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -110,5 +111,23 @@ export class OrderController {
   })
   async getOrderById(@Param('id') id: string) {
     return this.orderService.getOrderById(id);
+  }
+
+  @Post('updateStatus/:id')
+  @Roles(Role.Client)
+  @ApiOperation({
+    operationId: 'adminUpdateStatusOrder',
+    description: 'Admin update status order',
+    summary: 'Admin update status order',
+  })
+  async adminUpdateStatusOrder(
+    @User(UserDataJwtProperties.USERID) userId: string,
+    @Param('id') id: string,
+    @Body() updateOrderStatusDto: UpdateStatusOrderDto,
+  ) {
+    return this.orderService.updateOrderStatus(id, {
+      ...updateOrderStatusDto,
+      updatedBy: userId,
+    });
   }
 }

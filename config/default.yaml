@@ -25,3 +25,5 @@ vnpay:
   hash:
   endpoint:
   returnUrl: https://app.mby.vn/order-success.html
+
+orderTimeoutInMinutes: 5
