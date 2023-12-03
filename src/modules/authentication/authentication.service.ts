@@ -45,7 +45,7 @@ export class AuthenticationService {
     const findParams: any = {};
     const cond = [];
     if (createAuthenticationDto.mail) {
-      cond.push({ gmail: createAuthenticationDto.mail });
+      cond.push({ mail: createAuthenticationDto.mail });
     }
     if (createAuthenticationDto.phone) {
       cond.push({ phone: createAuthenticationDto.phone });
