@@ -12,4 +12,5 @@ export const getOauthConfig = () => {
 export enum MailType {
   REGISTER = 'register',
   FORGOT_PASSWORD = 'forgot-password',
+  ORDER_SUCCESS = 'order-success',
 }

@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Inject,
   Injectable,
+  Logger,
   forwardRef,
 } from '@nestjs/common';
 import { CompletePurchaseDto, PurchaseDto } from './payment.dto';
@@ -23,12 +24,16 @@ import { OrderStatus } from '../order/order.enum';
 import { IPagination } from '../../adapters/pagination/pagination.interface';
 import { getHeaders } from '../../adapters/pagination/pagination.helper';
 import { CartService } from '../cart/cart.service';
+import { AuthenticationService } from '../authentication/authentication.service';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class PaymentService {
   constructor(
     private readonly vnpayService: VnpayService,
     private readonly transactionRepository: TransactionRepository,
+    private readonly authenticationService: AuthenticationService,
+    private readonly mailService: MailService,
     @Inject(forwardRef(() => OrderService))
     private readonly orderService: OrderService,
     @Inject(forwardRef(() => CartService))
@@ -94,6 +99,26 @@ export class PaymentService {
     if (payload.status === PaymentStatus.SUCCEEDED) {
       for (const item of order.listItem) {
         ids.push(item.cartId);
+      }
+    }
+
+    if (vnpayResponse.status === PaymentStatus.SUCCEEDED) {
+      const user = await this.authenticationService.getUserById(order.userId);
+      const payload = {
+        bankCode: vnpayResponse.bankCode,
+        cardType: vnpayResponse.cardType,
+        status: vnpayResponse.status,
+        bankTranNo: vnpayResponse.bankTranNo,
+        orderId: transaction.referenceId,
+        amount: order.total,
+        address: order.address,
+        date: order.updatedAt,
+        name: user.fullname,
+      };
+      try {
+        this.mailService.sendPurchaseSuccess(payload, user.mail);
+      } catch (error) {
+        Logger.log(`cannot send mail to ${user.mail}`, error);
       }
     }
     return Promise.all([

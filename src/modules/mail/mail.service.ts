@@ -93,4 +93,22 @@ export class MailService {
 
     return this.sendMailTemplate(options, params);
   }
+
+  async sendPurchaseSuccess(param: any, toMail: string) {
+    const clientUrl = String(getConfig().get('client.host'));
+    const address = `${param.address.address}, ${param.address.ward}, ${param.address.city}, ${param.address.province}`;
+    const params = {
+      ...param,
+      orderDetailLink: `${clientUrl}/orders/${param.orderId}`,
+      address,
+    };
+
+    const options = {
+      toMail,
+      subject: 'Thanh toán thành công',
+      mailType: MailType.ORDER_SUCCESS,
+    };
+
+    return this.sendMailTemplate(options, params);
+  }
 }

@@ -8,6 +8,8 @@ import { VnpayModule } from '../../externalModules/vnpay/vnpay.module';
 import { TransactionRepository } from './payment.repository';
 import { OrderModule } from '../order/order.module';
 import { CartModule } from '../cart/cart.module';
+import { AuthenticationModule } from '../authentication/authentication.module';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
@@ -15,6 +17,8 @@ import { CartModule } from '../cart/cart.module';
       { name: DbModel.Transactions, schema: ITransactionSchema },
     ]),
     VnpayModule,
+    AuthenticationModule,
+    MailModule,
     forwardRef(() => OrderModule),
     forwardRef(() => CartModule),
   ],
