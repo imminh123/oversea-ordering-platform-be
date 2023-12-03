@@ -38,9 +38,9 @@ export class TaobaoController {
   @Get('v2/:id')
   @Roles(Role.Client)
   @ApiOperation({
-    operationId: 'getTaobaoDetailItem',
-    description: 'Get taobao item by id',
-    summary: 'Get taobao item by id',
+    operationId: 'getTaobaoDetailItemV2',
+    description: 'Get taobao item by id v2',
+    summary: 'Get taobao item by id v2',
   })
   async getAddressByIdV2(@Param('id') id: string) {
     return this.taobaoService.directGetDetailItemV2(id);
