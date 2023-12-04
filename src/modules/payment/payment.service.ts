@@ -88,7 +88,7 @@ export class PaymentService {
       vnpayResponse.txnRef,
     );
     if (!transaction) {
-      throw new BadRequestException('Transaction with referenceId not exits');
+      throw new BadRequestException('Giao dịch không tồn tại');
     }
     const incomingStatus =
       payload.status === PaymentStatus.SUCCEEDED
@@ -135,7 +135,7 @@ export class PaymentService {
   async parseResponse(completePurchaseDto: CompletePurchaseDto) {
     const webhookResponse = JSON.stringify({ ...completePurchaseDto });
     if (this.checkInvalidSignature(completePurchaseDto)) {
-      throw new BadRequestException('Invalid signature');
+      throw new BadRequestException('Mã hóa không hợp lệ');
     }
     return {
       webhookResponse,
@@ -177,7 +177,7 @@ export class PaymentService {
     if (
       ![OrderStatus.CREATED, OrderStatus.PENDING_PAYMENT].includes(order.status)
     ) {
-      throw new BadRequestException('Can not pay for this order');
+      throw new BadRequestException('Không thể thanh toán cho order này');
     }
     if (!isAfter(order.createdAt, new Date(), 5)) {
       await this.orderService.updateOrderStatus(orderId, {
@@ -187,7 +187,7 @@ export class PaymentService {
         findExitsTransaction.status = PaymentStatus.FAILED;
         findExitsTransaction.save();
       }
-      throw new BadRequestException('Order timeout to pay');
+      throw new BadRequestException('Order đã hết hạn thanh toán');
     }
     return { order, findExitsTransaction };
   }

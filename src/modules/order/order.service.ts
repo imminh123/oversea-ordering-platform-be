@@ -160,7 +160,7 @@ export class OrderService {
     }
     const order = await this.orderRepository.findById(id);
     if (!order) {
-      throw new BadRequestException('Not found order with given id');
+      throw new BadRequestException('Không tìm thấy order');
     }
     return order;
   }

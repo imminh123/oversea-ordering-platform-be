@@ -53,11 +53,11 @@ export class AuthenticationService {
     findParams.$or = cond;
     const user = await this.authenticationRepository.findOne(findParams);
     if (user) {
-      throw new BadRequestException('User is exits');
+      throw new BadRequestException('Người dùng đã tồn tại');
     }
 
     if (role === Role.Root) {
-      throw new BadRequestException('Can not create root account');
+      throw new BadRequestException('Không thể tạo người dùng root');
     }
 
     const password = createAuthenticationDto.password;
@@ -80,7 +80,7 @@ export class AuthenticationService {
       registerToken: token,
     });
     if (!user) {
-      throw new NotFoundException(`Not found user`);
+      throw new NotFoundException(`Không tìm thấy ngừoi dùng`);
     }
     user.isActive = true;
     return this.authenticationRepository.updateById(user.id, {
@@ -96,11 +96,13 @@ export class AuthenticationService {
     const user = await this.authenticationRepository.findOne(findParams);
 
     if (!user) {
-      throw new BadRequestException('User mail or password is invalid');
+      throw new BadRequestException(
+        'Địa chỉ mail hoặc mật khẩu của người dùng không hợp lệ',
+      );
     }
 
     if (!user.isActive) {
-      throw new BadRequestException('Account is deactive');
+      throw new BadRequestException('Tài khoản hiện tại đã bị vô hiệu hóa');
     }
 
     const isMatch = await bcrypt.compare(
@@ -109,7 +111,9 @@ export class AuthenticationService {
     );
 
     if (!isMatch) {
-      throw new BadRequestException('User mail or password is invalid');
+      throw new BadRequestException(
+        'Địa chỉ mail hoặc mật khẩu của người dùng không hợp lệ',
+      );
     }
 
     const { accessToken, refreshToken } = await this.createSessionToken({
@@ -134,11 +138,13 @@ export class AuthenticationService {
     let user = await this.authenticationRepository.findOne(findParams);
 
     if (!user) {
-      throw new BadRequestException('User name or password is invalid');
+      throw new BadRequestException(
+        'Tên tài khoản hoặc mật khẩu của người dùng không hợp lệ',
+      );
     }
 
     if (!user.isActive) {
-      throw new BadRequestException('Account is deactive');
+      throw new BadRequestException('Tài khoản hiện tại đã bị vô hiệu hóa');
     }
 
     const isMatch = await bcrypt.compare(
@@ -147,7 +153,9 @@ export class AuthenticationService {
     );
 
     if (!isMatch) {
-      throw new BadRequestException('User name or password is invalid');
+      throw new BadRequestException(
+        'Tên tài khoản hoặc mật khẩu của người dùng không hợp lệ',
+      );
     }
 
     user = await this.authenticationRepository.updateById(user.id, {
@@ -170,15 +178,15 @@ export class AuthenticationService {
   async refreshSession(token: string) {
     const { userId, isRefresh } = decodeJWTToken(token);
     if (!isRefresh) {
-      throw new BadRequestException('Token is not a refresh token');
+      throw new BadRequestException('Token không phải token làm mới');
     }
     const user = await this.authenticationRepository.findById(userId);
 
     if (!user) {
-      throw new BadRequestException('User id is not exits');
+      throw new BadRequestException('Tài khoản không tồn tại');
     }
     if (!user.isActive) {
-      throw new BadRequestException('Account is deactive');
+      throw new BadRequestException('Tài khoản hiện tại đã bị vô hiệu hóa');
     }
 
     const accessToken = jwt.sign(
@@ -236,7 +244,7 @@ export class AuthenticationService {
     const user = await this.authenticationRepository.findById(id);
 
     if (!user) {
-      throw new BadRequestException('User id is not exits');
+      throw new BadRequestException('Tài khoản không tồn tại');
     }
 
     return db2api<IAuth, IAuth>(user);
@@ -265,7 +273,7 @@ export class AuthenticationService {
       redirect_uri,
     );
     if (!isAuthenticate) {
-      throw new BadRequestException('Login with Oauth failed');
+      throw new BadRequestException('Đăng nhập với OAuth thất bại');
     }
     const userInfo = await this.oauthService.getUserInfo(
       base,
@@ -323,7 +331,7 @@ export class AuthenticationService {
     const { base, token } = createSessionDto;
     const isAuthenticate = await this.oauthService.verifyIdToken(base, token);
     if (!isAuthenticate) {
-      throw new BadRequestException('Verify with Oauth failed');
+      throw new BadRequestException('Xác thực OAuth thất bại');
     }
     const userInfo = await this.oauthService.getUserInfo(
       base,
@@ -338,7 +346,7 @@ export class AuthenticationService {
 
     const user = await this.authenticationRepository.findById(userId);
     if (!user) {
-      throw new BadRequestException('Not found user');
+      throw new BadRequestException('Không tìm thấy ngừoi dùng');
     }
     let payload: IAuth = {
       ...findParams,
@@ -361,7 +369,7 @@ export class AuthenticationService {
     const user = await this.authenticationRepository.findById(userId);
 
     if (!user) {
-      throw new BadRequestException('Not found user');
+      throw new BadRequestException('Không tìm thấy ngừoi dùng');
     }
 
     if (!user.password) {
@@ -370,13 +378,13 @@ export class AuthenticationService {
       });
     }
     if (!password) {
-      throw new BadRequestException('Password is invalid');
+      throw new BadRequestException('Mật khẩu không đúng');
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      throw new BadRequestException('Password is invalid');
+      throw new BadRequestException('Mật khẩu không đúng');
     }
 
     return this.authenticationRepository.updateById(userId, {
@@ -388,7 +396,7 @@ export class AuthenticationService {
     const user = await this.authenticationRepository.findById(userId);
 
     if (!user) {
-      throw new BadRequestException('Not found user');
+      throw new BadRequestException('Không tìm thấy ngừoi dùng');
     }
 
     return this.authenticationRepository.updateById(userId, {
@@ -400,7 +408,7 @@ export class AuthenticationService {
     const user = await this.authenticationRepository.findById(userId);
 
     if (!user) {
-      throw new BadRequestException('Not found user');
+      throw new BadRequestException('Không tìm thấy ngừoi dùng');
     }
     const updateParam: any = {};
     if (base === OAuthClient.GOOGLE) {

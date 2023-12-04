@@ -36,7 +36,7 @@ export const Errors = {
     errorCode: getErrorCode(ErrorCode.GENERAL_VALIDATION_EXCEPTION),
   },
   TAOBAO_ITEM_WITH_GIVEN_ID_NOT_EXITS: {
-    message: 'Not found taobao item with given id',
+    message: 'Không tìm thấy hàng hóa này trên taobao',
     statusCode: HttpStatus.BAD_REQUEST,
     errorCode: getErrorCode(ErrorCode.TAOBAO_ITEM_NOT_EXITS, TAOBAO_ERROR_CODE),
   },

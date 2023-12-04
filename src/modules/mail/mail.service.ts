@@ -59,16 +59,28 @@ export class MailService {
           prefixPath,
           `templates/forgot_password.html`,
         );
+      case MailType.ORDER_SUCCESS:
+        return path.resolve(
+          __dirname,
+          prefixPath,
+          `templates/order-success.html`,
+        );
     }
   }
 
   getHTMLFile(path: string) {
+    if (!path) {
+      return;
+    }
     return fs.readFileSync(path, { encoding: 'utf-8' });
   }
 
   getHtmlTemplate(mailType: MailType, data) {
     const templatePath = this.getTemplatePath(mailType);
     const htmlContent = this.getHTMLFile(templatePath);
+    if (!htmlContent) {
+      return;
+    }
     const template = handlebars.compile(htmlContent);
     return template(data);
   }

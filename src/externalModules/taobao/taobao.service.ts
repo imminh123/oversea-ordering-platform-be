@@ -30,7 +30,7 @@ export class TaobaoService {
       }
       if ((skuId || pvid) && !skuItem) {
         throw new BadRequestException(
-          'Can find item and variant with given id',
+          'Không thể tìm thấy hàng hóa trên taobao',
         );
       }
     }
@@ -69,7 +69,7 @@ export class TaobaoService {
       }
       if ((skuId || pvid) && !skuItem) {
         throw new BadRequestException(
-          'Can find item and variant with given id',
+          'Không thể tìm thấy hàng hóa trên taobao',
         );
       }
     }
@@ -120,7 +120,7 @@ export class TaobaoService {
   async directGetDetailItemV1(id: number) {
     const item = await this.apiTaobaoService.getItemDetailFromTaobao(id);
     if (!item) {
-      throw new BadRequestException('Not found item with given Id');
+      throw new BadRequestException('Không thể tìm thấy hàng hóa trên taobao');
     }
     return item;
   }
@@ -128,7 +128,7 @@ export class TaobaoService {
   async directGetDetailItemV2(id: string) {
     const item = await this.apiTaobaoService.getItemDetailFromTaobaoV2(id);
     if (!item) {
-      throw new BadRequestException('Not found item with given Id');
+      throw new BadRequestException('Không thể tìm thấy hàng hóa trên taobao');
     }
     return item;
   }

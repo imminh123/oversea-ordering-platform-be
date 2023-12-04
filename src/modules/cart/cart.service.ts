@@ -200,12 +200,12 @@ export class CartService {
     const item = await this.cartRepository.findOne(findParam);
     if (!item) {
       throw new BadRequestException(
-        'Not found item with given id belong to client',
+        'Không thể tìm thấy hàng hóa này trong giỏ hàng',
       );
     }
 
     if (!item.isActive) {
-      throw new BadRequestException('This item is currently unavailable');
+      throw new BadRequestException('Hàng hóa này hiện không tồn tại');
     }
 
     return this.cartRepository.updateById(id, { ...updateCartItemDto });
@@ -233,7 +233,7 @@ export class CartService {
       Variables.EXCHANGE_RATE,
     );
     if (!rate) {
-      throw new NotFoundException('Can not get exchange rate');
+      throw new NotFoundException('Không thể lấy giá nhân dân tệ');
     }
     const current = new Date();
     for (const { listItem } of cart) {

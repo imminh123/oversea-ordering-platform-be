@@ -16,7 +16,7 @@ export class AddItemToCartDto {
   @IsNotEmpty()
   @Transform((x) => {
     if (!Boolean(Number(x.value))) {
-      throw new BadRequestException('Invalid id');
+      throw new BadRequestException('Id không hợp lệ');
     }
     return Number(x.value);
   })
@@ -92,7 +92,7 @@ export class GetDetailTaobaoItemDto {
   @IsNotEmpty()
   @Transform((x) => {
     if (!Boolean(Number(x.value))) {
-      throw new BadRequestException('Invalid id');
+      throw new BadRequestException('Id không hợp lệ');
     }
     return Number(x.value);
   })
