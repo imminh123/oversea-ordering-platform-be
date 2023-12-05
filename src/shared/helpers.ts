@@ -219,14 +219,14 @@ export function validateFromToFilterDate(fromDate?: Date, toDate?: Date) {
     if (moment(fromDate).isAfter(moment(toDate))) {
       throw new BadRequestException({
         ...Errors.GENERAL_VALIDATION_EXCEPTION,
-        description: `From Date must be before To Date.`,
+        description: `Ngày bắt đầu phải trước ngày kết thúc.`,
       });
     }
   }
   if (!fromDate && toDate) {
     throw new BadRequestException({
       ...Errors.GENERAL_VALIDATION_EXCEPTION,
-      description: `From Date must be required with To Date.`,
+      description: `Ngày kết thúc cần có ngày bắt đầu.`,
     });
   }
 }

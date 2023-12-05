@@ -73,7 +73,9 @@ export class OAuthService {
         return response.data.error.is_valid;
       }
       throw new BadGatewayException(
-        `Verify facebook user token failed: ${response.data.error}`,
+        `Verify facebook user token failed: ${JSON.stringify(
+          response.data.error,
+        )}`,
       );
     }
   }
@@ -89,7 +91,9 @@ export class OAuthService {
       data.avatar = `${fbApiUrl}${data.id}/picture?type=large`;
       return data;
     } catch (error) {
-      throw new BadGatewayException(`Get facebook app token failed: ${error}`);
+      throw new BadGatewayException(
+        `Get facebook app token failed: ${JSON.stringify(error)}`,
+      );
     }
   }
 

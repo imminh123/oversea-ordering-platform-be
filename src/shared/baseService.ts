@@ -50,7 +50,7 @@ export class BaseService<T extends Document, U> {
     }
     const document = await this.repository.findById(id);
     if (!document) {
-      throw new BadRequestException('Not found document with given id');
+      throw new BadRequestException('Không tìm thấy bản ghi');
     }
     return db2api<T, U>(document);
   }
