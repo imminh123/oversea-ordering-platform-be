@@ -27,7 +27,7 @@ export class MailService {
           {
             From: {
               Email: 'thudan.td@gmail.com',
-              Name: 'Oversea',
+              Name: 'MBY Logistics',
             },
             To: [
               {

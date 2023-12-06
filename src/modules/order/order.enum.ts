@@ -10,4 +10,5 @@ export enum OrderStatus {
   DELIVERED = 'delivered',
   SUCCEEDED = 'succeeded',
   TIMEOUT = 'timeout',
+  FAILED = 'failed',
 }

@@ -12,6 +12,7 @@ import { PaymentModule } from './modules/payment/payment.module';
 import { AddressModule } from './modules/address/address.module';
 import { TaobaoModule } from './externalModules/taobao/taobao.module';
 import { MailModule } from './modules/mail/mail.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { MailModule } from './modules/mail/mail.module';
     AddressModule,
     TaobaoModule,
     MailModule,
+    DashboardModule,
   ],
   providers: [
     {

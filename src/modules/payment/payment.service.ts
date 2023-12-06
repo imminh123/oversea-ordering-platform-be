@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  HttpException,
   Inject,
   Injectable,
   Logger,
@@ -66,7 +67,6 @@ export class PaymentService {
       await this.vnpayService.getVnpayPaymentGatewayRequest({
         ...createPurchaseDto,
         amount: order.total,
-        transactionId: transaction.id,
         orderInfo: `Pay for order ${order.id}`,
       });
     if (order.status === OrderStatus.CREATED) {
@@ -82,60 +82,89 @@ export class PaymentService {
   }
 
   async completePurchase(completePurchaseDto: CompletePurchaseDto) {
-    const vnpayResponse = await this.parseResponse(completePurchaseDto);
-    const payload: Partial<ITransaction> = { ...vnpayResponse };
-    const transaction = await this.transactionRepository.findById(
-      vnpayResponse.txnRef,
-    );
-    if (!transaction) {
-      throw new BadRequestException('Giao dịch không tồn tại');
-    }
-    const incomingStatus =
-      payload.status === PaymentStatus.SUCCEEDED
-        ? OrderStatus.DELIVERED
-        : OrderStatus.PENDING_PAYMENT;
-    const order = await this.orderService.getOrderById(transaction.referenceId);
-    const ids = [];
-    if (payload.status === PaymentStatus.SUCCEEDED) {
-      for (const item of order.listItem) {
-        ids.push(item.cartId);
+    try {
+      const vnpayResponse = await this.parseResponse(completePurchaseDto);
+      const payload: Partial<ITransaction> = { ...vnpayResponse };
+      const transaction = await this.transactionRepository.findOne(
+        { referenceId: vnpayResponse.txnRef },
+        { sort: { createdAt: -1 } },
+      );
+      if (!transaction) {
+        throw new HttpException(
+          { RspCode: '01', Message: 'Order not found' },
+          200,
+        );
       }
-    }
-
-    if (vnpayResponse.status === PaymentStatus.SUCCEEDED) {
-      const user = await this.authenticationService.getUserById(order.userId);
-      const payload = {
-        bankCode: vnpayResponse.bankCode,
-        cardType: vnpayResponse.cardType,
-        status: vnpayResponse.status,
-        bankTranNo: vnpayResponse.bankTranNo,
-        orderId: transaction.referenceId,
-        amount: order.total,
-        address: order.address,
-        date: order.updatedAt,
-        name: user.fullname,
-      };
-      try {
-        this.mailService.sendPurchaseSuccess(payload, user.mail);
-      } catch (error) {
-        Logger.log(`cannot send mail to ${user.mail}`, error);
+      if (transaction.status === payload.status) {
+        throw new HttpException(
+          {
+            RspCode: '02',
+            Message: 'This transaction has been updated to the payment status',
+          },
+          200,
+        );
       }
+      const incomingStatus =
+        payload.status === PaymentStatus.SUCCEEDED
+          ? OrderStatus.DELIVERED
+          : OrderStatus.FAILED;
+      const order = await this.orderService.getOrderById(
+        transaction.referenceId,
+      );
+      if (order.status !== OrderStatus.PENDING_PAYMENT) {
+        throw new HttpException(
+          {
+            RspCode: '02',
+            Message: 'This order has been updated to the payment status',
+          },
+          200,
+        );
+      }
+      const ids = [];
+      if (vnpayResponse.status === PaymentStatus.SUCCEEDED) {
+        for (const item of order.listItem) {
+          ids.push(item.cartId);
+        }
+        const user = await this.authenticationService.getUserById(order.userId);
+        const payload = {
+          bankCode: vnpayResponse.bankCode,
+          cardType: vnpayResponse.cardType,
+          status: vnpayResponse.status,
+          bankTranNo: vnpayResponse.bankTranNo,
+          orderId: transaction.referenceId,
+          amount: order.total,
+          address: order.address,
+          date: order.updatedAt,
+          name: user.fullname,
+        };
+        try {
+          this.mailService.sendPurchaseSuccess(payload, user.mail);
+        } catch (error) {
+          Logger.log(`cannot send mail to ${user.mail}`, error);
+        }
+      }
+      await Promise.all([
+        this.transactionRepository.updateById(transaction.id, {
+          ...payload,
+        }),
+        this.orderService.updateOrderStatus(transaction.referenceId, {
+          status: incomingStatus,
+        }),
+        this.cartService.delete(ids),
+      ]);
+      return { RspCode: '00', Message: 'success' };
+    } catch (error) {
+      throw error;
     }
-    return Promise.all([
-      this.transactionRepository.updateById(transaction.id, {
-        ...payload,
-      }),
-      this.orderService.updateOrderStatus(transaction.referenceId, {
-        status: incomingStatus,
-      }),
-      this.cartService.delete(ids),
-    ]);
   }
 
   async parseResponse(completePurchaseDto: CompletePurchaseDto) {
     const webhookResponse = JSON.stringify({ ...completePurchaseDto });
     if (this.checkInvalidSignature(completePurchaseDto)) {
-      throw new BadRequestException('Mã hóa không hợp lệ');
+      throw new HttpException(
+        { RspCode: '97', Message: 'Checksum failed' },
+        200,
+      );
     }
     return {
       webhookResponse,
