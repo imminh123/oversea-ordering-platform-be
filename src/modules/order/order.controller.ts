@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { User, UserDataJwtProperties } from '../../decorators/user.decorator';
-import { CreateOrderDto } from './order.dto';
+import { CreateOrderDto, ReCreateOrderDto } from './order.dto';
 import { Roles } from '../../decorators/authorization.decorator';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Role } from '../../shared/constant';
@@ -44,11 +44,39 @@ export class OrderController {
     description: 'Client create order',
     summary: 'Client create order',
   })
-  async create(
+  async createOrder(
     @Body() createOrderDto: CreateOrderDto,
     @User(UserDataJwtProperties.USERID) userId: string,
   ) {
     return this.orderService.clientCreateOrder(createOrderDto, userId);
+  }
+
+  @Post('reCreateOrderAndPay')
+  @Roles(Role.Client)
+  @ApiOperation({
+    operationId: 'clientReCreateOrderAndPay',
+    description: 'Client reCreate order and pay',
+    summary: 'Client reCreate order and pay',
+  })
+  async clientReCreateOrderAndPay(
+    @Body() createOrderDto: ReCreateOrderDto,
+    @User(UserDataJwtProperties.USERID) userId: string,
+  ) {
+    return this.orderService.clientReCreateOrderAndPay(createOrderDto, userId);
+  }
+
+  @Post('reCreateOrder')
+  @Roles(Role.Client)
+  @ApiOperation({
+    operationId: 'clientReCreateOrder',
+    description: 'Client reCreate order',
+    summary: 'Client recreate order',
+  })
+  async reCreateOrder(
+    @Body() createOrderDto: ReCreateOrderDto,
+    @User(UserDataJwtProperties.USERID) userId: string,
+  ) {
+    return this.orderService.clientReCreateOrder(createOrderDto, userId);
   }
 
   @Get()
