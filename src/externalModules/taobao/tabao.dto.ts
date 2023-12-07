@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { SortOptionV2 } from './taobao.enum';
+import { LanguageOptionV3, SortOptionV2, SortOptionV3 } from './taobao.enum';
 
 export class SearchItemDto {
   @ApiProperty({
@@ -38,4 +38,79 @@ export class SearchItemDtoV2 {
     enum: SortOptionV2,
   })
   sort: SortOptionV2;
+}
+
+export class SearchItemDtoV3 {
+  @ApiProperty({
+    type: String,
+    example: '',
+    required: true,
+  })
+  query: string;
+
+  @ApiProperty({
+    type: String,
+    example: 1,
+    required: false,
+  })
+  page: string;
+
+  @ApiProperty({
+    type: String,
+    example: SortOptionV3.default,
+    required: false,
+    enum: SortOptionV3,
+  })
+  sort: SortOptionV3;
+
+  @ApiProperty({
+    type: String,
+    example: LanguageOptionV3.China,
+    required: false,
+    enum: LanguageOptionV3,
+  })
+  target_language: LanguageOptionV3;
+
+  @ApiProperty({
+    type: String,
+    example: LanguageOptionV3.China,
+    required: false,
+    enum: LanguageOptionV3,
+  })
+  query_language: LanguageOptionV3;
+
+  @ApiProperty({
+    type: Number,
+    example: 0,
+    required: false,
+  })
+  minPrice: number;
+
+  @ApiProperty({
+    type: Number,
+    example: 100,
+    required: false,
+  })
+  maxPrice: number;
+
+  @ApiProperty({
+    type: Boolean,
+    example: false,
+    required: false,
+  })
+  inStock: boolean;
+
+  @ApiProperty({
+    type: Boolean,
+    example: false,
+    required: false,
+  })
+  isTmall: boolean;
+
+  @ApiProperty({
+    type: Boolean,
+    example: false,
+    required: false,
+  })
+  hasDiscount: boolean;
 }

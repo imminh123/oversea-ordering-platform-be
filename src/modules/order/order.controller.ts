@@ -5,10 +5,15 @@ import {
   Body,
   Param,
   UseInterceptors,
+  Query,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { User, UserDataJwtProperties } from '../../decorators/user.decorator';
-import { CreateOrderDto, ReCreateOrderDto } from './order.dto';
+import {
+  ClientIndexOrderDto,
+  CreateOrderDto,
+  ReCreateOrderDto,
+} from './order.dto';
 import { Roles } from '../../decorators/authorization.decorator';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Role } from '../../shared/constant';
@@ -91,8 +96,9 @@ export class OrderController {
   async clientIndexOrder(
     @User(UserDataJwtProperties.USERID) userId: string,
     @Pagination() pagination: IPagination,
+    @Query() indexOrderDto: ClientIndexOrderDto,
   ) {
-    return this.orderService.indexOrders(userId, pagination);
+    return this.orderService.indexOrders(indexOrderDto, userId, pagination);
   }
 
   @Get(':id')

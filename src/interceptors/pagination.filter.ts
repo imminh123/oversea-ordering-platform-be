@@ -4,6 +4,7 @@ import {
   ExecutionContext,
   CallHandler,
 } from '@nestjs/common';
+import { isNumber } from 'class-validator';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -15,6 +16,9 @@ export class PaginationInterceptor implements NestInterceptor {
   ): Observable<any> {
     return call$.handle().pipe(
       map((data) => {
+        if (isNumber(data)) {
+          return data;
+        }
         const headers = Object.assign({}, data.headers);
         const items = Object.assign({}, data.items);
         for (const key in headers) {

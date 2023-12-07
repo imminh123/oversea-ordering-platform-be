@@ -5,12 +5,12 @@ import {
 } from '@nestjs/common';
 import {
   AddItemToCartDto,
-  GetDetailTaobaoItemDto,
+  CartListingFilter,
   GetSummaryCartDto,
   UpdateCartItemDto,
 } from './cart.dto';
 import { TaobaoService } from '../../externalModules/taobao/taobao.service';
-import { CartListingFilter, ICart, ICartDocument } from './cart.interface';
+import { ICart, ICartDocument } from './cart.interface';
 import Decimal from 'decimal.js';
 import * as _ from 'lodash';
 import { CartRepository } from './cart.repository';
@@ -60,11 +60,14 @@ export class CartService {
   async clientGetCart(
     filters: CartListingFilter,
     userId: string,
-  ): Promise<ICart[]> {
+  ): Promise<ICart[] | number> {
     const { cartIds } = filters;
     const findParam: any = { userId };
     if (!_.isEmpty(cartIds)) {
       findParam._id = { $in: cartIds };
+    }
+    if (filters.onlyCount) {
+      return this.cartRepository.count(findParam);
     }
     const cart = await this.cartRepository.find(findParam, {
       sort: { createdAt: -1 },

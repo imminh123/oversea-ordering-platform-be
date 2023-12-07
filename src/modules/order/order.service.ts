@@ -1,6 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { OrderRepository } from './order.repository';
-import { CreateOrderDto, ReCreateOrderDto } from './order.dto';
+import {
+  ClientIndexOrderDto,
+  CreateOrderDto,
+  ReCreateOrderDto,
+} from './order.dto';
 import { TaobaoService } from '../../externalModules/taobao/taobao.service';
 import { VariablesService } from '../variables/variables.service';
 import { Errors } from '../../shared/errors/errors';
@@ -10,7 +14,7 @@ import Decimal from 'decimal.js';
 import { OrderStatus } from './order.enum';
 import { Variables } from '../variables/variables.helper';
 import { isValidObjectId } from 'mongoose';
-import { db2api } from '../../shared/helpers';
+import { buildFilterDateParam, db2api } from '../../shared/helpers';
 import { PaymentService } from '../payment/payment.service';
 import { PurchaseDto } from '../payment/payment.dto';
 import { IPagination } from '../../adapters/pagination/pagination.interface';
@@ -171,17 +175,31 @@ export class OrderService {
     return this.orderRepository.create(order);
   }
 
-  async indexOrders(userId: string, pagination: IPagination) {
-    const orders = await this.orderRepository.find(
-      { userId },
-      {
-        skip: pagination.startIndex,
-        limit: pagination.perPage,
-        sort: { createdAt: -1 },
-      },
-    );
+  async indexOrders(
+    indexOrderDto: ClientIndexOrderDto,
+    userId: string,
+    pagination: IPagination,
+  ) {
+    const findParam: any = { userId };
+    if (indexOrderDto.status) {
+      findParam.status = indexOrderDto.status;
+    }
+    if (indexOrderDto.timeFrom) {
+      findParam.createdAt = buildFilterDateParam(
+        indexOrderDto.timeFrom,
+        indexOrderDto.timeTo,
+      );
+    }
+    if (indexOrderDto.onlyCount) {
+      return this.orderRepository.count(findParam);
+    }
+    const orders = await this.orderRepository.find(findParam, {
+      skip: pagination.startIndex,
+      limit: pagination.perPage,
+      sort: { createdAt: -1 },
+    });
 
-    const listLength = await this.orderRepository.count({ userId });
+    const listLength = await this.orderRepository.count(findParam);
     const responseHeader = getHeaders(pagination, listLength);
 
     return {

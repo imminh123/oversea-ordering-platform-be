@@ -1,8 +1,4 @@
-import { IsArray, IsOptional, IsString } from 'class-validator';
 import { BaseDocument } from '../../shared/database/database.helpers';
-import { Transform } from 'class-transformer';
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { getParamsFromArrayQuery } from '../../shared/helpers';
 
 export interface ICart {
   itemId: number;
@@ -21,15 +17,3 @@ export interface ICart {
   userId: string;
 }
 export interface ICartDocument extends ICart, BaseDocument {}
-
-export class CartListingFilter {
-  @IsOptional()
-  @Transform(({ value }) => getParamsFromArrayQuery(value))
-  @IsArray()
-  @IsString({ each: true })
-  @ApiPropertyOptional({
-    type: [String],
-    description: 'Multiple cart item IDs',
-  })
-  cartIds?: string[];
-}
