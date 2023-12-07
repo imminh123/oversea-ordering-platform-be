@@ -11,6 +11,7 @@ import {
 import { CartService } from './cart.service';
 import {
   AddItemToCartDto,
+  CartListingFilter,
   GetSummaryCartDto,
   UpdateCartItemDto,
 } from './cart.dto';
@@ -18,7 +19,6 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { User, UserDataJwtProperties } from '../../decorators/user.decorator';
 import { Roles } from '../../decorators/authorization.decorator';
 import { Role } from '../../shared/constant';
-import { CartListingFilter } from './cart.interface';
 
 @Controller('cart')
 @ApiTags('cart')

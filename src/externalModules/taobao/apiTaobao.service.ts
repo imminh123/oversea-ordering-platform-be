@@ -3,7 +3,7 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { getConfig } from '../../shared/config/config.provider';
 import axios from 'axios';
 import { EndpointEnum, SortOption, SortOptionV2 } from './taobao.enum';
-import { SearchItemDtoV2 } from './tabao.dto';
+import { SearchItemDtoV2, SearchItemDtoV3 } from './tabao.dto';
 
 const config = getConfig();
 const tmApiToken = config.get('tmApiToken');
@@ -14,6 +14,12 @@ const emptyResult = {
     base: { pageSize: 0, totalResults: 0 },
   },
 };
+
+const emptyResultV2 = {
+  items: [],
+  page: 1,
+  total_items_count: 0,
+};
 @Injectable()
 export class ApiTaobaoService {
   async getItemDetailFromTaobao(id: number) {
@@ -23,11 +29,14 @@ export class ApiTaobaoService {
       params: { apiToken: tmApiToken, item_id: id },
     };
     try {
-      const { data } = (await axios.request(options)).data;
-      return data;
+      const { data } = await axios.request(options);
+      if (data.code === 404) {
+        return null;
+      }
+      return data.data;
     } catch (error) {
       Logger.error(error);
-      return null;
+      throw new BadRequestException('Không thể lấy item từ taobao');
     }
   }
 
@@ -43,7 +52,6 @@ export class ApiTaobaoService {
     };
     try {
       const { data } = await axios.request(options);
-      console.log(JSON.stringify(data));
       if (data.result.status.data === 'error') {
         return emptyResult;
       }
@@ -95,6 +103,30 @@ export class ApiTaobaoService {
     } catch (error) {
       Logger.error(error);
       return emptyResult;
+    }
+  }
+
+  async searchItemTaobaoV3(params: SearchItemDtoV3) {
+    const options = {
+      method: 'GET',
+      url: EndpointEnum.SearchItemV3,
+      params: {
+        ...params,
+      },
+      headers: {
+        'X-RapidAPI-Key': rapidApiKey,
+        'X-RapidAPI-Host': 'taobao-tmall-Tao-Bao-data-service.p.rapidapi.com',
+      },
+    };
+    try {
+      const { data } = await axios.request(options);
+      if (data.status === 404) {
+        return emptyResultV2;
+      }
+      return data;
+    } catch (error) {
+      Logger.error(error);
+      return emptyResultV2;
     }
   }
 }

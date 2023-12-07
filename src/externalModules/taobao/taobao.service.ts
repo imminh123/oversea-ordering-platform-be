@@ -3,7 +3,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { ItemDetailInfo } from './taobao.interface';
 import { ApiTaobaoService } from './apiTaobao.service';
 import { getHeaders } from '../../adapters/pagination/pagination.helper';
-import { SearchItemDtoV2 } from './tabao.dto';
+import { SearchItemDtoV2, SearchItemDtoV3 } from './tabao.dto';
 
 @Injectable()
 export class TaobaoService {
@@ -14,7 +14,11 @@ export class TaobaoService {
     skuId?: string,
   ): Promise<ItemDetailInfo> {
     const item = await this.apiTaobaoService.getItemDetailFromTaobao(itemId);
+    if (!item) {
+      return null;
+    }
     let skuItem;
+
     if (item.skus && item.sku_props) {
       if (skuId) {
         skuItem = item.skus.find((value) => {
@@ -110,6 +114,24 @@ export class TaobaoService {
       { page: Number(page), perPage: Number(perPage) },
       Number(listLength),
     );
+
+    return {
+      items,
+      headers: responseHeader,
+    };
+  }
+
+  async directSearchItemTaobaoV3(searchDto: SearchItemDtoV3) {
+    const listItems = await this.apiTaobaoService.searchItemTaobaoV3(searchDto);
+    const { items, page, max_page, total_items_count: listLength } = listItems;
+    const responseHeader = getHeaders(
+      { page: page, perPage: items.length },
+      listLength,
+    );
+    if (responseHeader['x-pages-count'] > max_page) {
+      responseHeader['x-pages-count'] = max_page;
+      responseHeader['x-next-page'] -= 1;
+    }
 
     return {
       items,

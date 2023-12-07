@@ -6,10 +6,12 @@ import {
   IsArray,
   ArrayNotEmpty,
   IsString,
+  IsBoolean,
 } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { BadRequestException } from '@nestjs/common';
+import { getParamsFromArrayQuery } from '../../shared/helpers';
 
 export class AddItemToCartDto {
   @IsNumber()
@@ -102,4 +104,27 @@ export class GetDetailTaobaoItemDto {
     required: false,
   })
   id: number;
+}
+
+export class CartListingFilter {
+  @IsOptional()
+  @Transform(({ value }) => getParamsFromArrayQuery(value))
+  @IsArray()
+  @IsString({ each: true })
+  @ApiPropertyOptional({
+    type: [String],
+    description: 'Multiple cart item IDs',
+  })
+  cartIds?: string[];
+
+  @IsBoolean()
+  @IsOptional()
+  @Transform((data) => {
+    return data.value === 'true';
+  })
+  @ApiProperty({
+    type: Boolean,
+    required: false,
+  })
+  onlyCount?: boolean;
 }
