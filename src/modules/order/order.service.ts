@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { OrderRepository } from './order.repository';
-import { CreateOrderDto } from './order.dto';
+import { CreateOrderDto, ReCreateOrderDto } from './order.dto';
 import { TaobaoService } from '../../externalModules/taobao/taobao.service';
 import { VariablesService } from '../variables/variables.service';
 import { Errors } from '../../shared/errors/errors';
@@ -61,20 +61,55 @@ export class OrderService {
     );
   }
 
-  async createOrderAndPay({
-    address,
-    listItem,
-    userId,
-    wareHouseAddress,
-  }: {
-    address: IAddress;
-    listItem: ICartDocument[];
-    userId: string;
-    wareHouseAddress?: string;
-  }) {
+  async clientReCreateOrderAndPay(
+    { orderId }: ReCreateOrderDto,
+    userId: string,
+  ) {
+    const { address, listItem, wareHouseAddress } =
+      await this.orderRepository.findById(orderId);
+    return this.createOrderAndPay(
+      {
+        wareHouseAddress,
+        address,
+        listItem,
+        userId,
+      },
+      true,
+    );
+  }
+
+  async clientReCreateOrder({ orderId }: ReCreateOrderDto, userId: string) {
+    const { address, listItem, wareHouseAddress } =
+      await this.orderRepository.findById(orderId);
+    return this.createOrder(
+      {
+        wareHouseAddress,
+        address,
+        listItem,
+      },
+      userId,
+      true,
+    );
+  }
+
+  async createOrderAndPay(
+    {
+      address,
+      listItem,
+      userId,
+      wareHouseAddress,
+    }: {
+      address: IAddress;
+      listItem: ICartDocument[] | any[];
+      userId: string;
+      wareHouseAddress?: string;
+    },
+    isReCreate = false,
+  ) {
     const order = await this.createOrder(
       { wareHouseAddress, address, listItem },
       userId,
+      isReCreate,
     );
     const paymentPayload: PurchaseDto = {
       referenceId: order.id,
@@ -92,11 +127,12 @@ export class OrderService {
       address,
       wareHouseAddress,
     }: {
-      listItem: Partial<ICartDocument>[];
+      listItem: ICartDocument[] | any[];
       address: IAddress;
       wareHouseAddress?: string;
     },
     userId: string,
+    isReCreate = false,
   ) {
     const listProduct = [];
     let total = new Decimal(0);
@@ -120,7 +156,7 @@ export class OrderService {
         volume: item.quantity,
         rate,
       });
-      orderItem.cartId = item.id;
+      orderItem.cartId = isReCreate ? '' : item?.id;
       listProduct.push(orderItem);
       total = total.add(orderItem.vnCost);
     }

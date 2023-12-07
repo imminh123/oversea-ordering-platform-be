@@ -32,3 +32,13 @@ export class CreateOrderDto {
   })
   wareHouseAddress?: string;
 }
+
+export class ReCreateOrderDto {
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({
+    type: String,
+    example: 'def',
+  })
+  orderId: string;
+}

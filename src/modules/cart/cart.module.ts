@@ -16,6 +16,6 @@ import { VariablesModule } from '../variables/variables.module';
   ],
   controllers: [CartController],
   providers: [CartService, CartRepository],
-  exports: [CartService],
+  exports: [CartService, CartRepository],
 })
 export class CartModule {}
