@@ -46,7 +46,7 @@ export class SearchItemDtoV3 {
     example: '',
     required: true,
   })
-  query: string;
+  q: string;
 
   @ApiProperty({
     type: String,

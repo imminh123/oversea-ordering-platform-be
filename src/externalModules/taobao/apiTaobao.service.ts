@@ -112,6 +112,7 @@ export class ApiTaobaoService {
       url: EndpointEnum.SearchItemV3,
       params: {
         ...params,
+        query: params.q,
       },
       headers: {
         'X-RapidAPI-Key': rapidApiKey,
