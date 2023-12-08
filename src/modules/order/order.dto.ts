@@ -2,10 +2,13 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   ArrayNotEmpty,
   IsArray,
+  IsBoolean,
   IsNotEmpty,
   IsOptional,
   IsString,
 } from 'class-validator';
+import { OrderStatus } from './order.enum';
+import { Transform } from 'class-transformer';
 
 export class CreateOrderDto {
   @IsArray()
@@ -41,4 +44,41 @@ export class ReCreateOrderDto {
     example: 'def',
   })
   orderId: string;
+}
+
+export class ClientIndexOrderDto {
+  @ApiProperty({
+    type: String,
+    enum: OrderStatus,
+    required: false,
+  })
+  status?: string;
+
+  @IsOptional()
+  @ApiProperty({
+    type: Date,
+    example: '2023-12-07T16:00:00.000Z',
+    required: false,
+  })
+  timeFrom?: Date;
+
+  @IsOptional()
+  @ApiProperty({
+    type: Date,
+    example: '2023-12-08T16:00:00.000Z',
+    required: false,
+  })
+  timeTo?: Date;
+
+  @IsBoolean()
+  @IsOptional()
+  @Transform((data) => {
+    return data.value === 'true';
+  })
+  @ApiProperty({
+    type: Boolean,
+    example: false,
+    required: false,
+  })
+  onlyCount?: boolean;
 }
