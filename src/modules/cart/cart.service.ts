@@ -66,9 +66,6 @@ export class CartService {
     if (!_.isEmpty(cartIds)) {
       findParam._id = { $in: cartIds };
     }
-    if (filters.onlyCount) {
-      return this.cartRepository.count(findParam);
-    }
     const cart = await this.cartRepository.find(findParam, {
       sort: { createdAt: -1 },
     });
@@ -119,6 +116,10 @@ export class CartService {
     }
 
     return itemsResponse;
+  }
+
+  async countCart(userId: string): Promise<number> {
+    return this.cartRepository.count({ userId });
   }
 
   async refreshClientCart(userId: string): Promise<ICart[]> {
