@@ -54,6 +54,17 @@ export class CartController {
     return this.cartService.clientGetCart(filters, userId);
   }
 
+  @Get('count')
+  @Roles(Role.Client)
+  @ApiOperation({
+    operationId: 'clientCountCart',
+    description: 'Client count cart',
+    summary: 'Client count cart',
+  })
+  clientCountCart(@User(UserDataJwtProperties.USERID) userId: string) {
+    return this.cartService.countCart(userId);
+  }
+
   @Get('v2')
   @Roles(Role.Client)
   @ApiOperation({

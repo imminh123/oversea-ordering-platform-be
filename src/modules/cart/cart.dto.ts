@@ -116,15 +116,4 @@ export class CartListingFilter {
     description: 'Multiple cart item IDs',
   })
   cartIds?: string[];
-
-  @IsBoolean()
-  @IsOptional()
-  @Transform((data) => {
-    return data.value === 'true';
-  })
-  @ApiProperty({
-    type: Boolean,
-    required: false,
-  })
-  onlyCount?: boolean;
 }
