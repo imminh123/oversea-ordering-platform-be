@@ -12,7 +12,7 @@ export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
   @Get()
-  @Roles(Role.Client)
+  @Roles(Role.Client, Role.Admin)
   @ApiOperation({
     operationId: 'getDashboardInformation',
     description: 'Get dashboard information',
