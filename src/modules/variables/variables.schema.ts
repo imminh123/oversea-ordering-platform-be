@@ -6,4 +6,5 @@ export const IVariableSchema = getBaseSchema<IVariableDocument>();
 IVariableSchema.add({
   name: { type: String, required: false },
   value: { type: String, required: false },
+  description: { type: String, required: false },
 });
