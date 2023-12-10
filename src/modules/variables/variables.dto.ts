@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmpty, IsString } from 'class-validator';
 
 export class AddVariableDto {
@@ -19,6 +19,14 @@ export class AddVariableDto {
     required: true,
   })
   value: string;
+
+  @IsString()
+  @ApiPropertyOptional({
+    type: String,
+    example: '',
+    required: false,
+  })
+  description: string;
 }
 
 export class AdminIndexVariableDto {
@@ -39,4 +47,12 @@ export class UpdateVariableDto {
     required: true,
   })
   value: string;
+
+  @IsString()
+  @ApiPropertyOptional({
+    type: String,
+    example: '',
+    required: false,
+  })
+  description: string;
 }

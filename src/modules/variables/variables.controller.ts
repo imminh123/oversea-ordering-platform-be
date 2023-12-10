@@ -30,7 +30,7 @@ export class VariablesController {
   constructor(private readonly variablesService: VariablesService) {}
 
   @Post()
-  // @Roles(Role.Admin, Role.Root)
+  @Roles(Role.Admin, Role.Root)
   @ApiOperation({
     operationId: 'AdminCreateNewVariable',
     description: 'Admin create new variable',

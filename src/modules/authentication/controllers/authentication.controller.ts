@@ -61,7 +61,7 @@ export class AuthenticationController {
     return this.authenticationService.registerUser(token);
   }
 
-  @Roles(Role.Client)
+  @Roles(Role.Client, Role.Admin)
   @ApiOperation({
     operationId: 'clientUpdateAuth',
     description: 'Client update auth',
@@ -75,7 +75,7 @@ export class AuthenticationController {
     return this.authenticationService.updateAuthInfo(updateAuthDto, userId);
   }
 
-  @Roles(Role.Client)
+  @Roles(Role.Client, Role.Admin)
   @ApiOperation({
     operationId: 'clientUpdateOAuth',
     description: 'Client update Oauth',
@@ -109,6 +109,7 @@ export class AuthenticationController {
     summary: 'Client get auth info',
   })
   @Get('client')
+  @Roles(...WebAdminRole, Role.Client)
   userGetInfo(@User(UserDataJwtProperties.USERID) userId: string) {
     return this.authenticationService.getUserById(userId);
   }

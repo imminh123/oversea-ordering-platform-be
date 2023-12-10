@@ -56,10 +56,10 @@ export class VariablesService {
     return db2api<IVariableDocument, IVariable>(variable);
   }
 
-  async updateVariableById(id: string, { value }: UpdateVariableDto) {
+  async updateVariableById(id: string, param: UpdateVariableDto) {
     await this.getVariableById(id);
     await this.cacheManager.reset();
-    return this.variableRepository.updateById(id, { value });
+    return this.variableRepository.updateById(id, param);
   }
 
   async deleteVariableById(id: string) {
