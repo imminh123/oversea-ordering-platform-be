@@ -36,7 +36,7 @@ export class OrderService {
   ) {}
   async clientCreateOrderAndPay(
     createOrderDto: CreateOrderDto,
-    userId: string,
+    { userId, userName }: { userId: string; userName: string },
   ) {
     const { address, listItem } = await this.prepareListItemAndAddress(
       createOrderDto.addressId,
@@ -47,10 +47,14 @@ export class OrderService {
       address,
       listItem,
       userId,
+      userName,
     });
   }
 
-  async clientCreateOrder(createOrderDto: CreateOrderDto, userId: string) {
+  async clientCreateOrder(
+    createOrderDto: CreateOrderDto,
+    { userId, userName }: { userId: string; userName: string },
+  ) {
     const { address, listItem } = await this.prepareListItemAndAddress(
       createOrderDto.addressId,
       createOrderDto.listItemId,
@@ -61,13 +65,13 @@ export class OrderService {
         address,
         listItem,
       },
-      userId,
+      { userId, userName },
     );
   }
 
   async clientReCreateOrderAndPay(
     { orderId }: ReCreateOrderDto,
-    userId: string,
+    { userId, userName }: { userId: string; userName: string },
   ) {
     const { address, listItem, wareHouseAddress } =
       await this.orderRepository.findById(orderId);
@@ -77,12 +81,16 @@ export class OrderService {
         address,
         listItem,
         userId,
+        userName,
       },
       true,
     );
   }
 
-  async clientReCreateOrder({ orderId }: ReCreateOrderDto, userId: string) {
+  async clientReCreateOrder(
+    { orderId }: ReCreateOrderDto,
+    { userId, userName }: { userId: string; userName: string },
+  ) {
     const { address, listItem, wareHouseAddress } =
       await this.orderRepository.findById(orderId);
     return this.createOrder(
@@ -91,7 +99,7 @@ export class OrderService {
         address,
         listItem,
       },
-      userId,
+      { userId, userName },
       true,
     );
   }
@@ -101,18 +109,20 @@ export class OrderService {
       address,
       listItem,
       userId,
+      userName,
       wareHouseAddress,
     }: {
       address: IAddress;
       listItem: ICartDocument[] | any[];
       userId: string;
+      userName: string;
       wareHouseAddress?: string;
     },
     isReCreate = false,
   ) {
     const order = await this.createOrder(
       { wareHouseAddress, address, listItem },
-      userId,
+      { userId, userName },
       isReCreate,
     );
     const paymentPayload: PurchaseDto = {
@@ -135,7 +145,7 @@ export class OrderService {
       address: IAddress;
       wareHouseAddress?: string;
     },
-    userId: string,
+    { userId, userName }: { userId: string; userName: string },
     isReCreate = false,
   ) {
     const listProduct = [];
@@ -169,6 +179,7 @@ export class OrderService {
     const order = {
       listItem: listProduct,
       userId,
+      userName,
       status: OrderStatus.CREATED,
       address,
       wareHouseAddress,
@@ -192,6 +203,13 @@ export class OrderService {
         indexOrderDto.timeFrom,
         indexOrderDto.timeTo,
       );
+    }
+
+    if (indexOrderDto.userName) {
+      findParam.userName = indexOrderDto.userName;
+    }
+    if (indexOrderDto.itemName) {
+      findParam.listItem = { itemName: indexOrderDto.itemName };
     }
     if (indexOrderDto.onlyCount) {
       return this.orderRepository.count(findParam);

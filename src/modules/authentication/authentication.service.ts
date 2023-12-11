@@ -119,6 +119,7 @@ export class AuthenticationService {
     const { accessToken, refreshToken } = await this.createSessionToken({
       id: user.id,
       role: user.role,
+      name: user.fullname,
     });
 
     return {
@@ -165,6 +166,7 @@ export class AuthenticationService {
     const { accessToken, refreshToken } = await this.createSessionToken({
       id: user.id,
       role: user.role,
+      name: user.fullname,
     });
 
     return {
@@ -313,6 +315,7 @@ export class AuthenticationService {
     const { accessToken, refreshToken } = await this.createSessionToken({
       id: user.id,
       role: user.role,
+      name: user.fullname,
     });
 
     return {
@@ -419,10 +422,14 @@ export class AuthenticationService {
     return this.authenticationRepository.updateById(userId, updateParam);
   }
 
-  async createSessionToken({ id, role }) {
-    const accessToken = jwt.sign({ userId: id, role }, privateKey, {
-      expiresIn: '10m',
-    });
+  async createSessionToken({ id, role, name }) {
+    const accessToken = jwt.sign(
+      { userId: id, userName: name, role },
+      privateKey,
+      {
+        expiresIn: '10m',
+      },
+    );
 
     const refreshToken = jwt.sign({ userId: id, isRefresh: true }, privateKey, {
       expiresIn: '1d',

@@ -29,6 +29,7 @@ const OrderHistoryDetail = {
 IOrderSchema.add({
   listItem: { type: [DetailItem], required: true },
   userId: { type: String, required: true },
+  userName: { type: String, required: false },
   status: { type: String, required: true },
   address: { type: Object, required: true },
   wareHouseAddress: { type: String, required: false },

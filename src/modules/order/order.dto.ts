@@ -56,6 +56,20 @@ export class ClientIndexOrderDto {
   })
   status?: string;
 
+  @ApiProperty({
+    type: String,
+    enum: OrderStatus,
+    required: false,
+  })
+  userName?: string;
+
+  @ApiProperty({
+    type: String,
+    enum: OrderStatus,
+    required: false,
+  })
+  itemName?: string;
+
   @IsOptional()
   @ApiProperty({
     type: Date,

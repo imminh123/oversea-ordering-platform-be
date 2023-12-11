@@ -39,8 +39,12 @@ export class OrderController {
   async clientCreateOrderAndPay(
     @Body() createOrderDto: CreateOrderDto,
     @User(UserDataJwtProperties.USERID) userId: string,
+    @User(UserDataJwtProperties.USERNAME) userName: string,
   ) {
-    return this.orderService.clientCreateOrderAndPay(createOrderDto, userId);
+    return this.orderService.clientCreateOrderAndPay(createOrderDto, {
+      userId,
+      userName,
+    });
   }
 
   @Post('createOrder')
@@ -53,8 +57,12 @@ export class OrderController {
   async createOrder(
     @Body() createOrderDto: CreateOrderDto,
     @User(UserDataJwtProperties.USERID) userId: string,
+    @User(UserDataJwtProperties.USERNAME) userName: string,
   ) {
-    return this.orderService.clientCreateOrder(createOrderDto, userId);
+    return this.orderService.clientCreateOrder(createOrderDto, {
+      userId,
+      userName,
+    });
   }
 
   @Post('reCreateOrderAndPay')
@@ -67,8 +75,12 @@ export class OrderController {
   async clientReCreateOrderAndPay(
     @Body() createOrderDto: ReCreateOrderDto,
     @User(UserDataJwtProperties.USERID) userId: string,
+    @User(UserDataJwtProperties.USERNAME) userName: string,
   ) {
-    return this.orderService.clientReCreateOrderAndPay(createOrderDto, userId);
+    return this.orderService.clientReCreateOrderAndPay(createOrderDto, {
+      userId,
+      userName,
+    });
   }
 
   @Post('reCreateOrder')
@@ -81,8 +93,12 @@ export class OrderController {
   async reCreateOrder(
     @Body() createOrderDto: ReCreateOrderDto,
     @User(UserDataJwtProperties.USERID) userId: string,
+    @User(UserDataJwtProperties.USERNAME) userName: string,
   ) {
-    return this.orderService.clientReCreateOrder(createOrderDto, userId);
+    return this.orderService.clientReCreateOrder(createOrderDto, {
+      userId,
+      userName,
+    });
   }
 
   @Get()

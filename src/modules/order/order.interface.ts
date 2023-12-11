@@ -26,6 +26,7 @@ export interface OrderHistoryDetail {
 export interface IOrder {
   listItem: DetailItem[];
   userId: string;
+  userName: string;
   status: OrderStatus;
   address: any;
   wareHouseAddress: string;
