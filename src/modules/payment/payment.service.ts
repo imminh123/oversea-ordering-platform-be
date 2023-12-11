@@ -8,7 +8,11 @@ import {
 } from '@nestjs/common';
 import { CompletePurchaseDto, PurchaseDto } from './payment.dto';
 import { ITransaction, ITransactionDocument } from './payment.interface';
-import { PaymentStatus, vnpayEndpoint } from './payment.enum';
+import {
+  PaymentStatus,
+  orderTimeOutInMinutes,
+  vnpayEndpoint,
+} from './payment.enum';
 import { VnpayService } from '../../externalModules/vnpay/vnpay.service';
 import { TransactionRepository } from './payment.repository';
 import { db2api, isAfter } from '../../shared/helpers';
@@ -21,7 +25,7 @@ import {
   SignatureType,
 } from '../../externalModules/vnpay/vnpay.enum';
 import { OrderService } from '../order/order.service';
-import { OrderStatus } from '../order/order.enum';
+import { OrderStatus, UpdatedByUser } from '../order/order.enum';
 import { IPagination } from '../../adapters/pagination/pagination.interface';
 import { getHeaders } from '../../adapters/pagination/pagination.helper';
 import { CartService } from '../cart/cart.service';
@@ -72,6 +76,7 @@ export class PaymentService {
     if (order.status === OrderStatus.CREATED) {
       await this.orderService.updateOrderStatus(createPurchaseDto.referenceId, {
         status: OrderStatus.PENDING_PAYMENT,
+        updatedBy: userId,
       });
     }
     const response = db2api<ITransactionDocument, ITransaction>(transaction);
@@ -106,7 +111,7 @@ export class PaymentService {
       }
       const incomingStatus =
         payload.status === PaymentStatus.SUCCEEDED
-          ? OrderStatus.DELIVERED
+          ? OrderStatus.PENDING_ORDER
           : OrderStatus.FAILED;
       const order = await this.orderService.getOrderById(
         transaction.referenceId,
@@ -140,7 +145,7 @@ export class PaymentService {
         try {
           this.mailService.sendPurchaseSuccess(payload, user.mail);
         } catch (error) {
-          Logger.log(`cannot send mail to ${user.mail}`, error);
+          console.log(`cannot send mail to ${user.mail}`, error);
         }
       }
       await Promise.all([
@@ -208,9 +213,10 @@ export class PaymentService {
     ) {
       throw new BadRequestException('Không thể thanh toán cho order này');
     }
-    if (!isAfter(order.createdAt, new Date(), 5)) {
+    if (!isAfter(order.createdAt, new Date(), orderTimeOutInMinutes)) {
       await this.orderService.updateOrderStatus(orderId, {
         status: OrderStatus.TIMEOUT,
+        updatedBy: UpdatedByUser.SYSTEM,
       });
       if (findExitsTransaction) {
         findExitsTransaction.status = PaymentStatus.FAILED;

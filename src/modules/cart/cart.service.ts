@@ -15,7 +15,7 @@ import Decimal from 'decimal.js';
 import * as _ from 'lodash';
 import { CartRepository } from './cart.repository';
 import { Errors } from '../../shared/errors/errors';
-import { db2api, isAfter } from '../../shared/helpers';
+import { addTime, db2api, isAfter } from '../../shared/helpers';
 import { ItemDetailInfo } from '../../externalModules/taobao/taobao.interface';
 import { isValidObjectId } from 'mongoose';
 import { ObjectId } from 'bson';
@@ -69,38 +69,7 @@ export class CartService {
     const cart = await this.cartRepository.find(findParam, {
       sort: { createdAt: -1 },
     });
-    const current = new Date();
-    for (const cartItem of cart) {
-      if (isAfter(cartItem.updatedAt, current, 60)) {
-        continue;
-      }
-      const item = await this.cartRepository.findOne(
-        { itemId: cartItem.itemId, skuId: cartItem.skuId },
-        { sort: { updatedAt: -1 } },
-      );
-      if (item && isAfter(item.updatedAt, current, 60)) {
-        cartItem.updatedAt = item.updatedAt;
-        cartItem.price = item.price;
-        cartItem.propName = item.propName;
-        cartItem.isActive = item.isActive;
-        cartItem.save();
-        continue;
-      }
-      const newItem = await this.tbService.getItemDetailById(
-        cartItem.itemId,
-        undefined,
-        cartItem.skuId,
-      );
-      cartItem.updatedAt = current;
-      if (!newItem) {
-        cartItem.isActive = false;
-        cartItem.save();
-        continue;
-      }
-      cartItem.price = new Decimal(newItem.sale_price).toNumber();
-      cartItem.propName = newItem.props_names;
-      cartItem.save();
-    }
+    this.refreshClientCart(userId, 1).then().catch();
     const rate = await this.variablesService.getVariable(
       Variables.EXCHANGE_RATE,
     );
@@ -122,7 +91,10 @@ export class CartService {
     return this.cartRepository.count({ userId });
   }
 
-  async refreshClientCart(userId: string): Promise<ICart[]> {
+  async refreshClientCart(
+    userId: string,
+    cacheTimeInHour = 0,
+  ): Promise<ICart[]> {
     const cart = await this.cartRepository.find(
       { userId },
       {
@@ -130,15 +102,19 @@ export class CartService {
       },
     );
     const listUpdateVoid = [];
+    const mockTime = addTime(new Date(), -1 * cacheTimeInHour, 'hour');
     for (const cartItem of cart) {
-      const item = await this.tbService.getItemDetailById(
+      const item = await this.tbService.getItemDetailByIdV3(
         cartItem.itemId,
         undefined,
         cartItem.skuId,
+        mockTime,
       );
       if (!item) {
         listUpdateVoid.push(
-          this.cartRepository.updateById(cartItem.id, { isActive: false }),
+          this.cartRepository.updateById(cartItem.id, {
+            isActive: false,
+          }),
         );
         continue;
       }
@@ -148,7 +124,10 @@ export class CartService {
         volume: cartItem.quantity,
       });
       listUpdateVoid.push(
-        this.cartRepository.updateById(cartItem.id, updateItem),
+        this.cartRepository.updateById(cartItem.id, {
+          ...updateItem,
+          isActive: true,
+        }),
       );
     }
     return Promise.all(listUpdateVoid);
@@ -239,49 +218,7 @@ export class CartService {
     if (!rate) {
       throw new NotFoundException('Không thể lấy giá nhân dân tệ');
     }
-    const current = new Date();
-    for (const { listItem } of cart) {
-      for (const cartItem of listItem) {
-        cartItem.vnPrice = new Decimal(cartItem.price)
-          .mul(rate)
-          .toDP(3)
-          .toString();
-        if (isAfter(cartItem.updatedAt, current, 60)) {
-          continue;
-        }
-        const item = await this.cartRepository.findOne(
-          { itemId: cartItem.itemId, skuId: cartItem.skuId },
-          { sort: { updatedAt: -1 } },
-        );
-        if (item && isAfter(item.updatedAt, current, 60)) {
-          cartItem.updatedAt = item.updatedAt;
-          cartItem.price = item.price;
-          cartItem.propName = item.propName;
-          cartItem.isActive = item.isActive;
-          cartItem.vnPrice = new Decimal(item.price)
-            .mul(rate)
-            .toDP(3)
-            .toString();
-          this.cartRepository.updateById(cartItem.id, cartItem);
-          continue;
-        }
-        const newItem = await this.tbService.getItemDetailById(
-          cartItem.itemId,
-          undefined,
-          cartItem.skuId,
-        );
-        cartItem.updatedAt = current;
-        if (!newItem) {
-          cartItem.isActive = false;
-          this.cartRepository.updateById(cartItem.id, cartItem);
-          continue;
-        }
-        cartItem.price = new Decimal(newItem.sale_price).toNumber();
-        cartItem.propName = newItem.props_names;
-        cartItem.vnPrice = new Decimal(item.price).mul(rate).toDP(3).toString();
-        this.cartRepository.updateById(cartItem.id, cartItem);
-      }
-    }
+    this.refreshClientCart(userId, 1).then().catch();
     return cart;
   }
 

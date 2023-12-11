@@ -8,6 +8,7 @@ export enum DbModel {
   Order = 'Order',
   Transactions = 'Transactions',
   Address = 'Address',
+  CacheItem = 'CacheItem',
 }
 
 export enum Role {

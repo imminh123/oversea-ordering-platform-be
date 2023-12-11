@@ -45,3 +45,5 @@ vnpay:
 mail:
   apiKey: MAILJET_API_KEY
   secretKey: MAILJET_SECRET_KEY
+
+orderTimeoutInMinutes: ORDER_TIMEOUT_IN_MINUTES

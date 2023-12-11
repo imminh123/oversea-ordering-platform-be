@@ -95,4 +95,21 @@ export class CartRepository
       ])
       .exec();
   }
+
+  async listingDistinctItemId(userId: string) {
+    return this.model
+      .aggregate([
+        {
+          $match: {
+            userId,
+          },
+        },
+        {
+          $group: {
+            _id: '$itemId',
+          },
+        },
+      ])
+      .exec();
+  }
 }
