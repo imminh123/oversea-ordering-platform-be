@@ -1,3 +1,5 @@
+import { BaseDocument } from '../../shared/database/database.helpers';
+
 export interface ItemDetailInfo {
   item_id: number;
   product_url: string;
@@ -10,4 +12,11 @@ export interface ItemDetailInfo {
   props_ids?: string;
   sale_price: string;
   skuid: string;
+  quantity: number;
 }
+
+export interface ICacheItem {
+  itemId: number;
+  detail: object;
+}
+export interface ICacheItemDocument extends ICacheItem, BaseDocument {}

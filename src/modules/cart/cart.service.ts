@@ -15,7 +15,7 @@ import Decimal from 'decimal.js';
 import * as _ from 'lodash';
 import { CartRepository } from './cart.repository';
 import { Errors } from '../../shared/errors/errors';
-import { db2api, isAfter } from '../../shared/helpers';
+import { addTime, db2api, isAfter } from '../../shared/helpers';
 import { ItemDetailInfo } from '../../externalModules/taobao/taobao.interface';
 import { isValidObjectId } from 'mongoose';
 import { ObjectId } from 'bson';
@@ -77,22 +77,11 @@ export class CartService {
       if (isAfter(cartItem.updatedAt, current, 60)) {
         continue;
       }
-      const item = await this.cartRepository.findOne(
-        { itemId: cartItem.itemId, skuId: cartItem.skuId },
-        { sort: { updatedAt: -1 } },
-      );
-      if (item && isAfter(item.updatedAt, current, 60)) {
-        cartItem.updatedAt = item.updatedAt;
-        cartItem.price = item.price;
-        cartItem.propName = item.propName;
-        cartItem.isActive = item.isActive;
-        cartItem.save();
-        continue;
-      }
-      const newItem = await this.tbService.getItemDetailById(
+      const newItem = await this.tbService.getItemDetailByIdV3(
         cartItem.itemId,
         undefined,
         cartItem.skuId,
+        addTime(current, -1, 'hour'),
       );
       cartItem.updatedAt = current;
       if (!newItem) {
@@ -102,6 +91,7 @@ export class CartService {
       }
       cartItem.price = new Decimal(newItem.sale_price).toNumber();
       cartItem.propName = newItem.props_names;
+      cartItem.isActive = true;
       cartItem.save();
     }
     const rate = await this.variablesService.getVariable(
@@ -129,15 +119,19 @@ export class CartService {
       },
     );
     const listUpdateVoid = [];
+    const current = new Date();
     for (const cartItem of cart) {
-      const item = await this.tbService.getItemDetailById(
+      const item = await this.tbService.getItemDetailByIdV3(
         cartItem.itemId,
         undefined,
         cartItem.skuId,
+        current,
       );
       if (!item) {
         listUpdateVoid.push(
-          this.cartRepository.updateById(cartItem.id, { isActive: false }),
+          this.cartRepository.updateById(cartItem.id, {
+            isActive: false,
+          }),
         );
         continue;
       }
@@ -147,7 +141,10 @@ export class CartService {
         volume: cartItem.quantity,
       });
       listUpdateVoid.push(
-        this.cartRepository.updateById(cartItem.id, updateItem),
+        this.cartRepository.updateById(cartItem.id, {
+          ...updateItem,
+          isActive: true,
+        }),
       );
     }
     return Promise.all(listUpdateVoid);
@@ -248,36 +245,24 @@ export class CartService {
         if (isAfter(cartItem.updatedAt, current, 60)) {
           continue;
         }
-        const item = await this.cartRepository.findOne(
-          { itemId: cartItem.itemId, skuId: cartItem.skuId },
-          { sort: { updatedAt: -1 } },
-        );
-        if (item && isAfter(item.updatedAt, current, 60)) {
-          cartItem.updatedAt = item.updatedAt;
-          cartItem.price = item.price;
-          cartItem.propName = item.propName;
-          cartItem.isActive = item.isActive;
-          cartItem.vnPrice = new Decimal(item.price)
-            .mul(rate)
-            .toDP(3)
-            .toString();
-          this.cartRepository.updateById(cartItem.id, cartItem);
-          continue;
-        }
-        const newItem = await this.tbService.getItemDetailById(
+        const item = await this.tbService.getItemDetailByIdV3(
           cartItem.itemId,
           undefined,
           cartItem.skuId,
+          addTime(current, -1, 'hour'),
         );
         cartItem.updatedAt = current;
-        if (!newItem) {
+        if (!item) {
           cartItem.isActive = false;
           this.cartRepository.updateById(cartItem.id, cartItem);
           continue;
         }
-        cartItem.price = new Decimal(newItem.sale_price).toNumber();
-        cartItem.propName = newItem.props_names;
-        cartItem.vnPrice = new Decimal(item.price).mul(rate).toDP(3).toString();
+        cartItem.price = new Decimal(item.sale_price).toNumber();
+        cartItem.propName = item.props_names;
+        cartItem.vnPrice = new Decimal(item.sale_price)
+          .mul(rate)
+          .toDP(3)
+          .toString();
         this.cartRepository.updateById(cartItem.id, cartItem);
       }
     }

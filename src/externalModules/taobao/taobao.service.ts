@@ -4,10 +4,15 @@ import { ItemDetailInfo } from './taobao.interface';
 import { ApiTaobaoService } from './apiTaobao.service';
 import { getHeaders } from '../../adapters/pagination/pagination.helper';
 import { SearchItemDtoV2, SearchItemDtoV3 } from './tabao.dto';
+import { CacheItemRepository } from './taobao.repository';
+import { buildFilterDateParam } from '../../shared/helpers';
 
 @Injectable()
 export class TaobaoService {
-  constructor(private readonly apiTaobaoService: ApiTaobaoService) {}
+  constructor(
+    private readonly apiTaobaoService: ApiTaobaoService,
+    private readonly cacheItemRepository: CacheItemRepository,
+  ) {}
   async getItemDetailById(
     itemId: number,
     pvid?: string[] | string,
@@ -45,10 +50,6 @@ export class TaobaoService {
     };
   }
 
-  async searchItem(text: string, page: number) {
-    return this.apiTaobaoService.searchItemTaobao(text, page);
-  }
-
   async getItemDetailByIdV2(
     itemId: number,
     pvid?: string[] | string,
@@ -81,6 +82,77 @@ export class TaobaoService {
       ...item,
       sale_price: item.skus[0].price,
       ...skuItem,
+    };
+  }
+
+  async getItemDetailByIdV3(
+    itemId: number,
+    pvid?: string[] | string,
+    skuId?: string,
+    date?: Date,
+  ): Promise<ItemDetailInfo> {
+    let item;
+    const findParams: any = { itemId };
+    if (date) {
+      findParams.createdAt = buildFilterDateParam(date);
+    }
+    const cacheItem = await this.cacheItemRepository.findOne(findParams, {
+      sort: { createdAt: -1 },
+    });
+    if (cacheItem) {
+      item = cacheItem.detail;
+    } else {
+      item = await this.apiTaobaoService.getItemDetailFromTaobaoV3(itemId);
+      if (!item) {
+        return null;
+      }
+      await this.cacheItemRepository.create({ itemId, detail: item });
+    }
+    let skuItem;
+    const main_imgs = [];
+    if (item.SkuMaps && item.SkuProps) {
+      if (skuId) {
+        skuItem = item.SkuMaps.find((value) => {
+          return value.SkuId === skuId;
+        });
+      } else if (pvid) {
+        const pvInRightOrder = Array.isArray(pvid)
+          ? this.getPvIdInRightOrderV3(pvid, item)
+          : pvid;
+        skuItem = item.SkuMaps.find((value) => {
+          return value.Key === pvInRightOrder;
+        });
+      }
+      if ((skuId || pvid) && !skuItem) {
+        return null;
+      }
+      if (skuItem.ImageUrl) {
+        main_imgs.push(skuItem.ImageUrl);
+      }
+    }
+    main_imgs.push(...item.ImageUrls.map((url) => `https:${url}`));
+    const propName = [];
+    for (const [key, value] of Object.entries(skuItem.SpecAttributes)) {
+      propName.push(`${key}: ${value}`);
+    }
+
+    return {
+      item_id: item.OfferId,
+      product_url: `https://item.taobao.com/item.htm?id=${item.OfferId}`,
+      title: item.Subject,
+      video_url: item.MainImageVideo,
+      shop_info: {
+        shop_id: item.ShopId,
+        seller_id: item.UserId,
+        shop_name: item.ShopName,
+        shop_url: `https://${item.ShopUrl}.taobao.com`,
+      },
+      props_names: propName.join('; '),
+      props_ids: skuItem.Key,
+      quantity: skuItem.AmountOnSale,
+      sale_price: skuItem.Price || skuItem.original_price,
+      main_imgs,
+      skuid: skuItem.SkuId,
     };
   }
 
@@ -155,11 +227,31 @@ export class TaobaoService {
     return item;
   }
 
+  async directGetDetailItemV3(id: number) {
+    const item = await this.apiTaobaoService.getItemDetailFromTaobaoV3(id);
+    if (!item) {
+      throw new BadRequestException('Không thể tìm thấy hàng hóa trên taobao');
+    }
+    await this.cacheItemRepository.create({ itemId: id, detail: item });
+    return item;
+  }
+
   private getPvIdInRightOrder(pvid: string[], item): string {
     const pvInRightOrderArr = [];
     const parseArr = pvid.map((x) => x.split(':')[0]);
     for (const id of item.sku_props) {
       const index = parseArr.findIndex((item) => item === id.pid);
+      pvInRightOrderArr.push(pvid[index]);
+    }
+    return pvInRightOrderArr.join(';');
+  }
+
+  private getPvIdInRightOrderV3(pvid: string[], item): string {
+    const pvInRightOrderArr = [];
+    const parseArr = pvid.map((x) => x.split(':')[0]);
+    for (const prop of item.SkuProps) {
+      const id = prop.Value.value.split(':')[0];
+      const index = parseArr.findIndex((findItem) => findItem === id);
       pvInRightOrderArr.push(pvid[index]);
     }
     return pvInRightOrderArr.join(';');
