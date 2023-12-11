@@ -81,6 +81,31 @@ export class ApiTaobaoService {
     }
   }
 
+  async getItemDetailFromTaobaoV3(id: number) {
+    const options = {
+      method: 'GET',
+      url: EndpointEnum.GetItemDetailV3,
+      params: { itemId: String(id) },
+      headers: {
+        'X-RapidAPI-Key': rapidApiKey,
+        'X-RapidAPI-Host': 'taobao-tmall-Tao-Bao-data-service.p.rapidapi.com',
+      },
+    };
+    try {
+      Logger.log(`Get taobao item with id ${id}`);
+      const { data } = await axios.request(options);
+      console.log(data);
+      if ([404, 409, 429, 503, 504, 505].includes(data.status)) {
+        return null;
+      }
+      Logger.log(`Get taobao item with id ${id} successful`);
+      return data.Data;
+    } catch (error) {
+      Logger.error(error);
+      return null;
+    }
+  }
+
   async searchItemTaobaoV2(params: SearchItemDtoV2) {
     const options = {
       method: 'GET',

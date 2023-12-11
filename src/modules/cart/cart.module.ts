@@ -7,10 +7,14 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ICartSchema } from './cart.schema';
 import { TaobaoModule } from '../../externalModules/taobao/taobao.module';
 import { VariablesModule } from '../variables/variables.module';
+import { ICacheItemSchema } from '../../externalModules/taobao/taobao.schema';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: DbModel.Cart, schema: ICartSchema }]),
+    MongooseModule.forFeature([
+      { name: DbModel.Cart, schema: ICartSchema },
+      { name: DbModel.CacheItem, schema: ICacheItemSchema },
+    ]),
     TaobaoModule,
     VariablesModule,
   ],

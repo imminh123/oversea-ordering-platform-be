@@ -143,11 +143,13 @@ export class OrderService {
     const rate = await this.variablesService.getVariable(
       Variables.EXCHANGE_RATE,
     );
+    const current = new Date();
     for (const item of listItem) {
-      const tbItem = await this.tbService.getItemDetailById(
+      const tbItem = await this.tbService.getItemDetailByIdV3(
         item.itemId,
         undefined,
         item.skuId,
+        current,
       );
       if (!tbItem) {
         throw new BadRequestException({
@@ -243,6 +245,11 @@ export class OrderService {
     volume: number;
     rate: number | string;
   }): DetailItem {
+    if (volume > item.quantity) {
+      throw new BadRequestException(
+        `Số lượng hàng còn lại không đủ. Hiện tại trền sàn còn ${item.quantity}`,
+      );
+    }
     return {
       itemId: item.item_id,
       itemName: item.title,
