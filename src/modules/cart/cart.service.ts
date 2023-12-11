@@ -69,28 +69,7 @@ export class CartService {
     const cart = await this.cartRepository.find(findParam, {
       sort: { createdAt: -1 },
     });
-    const current = new Date();
-    for (const cartItem of cart) {
-      if (isAfter(cartItem.updatedAt, current, 60)) {
-        continue;
-      }
-      const newItem = await this.tbService.getItemDetailByIdV3(
-        cartItem.itemId,
-        undefined,
-        cartItem.skuId,
-        addTime(current, -1, 'hour'),
-      );
-      cartItem.updatedAt = current;
-      if (!newItem) {
-        cartItem.isActive = false;
-        cartItem.save();
-        continue;
-      }
-      cartItem.price = new Decimal(newItem.sale_price).toNumber();
-      cartItem.propName = newItem.props_names;
-      cartItem.isActive = true;
-      cartItem.save();
-    }
+    this.refreshClientCart(userId, 1).then().catch();
     const rate = await this.variablesService.getVariable(
       Variables.EXCHANGE_RATE,
     );
@@ -112,7 +91,10 @@ export class CartService {
     return this.cartRepository.count({ userId });
   }
 
-  async refreshClientCart(userId: string): Promise<ICart[]> {
+  async refreshClientCart(
+    userId: string,
+    cacheTimeInHour = 0,
+  ): Promise<ICart[]> {
     const cart = await this.cartRepository.find(
       { userId },
       {
@@ -120,13 +102,13 @@ export class CartService {
       },
     );
     const listUpdateVoid = [];
-    const current = new Date();
+    const mockTime = addTime(new Date(), -1 * cacheTimeInHour, 'hour');
     for (const cartItem of cart) {
       const item = await this.tbService.getItemDetailByIdV3(
         cartItem.itemId,
         undefined,
         cartItem.skuId,
-        current,
+        mockTime,
       );
       if (!item) {
         listUpdateVoid.push(
@@ -236,37 +218,7 @@ export class CartService {
     if (!rate) {
       throw new NotFoundException('Không thể lấy giá nhân dân tệ');
     }
-    const current = new Date();
-    for (const { listItem } of cart) {
-      for (const cartItem of listItem) {
-        cartItem.vnPrice = new Decimal(cartItem.price)
-          .mul(rate)
-          .toDP(3)
-          .toString();
-        if (isAfter(cartItem.updatedAt, current, 60)) {
-          continue;
-        }
-        const item = await this.tbService.getItemDetailByIdV3(
-          cartItem.itemId,
-          undefined,
-          cartItem.skuId,
-          addTime(current, -1, 'hour'),
-        );
-        cartItem.updatedAt = current;
-        if (!item) {
-          cartItem.isActive = false;
-          this.cartRepository.updateById(cartItem.id, cartItem);
-          continue;
-        }
-        cartItem.price = new Decimal(item.sale_price).toNumber();
-        cartItem.propName = item.props_names;
-        cartItem.vnPrice = new Decimal(item.sale_price)
-          .mul(rate)
-          .toDP(3)
-          .toString();
-        this.cartRepository.updateById(cartItem.id, cartItem);
-      }
-    }
+    this.refreshClientCart(userId, 1).then().catch();
     return cart;
   }
 
