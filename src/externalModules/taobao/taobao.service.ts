@@ -96,6 +96,7 @@ export class TaobaoService {
     if (date) {
       findParams.createdAt = buildFilterDateParam(date);
     }
+    console.log(findParams);
     const cacheItem = await this.cacheItemRepository.findOne(findParams, {
       sort: { createdAt: -1 },
     });
