@@ -10,7 +10,7 @@ import {
 import { OAuthClient } from './authentication.const';
 import { Role } from '../../shared/constant';
 
-export class CreateUserDto {
+export class CreateClientUserDto {
   @IsString()
   @IsNotEmpty()
   @ApiProperty({
@@ -46,12 +46,27 @@ export class CreateUserDto {
   wareHouseAddress?: string;
 }
 
-export class CreateSessionTokenDto extends PickType(CreateUserDto, [
-  'mail',
-  'password',
-] as const) {}
+export class CreateAdminUserDto {
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({
+    type: String,
+    example: 'def',
+    required: true,
+  })
+  password: string;
 
-export class CreateAdminSessionTokenDto extends PickType(CreateUserDto, [
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({
+    type: String,
+    example: 'abc',
+    required: false,
+  })
+  userName: string;
+}
+
+export class CreateSessionTokenDto extends PickType(CreateClientUserDto, [
   'mail',
   'password',
 ] as const) {}
@@ -245,4 +260,20 @@ export class AdminIndexAuthenDto {
     example: true,
   })
   isActive: boolean;
+
+  @ApiProperty({
+    required: false,
+    type: Boolean,
+    example: false,
+  })
+  isBlock: boolean;
+}
+
+export class AdminUpdateClientAuthenDto {
+  @ApiProperty({
+    required: false,
+    type: Boolean,
+    example: false,
+  })
+  isBlock: boolean;
 }

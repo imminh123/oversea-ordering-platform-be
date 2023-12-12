@@ -13,6 +13,8 @@ server:
 client:
   host: CLIENT_HOST
 
+root: ROOT_ACCOUNTS
+
 firebase:
   projectId: FIREBASE_PROJECT_ID
   privateKey: FIREBASE_PRIVATE_KEY
@@ -47,3 +49,4 @@ mail:
   secretKey: MAILJET_SECRET_KEY
 
 orderTimeoutInMinutes: ORDER_TIMEOUT_IN_MINUTES
+setConfigCacheTime: SET_CONFIG_CACHE_TIME

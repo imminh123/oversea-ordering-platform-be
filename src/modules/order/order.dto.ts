@@ -5,12 +5,14 @@ import {
   IsBoolean,
   IsEnum,
   IsNotEmpty,
+  IsNumber,
   IsObject,
   IsOptional,
   IsString,
+  ValidateNested,
 } from 'class-validator';
 import { OrderStatus } from './order.enum';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 
 export class CreateOrderDto {
   @IsArray()
@@ -58,14 +60,12 @@ export class ClientIndexOrderDto {
 
   @ApiProperty({
     type: String,
-    enum: OrderStatus,
     required: false,
   })
   userName?: string;
 
   @ApiProperty({
     type: String,
-    enum: OrderStatus,
     required: false,
   })
   itemName?: string;
@@ -101,6 +101,7 @@ export class ClientIndexOrderDto {
 export class UpdateStatusOrderDto {
   @IsString()
   @IsEnum(OrderStatus)
+  @IsOptional()
   @ApiProperty({
     type: String,
     enum: OrderStatus,
@@ -108,10 +109,38 @@ export class UpdateStatusOrderDto {
   })
   status: OrderStatus;
 
+  @IsArray()
+  @ArrayNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => UpdateListItemOrder)
+  @ApiProperty({
+    type: Array,
+    example: [{ id: '', quantity: 1 }],
+  })
+  listItem: UpdateListItemOrder[];
+
   @IsObject()
   @ApiProperty({
     type: Object,
     example: {},
   })
   meta: any;
+}
+
+export class UpdateListItemOrder {
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({
+    type: String,
+    example: 'def',
+  })
+  id: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  @ApiProperty({
+    type: Number,
+    example: 1,
+  })
+  quantity: number;
 }

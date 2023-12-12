@@ -21,6 +21,7 @@ import { isValidObjectId } from 'mongoose';
 import { ObjectId } from 'bson';
 import { VariablesService } from '../variables/variables.service';
 import { Variables } from '../variables/variables.helper';
+import { setConfigCacheTime } from './cart.helper';
 
 @Injectable()
 export class CartService {
@@ -69,7 +70,7 @@ export class CartService {
     const cart = await this.cartRepository.find(findParam, {
       sort: { createdAt: -1 },
     });
-    this.refreshClientCart(userId, 1).then().catch();
+    this.refreshClientCart(userId, setConfigCacheTime).then().catch();
     const rate = await this.variablesService.getVariable(
       Variables.EXCHANGE_RATE,
     );

@@ -4,6 +4,7 @@ import {
   CreateSessionTokenDto,
   RefreshTokenDto,
   CreateSessionWithOAuth2Dto,
+  CreateAdminUserDto,
 } from '../authentication.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
@@ -19,17 +20,15 @@ import { Role } from '../../../shared/constant';
 export class SessionController {
   constructor(private readonly authenticationService: AuthenticationService) {}
 
-  // @Post('adminCreateSession')
-  // @ApiOperation({
-  //   operationId: 'createAdminSession',
-  //   description: 'Create admin session',
-  //   summary: 'Create admin session',
-  // })
-  // createAdminSessionToken(
-  //   @Body() createSessionDto: CreateAdminSessionTokenDto,
-  // ) {
-  //   return this.authenticationService.createAdminSession(createSessionDto);
-  // }
+  @Post('adminCreateSession')
+  @ApiOperation({
+    operationId: 'createAdminSession',
+    description: 'Create admin session',
+    summary: 'Create admin session',
+  })
+  createAdminSessionToken(@Body() createSessionDto: CreateAdminUserDto) {
+    return this.authenticationService.createAdminSession(createSessionDto);
+  }
 
   @Post('createClientSession')
   @ApiOperation({
@@ -38,7 +37,7 @@ export class SessionController {
     summary: 'Create client session',
   })
   createSessionToken(@Body() createSessionDto: CreateSessionTokenDto) {
-    return this.authenticationService.createSession(createSessionDto);
+    return this.authenticationService.createClientSession(createSessionDto);
   }
 
   @Post('createSessionWithOAuth2')

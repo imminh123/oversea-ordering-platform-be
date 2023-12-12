@@ -1,16 +1,17 @@
 import { getBaseSchema } from '../../shared/database/database.helpers';
 import { Gender } from './authentication.const';
-import { IAuthDocument } from './authentication.interface';
+import { IClientAuthDocument } from './authentication.interface';
 
-export const IAuthSchema = getBaseSchema<IAuthDocument>();
+export const IClientAuthSchema = getBaseSchema<IClientAuthDocument>();
 
-IAuthSchema.add({
+IClientAuthSchema.add({
   mail: { type: String, required: false },
   fbId: { type: String, required: false },
   ggId: { type: String, required: false },
   phone: { type: String, required: false },
   password: { type: String, required: false },
   role: { type: String, required: true },
+  userName: { type: String, required: false },
   fullname: { type: String, required: false },
   birthday: { type: String, required: false },
   gender: { type: String, enum: Gender, required: false },
@@ -21,6 +22,7 @@ IAuthSchema.add({
   ward: { type: String, required: false },
   avatar: { type: String, required: false },
   isActive: { type: Boolean, required: true, default: true },
+  isBlock: { type: Boolean, required: true, default: false },
   registerToken: { type: String, required: false },
   resetPasswordToken: { type: String, required: false },
   resetPasswordSentAt: { type: Date, required: false },

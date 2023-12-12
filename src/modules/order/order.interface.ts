@@ -9,6 +9,7 @@ export interface DetailItem {
   shopName: string;
   shopUrl: string;
   quantity: number;
+  rate: number;
   price: number;
   currency?: string;
   skuId?: string;
@@ -16,10 +17,12 @@ export interface DetailItem {
   vnCost: number;
   cartId?: string;
   image: string;
+  id?: string;
 }
 
 export interface OrderHistoryDetail {
   status: OrderStatus;
+  listItem: any;
   updatedBy?: string;
   meta?: any;
 }

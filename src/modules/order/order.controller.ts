@@ -17,7 +17,7 @@ import {
 } from './order.dto';
 import { Roles } from '../../decorators/authorization.decorator';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Role } from '../../shared/constant';
+import { Role, WebAdminRole } from '../../shared/constant';
 import { Pagination } from '../../decorators/pagination.decorator';
 import { IPagination } from '../../adapters/pagination/pagination.interface';
 import { CommonQueryRequest } from '../../shared/swagger.helper';
@@ -115,11 +115,27 @@ export class OrderController {
     @Pagination() pagination: IPagination,
     @Query() indexOrderDto: ClientIndexOrderDto,
   ) {
-    return this.orderService.indexOrders(indexOrderDto, userId, pagination);
+    return this.orderService.indexOrders(indexOrderDto, pagination, userId);
+  }
+
+  @Get('admin')
+  @Roles(...WebAdminRole)
+  @CommonQueryRequest()
+  @UseInterceptors(PaginationInterceptor)
+  @ApiOperation({
+    operationId: 'adminIndexOrder',
+    description: 'Admin index order',
+    summary: 'Admin index order',
+  })
+  async adminIndexOrder(
+    @Pagination() pagination: IPagination,
+    @Query() indexOrderDto: ClientIndexOrderDto,
+  ) {
+    return this.orderService.indexOrders(indexOrderDto, pagination);
   }
 
   @Get(':id')
-  @Roles(Role.Client)
+  @Roles(...WebAdminRole, Role.Client)
   @ApiOperation({
     operationId: 'getOrderById',
     description: 'Get order by id',
@@ -130,7 +146,7 @@ export class OrderController {
   }
 
   @Post('updateStatus/:id')
-  @Roles(Role.Client)
+  @Roles(...WebAdminRole)
   @ApiOperation({
     operationId: 'adminUpdateStatusOrder',
     description: 'Admin update status order',
