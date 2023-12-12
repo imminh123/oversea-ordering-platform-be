@@ -219,6 +219,14 @@ export class CartService {
       throw new NotFoundException('Không thể lấy giá nhân dân tệ');
     }
     this.refreshClientCart(userId, 1).then().catch();
+    for (const { listItem } of cart) {
+      for (const cartItem of listItem) {
+        cartItem.vnPrice = new Decimal(cartItem.price)
+          .mul(rate)
+          .toDP(3)
+          .toString();
+      }
+    }
     return cart;
   }
 
