@@ -21,6 +21,7 @@ import { isValidObjectId } from 'mongoose';
 import { ObjectId } from 'bson';
 import { VariablesService } from '../variables/variables.service';
 import { Variables } from '../variables/variables.helper';
+import { setConfigCacheTime } from './cart.helper';
 
 @Injectable()
 export class CartService {
@@ -69,7 +70,7 @@ export class CartService {
     const cart = await this.cartRepository.find(findParam, {
       sort: { createdAt: -1 },
     });
-    this.refreshClientCart(userId, 1).then().catch();
+    this.refreshClientCart(userId, setConfigCacheTime).then().catch();
     const rate = await this.variablesService.getVariable(
       Variables.EXCHANGE_RATE,
     );
@@ -104,6 +105,7 @@ export class CartService {
     const listUpdateVoid = [];
     const mockTime = addTime(new Date(), -1 * cacheTimeInHour, 'hour');
     for (const cartItem of cart) {
+      const isUpdate = isAfter(mockTime, cartItem.updatedAt, 0);
       const item = await this.tbService.getItemDetailByIdV3(
         cartItem.itemId,
         undefined,
@@ -111,11 +113,13 @@ export class CartService {
         mockTime,
       );
       if (!item) {
-        listUpdateVoid.push(
-          this.cartRepository.updateById(cartItem.id, {
-            isActive: false,
-          }),
-        );
+        if (isUpdate) {
+          listUpdateVoid.push(
+            this.cartRepository.updateById(cartItem.id, {
+              isActive: false,
+            }),
+          );
+        }
         continue;
       }
       const updateItem = this.convertResponseFromTaobaoItem({
@@ -123,12 +127,14 @@ export class CartService {
         userId: cartItem.userId,
         volume: cartItem.quantity,
       });
-      listUpdateVoid.push(
-        this.cartRepository.updateById(cartItem.id, {
-          ...updateItem,
-          isActive: true,
-        }),
-      );
+      if (isUpdate) {
+        listUpdateVoid.push(
+          this.cartRepository.updateById(cartItem.id, {
+            ...updateItem,
+            isActive: true,
+          }),
+        );
+      }
     }
     return Promise.all(listUpdateVoid);
   }

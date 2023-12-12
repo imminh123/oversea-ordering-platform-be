@@ -16,6 +16,11 @@ export enum Role {
   Admin = 'admin',
   Client = 'client',
 }
+export const RoleValue: Readonly<{ [key in Role]: number }> = {
+  [Role.Root]: 0,
+  [Role.Admin]: 1,
+  [Role.Client]: 2,
+};
 export const WebAdminRole = [Role.Admin, Role.Root];
 
 export const EXCLUDED_LOGGER_MIDDLEWARE_ROUTES: RouteInfo[] = [

@@ -4,6 +4,7 @@ import {
   ClientIndexOrderDto,
   CreateOrderDto,
   ReCreateOrderDto,
+  UpdateListItemOrder,
 } from './order.dto';
 import { TaobaoService } from '../../externalModules/taobao/taobao.service';
 import { VariablesService } from '../variables/variables.service';
@@ -36,7 +37,7 @@ export class OrderService {
   ) {}
   async clientCreateOrderAndPay(
     createOrderDto: CreateOrderDto,
-    userId: string,
+    { userId, userName }: { userId: string; userName: string },
   ) {
     const { address, listItem } = await this.prepareListItemAndAddress(
       createOrderDto.addressId,
@@ -47,10 +48,14 @@ export class OrderService {
       address,
       listItem,
       userId,
+      userName,
     });
   }
 
-  async clientCreateOrder(createOrderDto: CreateOrderDto, userId: string) {
+  async clientCreateOrder(
+    createOrderDto: CreateOrderDto,
+    { userId, userName }: { userId: string; userName: string },
+  ) {
     const { address, listItem } = await this.prepareListItemAndAddress(
       createOrderDto.addressId,
       createOrderDto.listItemId,
@@ -61,13 +66,13 @@ export class OrderService {
         address,
         listItem,
       },
-      userId,
+      { userId, userName },
     );
   }
 
   async clientReCreateOrderAndPay(
     { orderId }: ReCreateOrderDto,
-    userId: string,
+    { userId, userName }: { userId: string; userName: string },
   ) {
     const { address, listItem, wareHouseAddress } =
       await this.orderRepository.findById(orderId);
@@ -77,12 +82,16 @@ export class OrderService {
         address,
         listItem,
         userId,
+        userName,
       },
       true,
     );
   }
 
-  async clientReCreateOrder({ orderId }: ReCreateOrderDto, userId: string) {
+  async clientReCreateOrder(
+    { orderId }: ReCreateOrderDto,
+    { userId, userName }: { userId: string; userName: string },
+  ) {
     const { address, listItem, wareHouseAddress } =
       await this.orderRepository.findById(orderId);
     return this.createOrder(
@@ -91,7 +100,7 @@ export class OrderService {
         address,
         listItem,
       },
-      userId,
+      { userId, userName },
       true,
     );
   }
@@ -101,18 +110,20 @@ export class OrderService {
       address,
       listItem,
       userId,
+      userName,
       wareHouseAddress,
     }: {
       address: IAddress;
       listItem: ICartDocument[] | any[];
       userId: string;
+      userName: string;
       wareHouseAddress?: string;
     },
     isReCreate = false,
   ) {
     const order = await this.createOrder(
       { wareHouseAddress, address, listItem },
-      userId,
+      { userId, userName },
       isReCreate,
     );
     const paymentPayload: PurchaseDto = {
@@ -135,7 +146,7 @@ export class OrderService {
       address: IAddress;
       wareHouseAddress?: string;
     },
-    userId: string,
+    { userId, userName }: { userId: string; userName: string },
     isReCreate = false,
   ) {
     const listProduct = [];
@@ -169,6 +180,7 @@ export class OrderService {
     const order = {
       listItem: listProduct,
       userId,
+      userName,
       status: OrderStatus.CREATED,
       address,
       wareHouseAddress,
@@ -180,10 +192,13 @@ export class OrderService {
 
   async indexOrders(
     indexOrderDto: ClientIndexOrderDto,
-    userId: string,
     pagination: IPagination,
+    userId?: string,
   ) {
-    const findParam: any = { userId };
+    const findParam: any = {};
+    if (userId) {
+      findParam.userId = userId;
+    }
     if (indexOrderDto.status) {
       findParam.status = indexOrderDto.status;
     }
@@ -192,6 +207,12 @@ export class OrderService {
         indexOrderDto.timeFrom,
         indexOrderDto.timeTo,
       );
+    }
+    if (indexOrderDto.userName) {
+      findParam.userName = indexOrderDto.userName;
+    }
+    if (indexOrderDto.itemName) {
+      findParam.listItem = { itemName: indexOrderDto.itemName };
     }
     if (indexOrderDto.onlyCount) {
       return this.orderRepository.count(findParam);
@@ -226,21 +247,59 @@ export class OrderService {
     id: string,
     {
       status,
+      listItem,
       updatedBy,
       meta,
-    }: { status: OrderStatus; updatedBy?: string; meta?: any },
+    }: {
+      status: OrderStatus;
+      listItem?: UpdateListItemOrder[];
+      updatedBy?: string;
+      meta?: any;
+    },
   ) {
     const order = await this.getOrderById(id);
     if (order.status === status) {
       return order;
     }
+    if (listItem && listItem.length > 0) {
+      let refundAmount = new Decimal(0);
+      for (const item of listItem) {
+        const orderItem = order.listItem.find((x) => {
+          return x.id === item.id;
+        });
+        if (item.quantity < 0 || item.quantity > orderItem.quantity) {
+          throw new BadRequestException(
+            'Quantity của item không hợp lệ',
+            item.id,
+          );
+        }
+        refundAmount = refundAmount.add(orderItem.vnCost);
+        const rate =
+          orderItem.rate ||
+          new Decimal(orderItem.vnCost)
+            .dividedBy(orderItem.price)
+            .toDP(0)
+            .toNumber();
+        if (!orderItem.rate) {
+          orderItem.rate = rate;
+        }
+        orderItem.vnCost = rate * item.quantity;
+        orderItem.quantity = item.quantity;
+        refundAmount = refundAmount.sub(orderItem.vnCost);
+      }
+      order.total = refundAmount.sub(order.total).abs().toDP(2).toNumber();
+      meta.refundAmount = refundAmount.toDP(2).toNumber();
+    }
     const orderHistories = order.orderHistories || [];
     orderHistories.push({
       status,
+      listItem,
       updatedBy,
       meta,
     });
-    return this.orderRepository.updateById(id, { status, orderHistories });
+    order.orderHistories = orderHistories;
+    order.save();
+    return order;
   }
 
   private async prepareListItemAndAddress(
@@ -275,6 +334,7 @@ export class OrderService {
       shopName: item.shop_info.shop_name,
       shopUrl: item.shop_info.shop_url,
       quantity: volume,
+      rate: new Decimal(rate).toDP(2).toNumber(),
       price: new Decimal(item.sale_price).toDP(2).toNumber(),
       currency: item.currency,
       vnCost: new Decimal(item.sale_price)

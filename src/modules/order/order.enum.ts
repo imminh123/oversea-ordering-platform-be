@@ -1,3 +1,5 @@
+import { getConfig } from '../../shared/config/config.provider';
+
 export const mockItem = {
   id: '682042505030',
   pvid: ['1627207:19761432'],

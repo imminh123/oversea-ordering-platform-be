@@ -6,7 +6,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import handlebars from 'handlebars';
 import { getConfig } from '../../shared/config/config.provider';
-import { IAuthDocument } from '../authentication/authentication.interface';
+import { IClientAuthDocument } from '../authentication/authentication.interface';
 
 @Injectable()
 export class MailService {
@@ -90,7 +90,7 @@ export class MailService {
     return this.sendMail({ toMail, subject, body });
   }
 
-  async sendRequestActiveAccount(user: IAuthDocument) {
+  async sendRequestActiveAccount(user: IClientAuthDocument) {
     const clientUrl = String(getConfig().get('client.host'));
     const params = {
       email: user.mail,

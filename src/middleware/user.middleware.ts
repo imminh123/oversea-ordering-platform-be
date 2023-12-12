@@ -11,6 +11,7 @@ export class UserMiddleware implements NestMiddleware {
       req.user = user;
       httpContext.set('user', user);
       httpContext.set('userId', user.userId);
+      httpContext.set('userName', user.userName);
     }
     next();
   }
@@ -28,6 +29,9 @@ export class UserMiddleware implements NestMiddleware {
 
 export function getUserId() {
   return httpContext.get('userId');
+}
+export function getUserName() {
+  return httpContext.get('userName');
 }
 
 export function getUserData(key?) {

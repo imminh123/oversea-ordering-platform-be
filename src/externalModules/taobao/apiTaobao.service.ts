@@ -94,7 +94,6 @@ export class ApiTaobaoService {
     try {
       Logger.log(`Get taobao item with id ${id}`);
       const { data } = await axios.request(options);
-      console.log(data);
       if ([404, 409, 429, 503, 504, 505].includes(data.status)) {
         return null;
       }

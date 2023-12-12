@@ -27,3 +27,4 @@ vnpay:
   returnUrl: https://app.mby.vn/order-success.html
 
 orderTimeoutInMinutes: 5
+setConfigCacheTime: 24

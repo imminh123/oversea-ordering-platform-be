@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { AuthenticationService } from '../authentication.service';
 import {
-  CreateUserDto,
+  CreateClientUserDto,
   UserIdDto,
   ChangePasswordDto,
   UpdateAuthDto,
@@ -28,17 +28,13 @@ import {
   User,
   UserDataJwtProperties,
 } from '../../../decorators/user.decorator';
-import { OAuthService } from '../oauth.service';
 import { SkipJwtAuth } from '../../../decorators/skip_jwt_auth';
 
 @Controller('authentication')
 @ApiTags('authentication')
 @ApiBearerAuth('access-token')
 export class AuthenticationController {
-  constructor(
-    private readonly authenticationService: AuthenticationService,
-    private readonly oauthService: OAuthService,
-  ) {}
+  constructor(private readonly authenticationService: AuthenticationService) {}
 
   @Post()
   @ApiOperation({
@@ -46,15 +42,15 @@ export class AuthenticationController {
     description: 'Create new client user',
     summary: 'Create new client user',
   })
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.authenticationService.createUser(createUserDto);
+  create(@Body() createUserDto: CreateClientUserDto) {
+    return this.authenticationService.createClientUser(createUserDto);
   }
 
   @Post('register/:token')
   @ApiOperation({
-    operationId: 'activeAccount',
-    description: 'Active registered account',
-    summary: 'Active registered account',
+    operationId: 'clientActiveAccount',
+    description: 'Client active registered account',
+    summary: 'Client active registered account',
   })
   @SkipJwtAuth()
   activeAccount(@Param('token') token: string) {
@@ -63,9 +59,9 @@ export class AuthenticationController {
 
   @Roles(Role.Client, Role.Admin)
   @ApiOperation({
-    operationId: 'clientUpdateAuth',
-    description: 'Client update auth',
-    summary: 'Client update auth',
+    operationId: 'userUpdateAuth',
+    description: 'User update auth',
+    summary: 'User update auth',
   })
   @Put('')
   updateAuth(
@@ -75,7 +71,7 @@ export class AuthenticationController {
     return this.authenticationService.updateAuthInfo(updateAuthDto, userId);
   }
 
-  @Roles(Role.Client, Role.Admin)
+  @Roles(Role.Client)
   @ApiOperation({
     operationId: 'clientUpdateOAuth',
     description: 'Client update Oauth',
@@ -89,11 +85,11 @@ export class AuthenticationController {
     return this.authenticationService.deleteOAuthInfo(updateOAuthDto, userId);
   }
 
-  @Roles(Role.Client)
+  @Roles(Role.Client, Role.Admin)
   @ApiOperation({
-    operationId: 'clientChangePassword',
-    description: 'Client change password',
-    summary: 'Client change password',
+    operationId: 'userChangePassword',
+    description: 'User change password',
+    summary: 'User change password',
   })
   @Put('changePassword')
   changePassword(
@@ -104,50 +100,13 @@ export class AuthenticationController {
   }
 
   @ApiOperation({
-    operationId: 'clientGetAuthInfo',
-    description: 'Client get auth info',
-    summary: 'Client get auth info',
+    operationId: 'userGetAuthInfo',
+    description: 'User get auth info',
+    summary: 'User get auth info',
   })
   @Get('client')
   @Roles(...WebAdminRole, Role.Client)
   userGetInfo(@User(UserDataJwtProperties.USERID) userId: string) {
     return this.authenticationService.getUserById(userId);
-  }
-
-  @Roles(...WebAdminRole)
-  @CommonQueryRequest()
-  @ApiOperation({
-    operationId: 'adminIndexUsers',
-    description: 'Admin index users',
-    summary: 'Admin index users',
-  })
-  @Get()
-  findAll(
-    @Pagination() pagination: IPagination,
-    @Query() adminIndexAuthenDto: AdminIndexAuthenDto,
-  ) {
-    return this.authenticationService.findAll(adminIndexAuthenDto, pagination);
-  }
-
-  @Roles(...WebAdminRole)
-  @ApiOperation({
-    operationId: 'adminGetUserById',
-    description: 'Admin get user by id',
-    summary: 'Admin get user by id',
-  })
-  @Get(':id')
-  findOne(@Param() { id }: UserIdDto) {
-    return this.authenticationService.getUserById(id);
-  }
-
-  @Roles(...WebAdminRole)
-  @ApiOperation({
-    operationId: 'adminDeleteListUser',
-    description: 'Admin delete list user',
-    summary: 'Admin delete list user',
-  })
-  @Delete('')
-  deleteOne(@Body() { ids }: DeleteUserIdDto) {
-    return this.authenticationService.deleteListUserId(ids);
   }
 }

@@ -41,6 +41,7 @@ export class VariablesController {
   }
 
   @Get()
+  @Roles(Role.Admin, Role.Root, Role.Client)
   @CommonQueryRequest()
   @UseInterceptors(PaginationInterceptor)
   @ApiOperation({
@@ -70,7 +71,7 @@ export class VariablesController {
   }
 
   @Put(':id')
-  // @Roles(Role.Admin, Role.Root)
+  @Roles(Role.Admin, Role.Root)
   @ApiOperation({
     operationId: 'adminUpdateVariableById',
     description: 'Admin update variable by id',

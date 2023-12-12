@@ -5,12 +5,13 @@ import {
 } from '@nestjs/common';
 import {
   CreateSessionTokenDto,
-  CreateUserDto,
+  CreateClientUserDto,
   CreateSessionWithOAuth2Dto,
   ChangePasswordDto,
   UpdateAuthDto,
-  CreateAdminSessionTokenDto,
   AdminIndexAuthenDto,
+  CreateAdminUserDto,
+  AdminUpdateClientAuthenDto,
 } from './authentication.dto';
 import { AuthenticationRepository } from './authentication.repository';
 import * as jwt from 'jsonwebtoken';
@@ -22,11 +23,11 @@ import {
   db2api,
   decodeJWTToken,
 } from '../../shared/helpers';
-import { Role } from '../../shared/constant';
+import { Role, RoleValue } from '../../shared/constant';
 import { isValidObjectId } from 'mongoose';
 import { OAuthClient, privateKey } from './authentication.const';
 import { OAuthService } from './oauth.service';
-import { IAuth } from './authentication.interface';
+import { IClientAuth } from './authentication.interface';
 import { ObjectId } from 'bson';
 import { v4 as uuidv4 } from 'uuid';
 import { MailService } from '../mail/mail.service';
@@ -38,8 +39,8 @@ export class AuthenticationService {
     private readonly oauthService: OAuthService,
     private readonly mailService: MailService,
   ) {}
-  async createUser(
-    createAuthenticationDto: CreateUserDto,
+  async createClientUser(
+    createAuthenticationDto: CreateClientUserDto,
     role: Role = Role.Client,
   ) {
     const findParams: any = {};
@@ -67,11 +68,43 @@ export class AuthenticationService {
       password: await bcrypt.hash(password, 10),
       registerToken: uuidv4(),
       isActive: false,
+      isBlock: false,
       role,
     });
 
     await this.mailService.sendRequestActiveAccount(newUser);
 
+    return 'SUCCESS';
+  }
+
+  async createAdminUser(
+    createAuthenticationDto: CreateAdminUserDto,
+    role: Role = Role.Admin,
+  ) {
+    const findParams: any = {};
+    const cond = [];
+    if (createAuthenticationDto.userName) {
+      cond.push({ userName: createAuthenticationDto.userName });
+    }
+    findParams.$or = cond;
+    const user = await this.authenticationRepository.findOne(findParams);
+    if (user) {
+      throw new BadRequestException('Người dùng đã tồn tại');
+    }
+
+    if (role === Role.Root) {
+      throw new BadRequestException('Không thể tạo người dùng root');
+    }
+
+    const password = createAuthenticationDto.password;
+
+    await this.authenticationRepository.create({
+      ...createAuthenticationDto,
+      password: await bcrypt.hash(password, 10),
+      isActive: false,
+      isBlock: false,
+      role,
+    });
     return 'SUCCESS';
   }
 
@@ -88,8 +121,8 @@ export class AuthenticationService {
     });
   }
 
-  async createSession(createSessionDto: CreateSessionTokenDto) {
-    const findParams: any = {};
+  async createClientSession(createSessionDto: CreateSessionTokenDto) {
+    const findParams: any = { role: Role.Client };
     if (createSessionDto.mail) {
       findParams.mail = createSessionDto.mail;
     }
@@ -101,7 +134,7 @@ export class AuthenticationService {
       );
     }
 
-    if (!user.isActive) {
+    if (user.isBlock) {
       throw new BadRequestException('Tài khoản hiện tại đã bị vô hiệu hóa');
     }
 
@@ -119,6 +152,7 @@ export class AuthenticationService {
     const { accessToken, refreshToken } = await this.createSessionToken({
       id: user.id,
       role: user.role,
+      name: user.fullname,
     });
 
     return {
@@ -129,13 +163,13 @@ export class AuthenticationService {
     };
   }
 
-  async createAdminSession(createSessionDto: CreateAdminSessionTokenDto) {
+  async createAdminSession(createSessionDto: CreateAdminUserDto) {
     const findParams: any = {};
-    if (createSessionDto.mail) {
-      findParams.userName = createSessionDto.mail;
+    if (createSessionDto.userName) {
+      findParams.userName = createSessionDto.userName;
     }
     findParams.role = { $in: [Role.Root, Role.Admin] };
-    let user = await this.authenticationRepository.findOne(findParams);
+    const user = await this.authenticationRepository.findOne(findParams);
 
     if (!user) {
       throw new BadRequestException(
@@ -143,7 +177,7 @@ export class AuthenticationService {
       );
     }
 
-    if (!user.isActive) {
+    if (user.isBlock) {
       throw new BadRequestException('Tài khoản hiện tại đã bị vô hiệu hóa');
     }
 
@@ -158,13 +192,10 @@ export class AuthenticationService {
       );
     }
 
-    user = await this.authenticationRepository.updateById(user.id, {
-      sessionToken: new ObjectId().toString(),
-    });
-
     const { accessToken, refreshToken } = await this.createSessionToken({
       id: user.id,
       role: user.role,
+      name: user.fullname,
     });
 
     return {
@@ -185,7 +216,7 @@ export class AuthenticationService {
     if (!user) {
       throw new BadRequestException('Tài khoản không tồn tại');
     }
-    if (!user.isActive) {
+    if (user.isBlock) {
       throw new BadRequestException('Tài khoản hiện tại đã bị vô hiệu hóa');
     }
 
@@ -203,7 +234,7 @@ export class AuthenticationService {
     return { accessToken, expiresIn: 10 * 60 * 1000 };
   }
 
-  async findAll(
+  async adminIndexAuthen(
     adminIndexAuthenDto: AdminIndexAuthenDto,
     pagination?: IPagination,
   ) {
@@ -219,6 +250,9 @@ export class AuthenticationService {
     }
     if (adminIndexAuthenDto.isActive) {
       findParam.isActive = adminIndexAuthenDto.isActive;
+    }
+    if (adminIndexAuthenDto.isBlock) {
+      findParam.isBlock = adminIndexAuthenDto.isBlock;
     }
     const count = await this.authenticationRepository.count(findParam);
     const list = await this.authenticationRepository.find(
@@ -247,7 +281,7 @@ export class AuthenticationService {
       throw new BadRequestException('Tài khoản không tồn tại');
     }
 
-    return db2api<IAuth, IAuth>(user);
+    return db2api<IClientAuth, IClientAuth>(user);
   }
 
   async deleteListUserId(ids: string[]) {
@@ -289,7 +323,7 @@ export class AuthenticationService {
     let isNewUser = false;
 
     if (!user) {
-      const payload: IAuth = {
+      const payload: IClientAuth = {
         ...findParams,
         fullname: userInfo.name,
         mail: userInfo.email,
@@ -313,6 +347,7 @@ export class AuthenticationService {
     const { accessToken, refreshToken } = await this.createSessionToken({
       id: user.id,
       role: user.role,
+      name: user.fullname,
     });
 
     return {
@@ -348,7 +383,7 @@ export class AuthenticationService {
     if (!user) {
       throw new BadRequestException('Không tìm thấy ngừoi dùng');
     }
-    let payload: IAuth = {
+    let payload: IClientAuth = {
       ...findParams,
       fullname: userInfo.name,
       mail: userInfo.email,
@@ -419,10 +454,42 @@ export class AuthenticationService {
     return this.authenticationRepository.updateById(userId, updateParam);
   }
 
-  async createSessionToken({ id, role }) {
-    const accessToken = jwt.sign({ userId: id, role }, privateKey, {
-      expiresIn: '10m',
+  async adminUpdateUserAuth(
+    targetId: string,
+    adminId: string,
+    updateAuthDto: AdminUpdateClientAuthenDto,
+  ) {
+    const user = await this.authenticationRepository.findById(targetId);
+
+    if (!user) {
+      throw new BadRequestException('Không tìm thấy ngừoi dùng');
+    }
+
+    const admin = await this.authenticationRepository.findById(adminId);
+
+    if (!admin) {
+      throw new BadRequestException('Không tìm thấy ngừoi dùng');
+    }
+
+    if (RoleValue[user.role] <= RoleValue[admin.role]) {
+      throw new BadRequestException(
+        'Không thể update auth do user có quyền hạn cao hơn hoặc bằng',
+      );
+    }
+
+    return this.authenticationRepository.updateById(targetId, {
+      ...updateAuthDto,
     });
+  }
+
+  async createSessionToken({ id, role, name }) {
+    const accessToken = jwt.sign(
+      { userId: id, userName: name, role },
+      privateKey,
+      {
+        expiresIn: '10m',
+      },
+    );
 
     const refreshToken = jwt.sign({ userId: id, isRefresh: true }, privateKey, {
       expiresIn: '1d',
