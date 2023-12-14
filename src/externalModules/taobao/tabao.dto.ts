@@ -114,3 +114,76 @@ export class SearchItemDtoV3 {
   })
   hasDiscount: boolean;
 }
+
+export class SearchByImage {
+  @ApiProperty({
+    type: String,
+    example: 1,
+    required: false,
+  })
+  page: string;
+
+  @ApiProperty({
+    type: String,
+    example: SortOptionV3.default,
+    required: false,
+    enum: SortOptionV3,
+  })
+  sort: SortOptionV3;
+
+  @ApiProperty({
+    type: String,
+    example: LanguageOptionV3.China,
+    required: false,
+    enum: LanguageOptionV3,
+  })
+  target_language: LanguageOptionV3;
+
+  @ApiProperty({
+    type: String,
+    example: LanguageOptionV3.China,
+    required: false,
+    enum: LanguageOptionV3,
+  })
+  query_language: LanguageOptionV3;
+
+  @ApiProperty({
+    type: Number,
+    example: 0,
+    required: false,
+  })
+  minPrice: number;
+
+  @ApiProperty({
+    type: Number,
+    example: 100,
+    required: false,
+  })
+  maxPrice: number;
+
+  @ApiProperty({
+    type: Boolean,
+    example: false,
+    required: false,
+  })
+  inStock: boolean;
+
+  @ApiProperty({
+    type: Boolean,
+    example: false,
+    required: false,
+  })
+  isTmall: boolean;
+
+  @ApiProperty({
+    type: Boolean,
+    example: false,
+    required: false,
+  })
+  hasDiscount: boolean;
+}
+
+export class UploadFileDto {
+  @ApiProperty({ type: 'string', format: 'binary' })
+  file: Express.Multer.File;
+}
