@@ -5,6 +5,7 @@ export enum EndpointEnum {
   SearchItem = 'https://taobao-advanced.p.rapidapi.com/item_search_p',
   SearchItemV2 = 'https://taobao-api.p.rapidapi.com/api',
   SearchItemV3 = 'https://taobao-tmall-tao-bao-data-service.p.rapidapi.com/search/searchItems',
+  SearchByImage = 'https://taobao-tmall-tao-bao-data-service.p.rapidapi.com/search/searchByImage',
 }
 
 export enum SortOption {

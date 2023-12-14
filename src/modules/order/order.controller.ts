@@ -6,6 +6,7 @@ import {
   Param,
   UseInterceptors,
   Query,
+  Put,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { User, UserDataJwtProperties } from '../../decorators/user.decorator';
@@ -145,7 +146,7 @@ export class OrderController {
     return this.orderService.getOrderById(id);
   }
 
-  @Post('updateStatus/:id')
+  @Put('updateStatus/:id')
   @Roles(...WebAdminRole)
   @ApiOperation({
     operationId: 'adminUpdateStatusOrder',

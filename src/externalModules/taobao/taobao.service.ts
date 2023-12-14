@@ -1,11 +1,17 @@
 /* istanbul ignore file */
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  StreamableFile,
+} from '@nestjs/common';
 import { ItemDetailInfo } from './taobao.interface';
 import { ApiTaobaoService } from './apiTaobao.service';
 import { getHeaders } from '../../adapters/pagination/pagination.helper';
-import { SearchItemDtoV2, SearchItemDtoV3 } from './tabao.dto';
+import { SearchByImage, SearchItemDtoV2, SearchItemDtoV3 } from './tabao.dto';
 import { CacheItemRepository } from './taobao.repository';
 import { buildFilterDateParam } from '../../shared/helpers';
+import * as fs from 'fs';
+import { getConfig, getHost } from '../../shared/config/config.provider';
 
 @Injectable()
 export class TaobaoService {
@@ -234,6 +240,75 @@ export class TaobaoService {
     }
     await this.cacheItemRepository.create({ itemId: id, detail: item });
     return item;
+  }
+
+  async searchItemByImage(
+    userId: string,
+    image: Express.Multer.File,
+    searchDto: SearchByImage,
+  ) {
+    try {
+      const { buffer, mimetype } = image;
+      const type = mimetype === 'image/png' ? 'png' : 'jpg';
+      const endpoint = `http://${getHost()}${getConfig().get(
+        'service.baseUrl',
+      )}`;
+      const path = `${process.cwd()}/searchImages/${userId}.${type}`;
+      if (fs.existsSync(path)) {
+        fs.unlink(path, (err) => {
+          if (err) {
+            throw err;
+          }
+          console.log(`Delete old image search of user ${userId} success`);
+        });
+      }
+
+      return new Promise((resolve) => {
+        fs.writeFile(path, buffer, async (err) => {
+          if (err) throw err;
+          const listItems = await this.apiTaobaoService.searchItemByImageTaobao(
+            endpoint,
+            searchDto,
+          );
+          const {
+            items,
+            page,
+            max_page,
+            total_items_count: listLength,
+          } = listItems;
+          const responseHeader = getHeaders(
+            { page: page, perPage: items.length },
+            listLength,
+          );
+          if (responseHeader['x-pages-count'] > max_page) {
+            responseHeader['x-pages-count'] = max_page;
+            responseHeader['x-next-page'] -= 1;
+          }
+          resolve({
+            items,
+            headers: responseHeader,
+          });
+        });
+      });
+    } catch (error) {
+      console.log(
+        `Tìm kiếm theo ảnh thất bại do lỗi: ${JSON.stringify(error)}`,
+      );
+      throw error;
+    }
+  }
+
+  async getImage(fileName: string, type: string) {
+    const path = `${process.cwd()}/searchImages/${fileName}.${type}`;
+    if (!fs.existsSync(path)) {
+      throw new BadRequestException('Không tìm thấy ảnh');
+    }
+    const file = fs.createReadStream(path);
+    file.on('error', (err) => {
+      console.log(err);
+      throw err;
+    });
+    return new StreamableFile(file);
   }
 
   private getPvIdInRightOrder(pvid: string[], item): string {
