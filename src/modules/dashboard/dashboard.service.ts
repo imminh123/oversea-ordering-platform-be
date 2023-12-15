@@ -26,6 +26,29 @@ export class DashboardService {
         userId,
         status: OrderStatus.DELIVERED,
       }),
+      countPendingOrder: await this.orderRepository.count({
+        userId,
+        status: OrderStatus.PENDING_ORDER,
+      }),
+    };
+  }
+
+  async getAdminDashboardInformation() {
+    return {
+      lenCart: await this.cartRepository.count({}),
+      lenOrder: await this.orderRepository.count({}),
+      countCreated: await this.orderRepository.count({
+        status: OrderStatus.CREATED,
+      }),
+      countPendingPayment: await this.orderRepository.count({
+        status: OrderStatus.PENDING_PAYMENT,
+      }),
+      countDelivered: await this.orderRepository.count({
+        status: OrderStatus.DELIVERED,
+      }),
+      countPendingOrder: await this.orderRepository.count({
+        status: OrderStatus.PENDING_ORDER,
+      }),
     };
   }
 }
