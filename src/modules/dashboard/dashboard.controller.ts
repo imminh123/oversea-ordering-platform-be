@@ -12,13 +12,24 @@ export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
   @Get()
-  @Roles(Role.Client, Role.Admin)
+  @Roles(Role.Client)
   @ApiOperation({
     operationId: 'getDashboardInformation',
     description: 'Get dashboard information',
     summary: 'Get dashboard information',
   })
-  clientIndexAddress(@User(UserDataJwtProperties.USERID) userId: string) {
+  clientGetDashboard(@User(UserDataJwtProperties.USERID) userId: string) {
     return this.dashboardService.getDashboardInformation(userId);
+  }
+
+  @Get()
+  @Roles(Role.Admin)
+  @ApiOperation({
+    operationId: 'getAdminDashboardInformation',
+    description: 'Get admin dashboard information',
+    summary: 'Get admin dashboard information',
+  })
+  adminGetDashboard() {
+    return this.dashboardService.getAdminDashboardInformation();
   }
 }
