@@ -252,7 +252,7 @@ export class TaobaoService {
       const type = mimetype === 'image/png' ? 'png' : 'jpg';
       const endpoint = `http://${getHost()}${getConfig().get(
         'service.baseUrl',
-      )}`;
+      )}/taobao/image/${type}/${userId}`;
       const path = `${process.cwd()}/searchImages/${userId}.${type}`;
       if (fs.existsSync(path)) {
         fs.unlink(path, (err) => {
