@@ -113,6 +113,7 @@ export class UpdateStatusOrderDto {
   @ArrayNotEmpty()
   @ValidateNested({ each: true })
   @Type(() => UpdateListItemOrder)
+  @IsOptional()
   @ApiProperty({
     type: Array,
     example: [{ id: '', quantity: 1 }],
@@ -120,6 +121,7 @@ export class UpdateStatusOrderDto {
   listItem: UpdateListItemOrder[];
 
   @IsObject()
+  @IsOptional()
   @ApiProperty({
     type: Object,
     example: {},

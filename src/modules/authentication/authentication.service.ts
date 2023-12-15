@@ -241,8 +241,15 @@ export class AuthenticationService {
     const findParam: any = {};
     const cond = [];
     if (adminIndexAuthenDto.search) {
-      cond.push({ mail: adminIndexAuthenDto.search });
-      cond.push({ phone: adminIndexAuthenDto.search });
+      cond.push({
+        mail: { $regex: new RegExp(adminIndexAuthenDto.search, 'i') },
+      });
+      cond.push({
+        phone: { $regex: new RegExp(adminIndexAuthenDto.search, 'i') },
+      });
+      cond.push({
+        fullname: { $regex: new RegExp(adminIndexAuthenDto.search, 'i') },
+      });
       findParam.$or = cond;
     }
     if (adminIndexAuthenDto.role) {

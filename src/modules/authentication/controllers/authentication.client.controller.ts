@@ -1,26 +1,11 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Put,
-  Query,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put } from '@nestjs/common';
 import { AuthenticationService } from '../authentication.service';
 import {
   CreateClientUserDto,
-  UserIdDto,
   ChangePasswordDto,
   UpdateAuthDto,
-  AdminIndexAuthenDto,
-  DeleteUserIdDto,
   UpdateOAuthDto,
 } from '../authentication.dto';
-import { CommonQueryRequest } from '../../../shared/swagger.helper';
-import { Pagination } from '../../../decorators/pagination.decorator';
-import { IPagination } from '../../../adapters/pagination/pagination.interface';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Role, WebAdminRole } from '../../../shared/constant';
 import { Roles } from '../../../decorators/authorization.decorator';
