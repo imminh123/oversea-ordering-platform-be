@@ -212,7 +212,7 @@ export class OrderService {
       findParam.userName = indexOrderDto.userName;
     }
     if (indexOrderDto.itemName) {
-      findParam.listItem = { itemName: indexOrderDto.itemName };
+      findParam['listItem.itemName'] = indexOrderDto.itemName;
     }
     if (indexOrderDto.onlyCount) {
       return this.orderRepository.count(findParam);
@@ -249,7 +249,7 @@ export class OrderService {
       status,
       listItem,
       updatedBy,
-      meta,
+      meta = {},
     }: {
       status: OrderStatus;
       listItem?: UpdateListItemOrder[];

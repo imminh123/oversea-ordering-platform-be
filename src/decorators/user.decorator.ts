@@ -1,6 +1,10 @@
 /* istanbul ignore file */
 import { createParamDecorator } from '@nestjs/common';
-import { getUserData, getUserId } from '../middleware/user.middleware';
+import {
+  getUserData,
+  getUserId,
+  getUserName,
+} from '../middleware/user.middleware';
 
 export enum UserDataJwtProperties {
   USERID = 'userId',
@@ -13,7 +17,7 @@ export const User = createParamDecorator(
       case UserDataJwtProperties.USERID:
         return getUserId();
       case UserDataJwtProperties.USERNAME:
-        return getUserId();
+        return getUserName();
       default:
         return getUserData();
     }
