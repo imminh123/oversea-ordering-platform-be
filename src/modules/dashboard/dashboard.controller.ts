@@ -22,7 +22,7 @@ export class DashboardController {
     return this.dashboardService.getDashboardInformation(userId);
   }
 
-  @Get()
+  @Get('/admin')
   @Roles(Role.Admin)
   @ApiOperation({
     operationId: 'getAdminDashboardInformation',
