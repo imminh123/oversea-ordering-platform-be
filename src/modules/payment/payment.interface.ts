@@ -4,6 +4,7 @@ import { PaymentStatus } from './payment.enum';
 export interface ITransaction {
   referenceId: string;
   userId: string;
+  userName: string;
   amount: number;
   status: PaymentStatus;
   orderInfo: string;

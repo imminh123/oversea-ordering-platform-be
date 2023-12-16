@@ -31,6 +31,7 @@ import { IClientAuth } from './authentication.interface';
 import { ObjectId } from 'bson';
 import { v4 as uuidv4 } from 'uuid';
 import { MailService } from '../mail/mail.service';
+import { AddressService } from '../address/address.service';
 
 @Injectable()
 export class AuthenticationService {
@@ -38,6 +39,7 @@ export class AuthenticationService {
     private readonly authenticationRepository: AuthenticationRepository,
     private readonly oauthService: OAuthService,
     private readonly mailService: MailService,
+    private readonly addressService: AddressService,
   ) {}
   async createClientUser(
     createAuthenticationDto: CreateClientUserDto,
@@ -441,9 +443,17 @@ export class AuthenticationService {
       throw new BadRequestException('Không tìm thấy ngừoi dùng');
     }
 
-    return this.authenticationRepository.updateById(userId, {
+    const updatedUser = await this.authenticationRepository.updateById(userId, {
       ...updateAuthDto,
     });
+    await this.addressService.createAddress(
+      {
+        name: updatedUser.fullname,
+        ...updatedUser,
+      },
+      userId,
+    );
+    return updatedUser;
   }
 
   async deleteOAuthInfo({ base }, userId: string) {

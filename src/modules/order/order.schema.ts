@@ -15,7 +15,7 @@ const DetailItem = {
   rate: { type: Number, required: true },
   vnCost: { type: Number, required: true },
   currency: { type: String, required: true, default: 'CNY' },
-  propId: { type: String, required: false },
+  skuId: { type: String, required: false },
   propName: { type: String, required: false },
   cartId: { type: String, required: false },
   image: { type: String, required: true },

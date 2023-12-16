@@ -129,7 +129,11 @@ export class OrderService {
     const paymentPayload: PurchaseDto = {
       referenceId: order.id,
     };
-    const payment = await this.paymentService.purchase(paymentPayload, userId);
+    const payment = await this.paymentService.purchase(
+      paymentPayload,
+      userId,
+      userName,
+    );
     return {
       order,
       paymentGatewayUrl: payment.paymentGatewayUrl,

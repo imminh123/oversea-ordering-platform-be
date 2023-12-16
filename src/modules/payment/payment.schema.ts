@@ -6,6 +6,7 @@ export const ITransactionSchema = getBaseSchema<ITransactionDocument>();
 
 ITransactionSchema.add({
   userId: { type: String, required: true },
+  userName: { type: String, required: false },
   referenceId: { type: String, required: true },
   orderInfo: { type: String, required: true },
   amount: { type: Number, required: true },

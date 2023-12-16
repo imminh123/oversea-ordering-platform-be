@@ -10,6 +10,7 @@ import { OAuthService } from './oauth.service';
 import { SessionController } from './controllers/session.controller';
 import { MailModule } from '../mail/mail.module';
 import { AdminAuthenticationController } from './controllers/authentication.admin.controller';
+import { AddressModule } from '../address/address.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { AdminAuthenticationController } from './controllers/authentication.admi
     ]),
     HttpModule,
     MailModule,
+    AddressModule,
   ],
   controllers: [
     AuthenticationController,

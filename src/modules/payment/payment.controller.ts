@@ -9,13 +9,17 @@ import {
 import { PaymentService } from './payment.service';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { User, UserDataJwtProperties } from '../../decorators/user.decorator';
-import { CompletePurchaseDto, PurchaseDto } from './payment.dto';
+import {
+  AdminIndexPaymentDto,
+  CompletePurchaseDto,
+  PurchaseDto,
+} from './payment.dto';
 import { Roles } from '../../decorators/authorization.decorator';
 import { CommonQueryRequest } from '../../shared/swagger.helper';
 import { PaginationInterceptor } from '../../interceptors/pagination.filter';
 import { IPagination } from '../../adapters/pagination/pagination.interface';
 import { Pagination } from '../../decorators/pagination.decorator';
-import { Role } from '../../shared/constant';
+import { Role, WebAdminRole } from '../../shared/constant';
 
 @Controller('payment')
 @ApiTags('payment')
@@ -31,8 +35,9 @@ export class PaymentController {
   async purchase(
     @Body() purchaseDto: PurchaseDto,
     @User(UserDataJwtProperties.USERID) userId: string,
+    @User(UserDataJwtProperties.USERNAME) userName: string,
   ) {
-    return this.paymentService.purchase(purchaseDto, userId);
+    return this.paymentService.purchase(purchaseDto, userId, userName);
   }
 
   @Get()
@@ -43,6 +48,25 @@ export class PaymentController {
   })
   async completePurchase(@Query() completePurchaseDto: CompletePurchaseDto) {
     return this.paymentService.completePurchase(completePurchaseDto);
+  }
+
+  @Get('admin')
+  @Roles(...WebAdminRole)
+  @CommonQueryRequest()
+  @UseInterceptors(PaginationInterceptor)
+  @ApiOperation({
+    operationId: 'adminIndexPayment',
+    description: 'Admin index payment',
+    summary: 'Admin index payment',
+  })
+  async adminIndexOrder(
+    @Pagination() pagination: IPagination,
+    @Query() indexOrderDto: AdminIndexPaymentDto,
+  ) {
+    return this.paymentService.adminIndexPaymentTransactions(
+      indexOrderDto,
+      pagination,
+    );
   }
 
   @Get('clientIndexPayment')
@@ -58,6 +82,9 @@ export class PaymentController {
     @User(UserDataJwtProperties.USERID) userId: string,
     @Pagination() pagination: IPagination,
   ) {
-    return this.paymentService.indexPaymentTransactions(userId, pagination);
+    return this.paymentService.clientIndexPaymentTransactions(
+      userId,
+      pagination,
+    );
   }
 }

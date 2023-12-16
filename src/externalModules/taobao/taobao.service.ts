@@ -305,7 +305,6 @@ export class TaobaoService {
     }
     const file = fs.createReadStream(path);
     file.on('error', (err) => {
-      console.log(err);
       throw err;
     });
     return new StreamableFile(file);

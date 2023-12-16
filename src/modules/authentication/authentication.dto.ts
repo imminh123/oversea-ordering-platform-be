@@ -93,80 +93,73 @@ export class ChangePasswordDto {
 export class UpdateAuthDto {
   @IsString()
   @IsNotEmpty()
-  @IsOptional()
   @ApiProperty({
     type: String,
     example: 'def',
     required: false,
   })
-  fullname?: string;
+  fullname: string;
 
   @IsString()
-  @IsOptional()
   @IsNotEmpty()
   @ApiProperty({
     type: String,
     example: '84',
     required: false,
   })
-  phone?: string;
+  phone: string;
 
   @IsString()
-  @IsOptional()
+  @IsNotEmpty()
   @ApiProperty({
     type: String,
     example: 'dd/mm/yyyy',
   })
-  birthday?: string;
+  birthday: string;
 
   @IsString()
-  @IsOptional()
   @ApiProperty({
     type: String,
     example: 'def',
     required: false,
   })
-  gender?: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @IsOptional()
-  @ApiProperty({
-    type: String,
-    example: 'def',
-    required: false,
-  })
-  address?: string;
+  gender: string;
 
   @IsString()
   @IsNotEmpty()
-  @IsOptional()
   @ApiProperty({
     type: String,
     example: 'def',
     required: false,
   })
-  province?: string;
+  address: string;
 
   @IsString()
   @IsNotEmpty()
-  @IsOptional()
   @ApiProperty({
     type: String,
     example: 'def',
     required: false,
   })
-  city?: string;
+  province: string;
 
   @IsString()
   @IsNotEmpty()
-  @IsOptional()
   @ApiProperty({
     type: String,
     example: 'def',
     required: false,
   })
-  ward?: string;
+  city: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty({
+    type: String,
+    example: 'def',
+    required: false,
+  })
+  ward: string;
 }
 
 export class UpdateOAuthDto {
