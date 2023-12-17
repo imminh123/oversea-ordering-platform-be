@@ -14,6 +14,7 @@ import {
   ClientIndexOrderDto,
   CreateOrderDto,
   ReCreateOrderDto,
+  UpdateOrderDetailDto,
   UpdateStatusOrderDto,
 } from './order.dto';
 import { Roles } from '../../decorators/authorization.decorator';
@@ -135,15 +136,26 @@ export class OrderController {
     return this.orderService.indexOrders(indexOrderDto, pagination);
   }
 
-  @Get(':id')
-  @Roles(...WebAdminRole, Role.Client)
+  @Get('admin/:id')
+  @Roles(...WebAdminRole)
   @ApiOperation({
-    operationId: 'getOrderById',
-    description: 'Get order by id',
-    summary: 'Get order by id',
+    operationId: 'adminGetOrderById',
+    description: 'Admin get order by id',
+    summary: 'Admin get order by id',
   })
-  async getOrderById(@Param('id') id: string) {
-    return this.orderService.getOrderById(id);
+  async adminGetOrderById(@Param('id') id: string) {
+    return this.orderService.adminGetOrderById(id);
+  }
+
+  @Get(':id')
+  @Roles(Role.Client)
+  @ApiOperation({
+    operationId: 'clientGetOrderById',
+    description: 'Client get order by id',
+    summary: 'Client get order by id',
+  })
+  async clientGetOrderById(@Param('id') id: string) {
+    return this.orderService.clientGetOrderById(id);
   }
 
   @Put('updateStatus/:id')
@@ -160,6 +172,24 @@ export class OrderController {
   ) {
     return this.orderService.updateOrderStatus(id, {
       ...updateOrderStatusDto,
+      updatedBy: userId,
+    });
+  }
+
+  @Put('updateOrderDetail/:id')
+  @Roles(...WebAdminRole)
+  @ApiOperation({
+    operationId: 'adminUpdateOrderDetail',
+    description: 'Admin update order detail',
+    summary: 'Admin update order detail',
+  })
+  async adminUpdateOrderDetail(
+    @User(UserDataJwtProperties.USERID) userId: string,
+    @Param('id') id: string,
+    @Body() UpdateOrderDetailDto: UpdateOrderDetailDto,
+  ) {
+    return this.orderService.updateOrderDetail(id, {
+      ...UpdateOrderDetailDto,
       updatedBy: userId,
     });
   }

@@ -101,7 +101,6 @@ export class ClientIndexOrderDto {
 export class UpdateStatusOrderDto {
   @IsString()
   @IsEnum(OrderStatus)
-  @IsOptional()
   @ApiProperty({
     type: String,
     enum: OrderStatus,
@@ -109,6 +108,16 @@ export class UpdateStatusOrderDto {
   })
   status: OrderStatus;
 
+  @IsObject()
+  @IsOptional()
+  @ApiProperty({
+    type: Object,
+    example: {},
+  })
+  meta: any;
+}
+
+export class UpdateOrderDetailDto {
   @IsArray()
   @ArrayNotEmpty()
   @ValidateNested({ each: true })
@@ -119,6 +128,15 @@ export class UpdateStatusOrderDto {
     example: [{ id: '', quantity: 1 }],
   })
   listItem: UpdateListItemOrder[];
+
+  @IsString()
+  @IsNotEmpty()
+  @IsOptional()
+  @ApiProperty({
+    type: String,
+    example: '',
+  })
+  taobaoDeliveryId: string;
 
   @IsObject()
   @IsOptional()

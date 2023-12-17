@@ -23,6 +23,7 @@ const DetailItem = {
 
 const OrderHistoryDetail = {
   status: { type: String, required: false },
+  taobaoDeliveryId: { type: String, required: false },
   listItem: { type: Object, required: false },
   updatedBy: { type: String, required: false },
   meta: { type: Object, required: false },
@@ -37,4 +38,5 @@ IOrderSchema.add({
   wareHouseAddress: { type: String, required: false },
   total: { type: Number, required: true },
   orderHistories: { type: [OrderHistoryDetail], required: true, default: [] },
+  taobaoDeliveryId: { type: String, required: false },
 });

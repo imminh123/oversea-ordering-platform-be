@@ -12,10 +12,10 @@ import { Errors } from '../../shared/errors/errors';
 import { ItemDetailInfo } from '../../externalModules/taobao/taobao.interface';
 import { DetailItem, IOrder, IOrderDocument } from './order.interface';
 import Decimal from 'decimal.js';
-import { OrderStatus } from './order.enum';
+import { OrderStatus, UpdatedByUser } from './order.enum';
 import { Variables } from '../variables/variables.helper';
 import { isValidObjectId } from 'mongoose';
-import { buildFilterDateParam, db2api } from '../../shared/helpers';
+import { addTime, buildFilterDateParam, db2api } from '../../shared/helpers';
 import { PaymentService } from '../payment/payment.service';
 import { PurchaseDto } from '../payment/payment.dto';
 import { IPagination } from '../../adapters/pagination/pagination.interface';
@@ -24,6 +24,8 @@ import { AddressService } from '../address/address.service';
 import { CartService } from '../cart/cart.service';
 import { IAddress } from '../address/address.interface';
 import { ICartDocument } from '../cart/cart.interface';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { orderTimeOutInMinutes } from '../payment/payment.enum';
 
 @Injectable()
 export class OrderService {
@@ -247,22 +249,83 @@ export class OrderService {
     return order;
   }
 
+  async clientGetOrderById(id: string) {
+    return this.userGetOrderById(id, ['taobaoDeliveryId']);
+  }
+
+  async adminGetOrderById(id: string) {
+    return this.userGetOrderById(id);
+  }
+
+  async userGetOrderById(id: string, excludeFields: string[] = []) {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('Id must be objectId');
+    }
+    const order = await this.orderRepository.findById(id);
+    if (!order) {
+      throw new BadRequestException('Không tìm thấy order');
+    }
+    return db2api<IOrderDocument, IOrderDocument>(order, excludeFields);
+  }
+
   async updateOrderStatus(
     id: string,
     {
       status,
-      listItem,
       updatedBy,
       meta = {},
     }: {
       status: OrderStatus;
-      listItem?: UpdateListItemOrder[];
       updatedBy?: string;
       meta?: any;
     },
   ) {
     const order = await this.getOrderById(id);
     if (order.status === status) {
+      return order;
+    }
+    if (
+      [OrderStatus.CANCELLED, OrderStatus.FAILED, OrderStatus.TIMEOUT].includes(
+        order.status,
+      )
+    ) {
+      return order;
+    }
+    const orderHistories = order.orderHistories || [];
+    orderHistories.push({
+      status,
+      updatedBy,
+      meta,
+    });
+    order.orderHistories = orderHistories;
+
+    order.save();
+    return order;
+  }
+
+  async updateOrderDetail(
+    id: string,
+    {
+      taobaoDeliveryId,
+      listItem,
+      updatedBy,
+      meta = {},
+    }: {
+      taobaoDeliveryId: string;
+      listItem?: UpdateListItemOrder[];
+      updatedBy?: string;
+      meta?: any;
+    },
+  ) {
+    const order = await this.getOrderById(id);
+    if (
+      [
+        OrderStatus.CANCELLED,
+        OrderStatus.FAILED,
+        OrderStatus.SUCCEEDED,
+        OrderStatus.TIMEOUT,
+      ].includes(order.status)
+    ) {
       return order;
     }
     if (listItem && listItem.length > 0) {
@@ -294,9 +357,12 @@ export class OrderService {
       order.total = refundAmount.sub(order.total).abs().toDP(2).toNumber();
       meta.refundAmount = refundAmount.toDP(2).toNumber();
     }
+    if (taobaoDeliveryId && order.taobaoDeliveryId !== taobaoDeliveryId) {
+      order.taobaoDeliveryId = taobaoDeliveryId;
+    }
     const orderHistories = order.orderHistories || [];
     orderHistories.push({
-      status,
+      taobaoDeliveryId,
       listItem,
       updatedBy,
       meta,
@@ -350,5 +416,20 @@ export class OrderService {
       propName: item.props_names,
       image: item.main_imgs[0],
     };
+  }
+
+  @Cron(CronExpression.EVERY_MINUTE)
+  async handleOrderCron() {
+    const findParam: any = {};
+    findParam.createdAt = {
+      $lte: addTime(new Date(), orderTimeOutInMinutes, 'minute'),
+    };
+    findParam.status = {
+      $in: [OrderStatus.CREATED, OrderStatus.PENDING_PAYMENT],
+    };
+    return this.orderRepository.update(findParam, {
+      status: OrderStatus.TIMEOUT,
+      updatedBy: UpdatedByUser.SYSTEM,
+    });
   }
 }

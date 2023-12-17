@@ -21,8 +21,9 @@ export interface DetailItem {
 }
 
 export interface OrderHistoryDetail {
-  status: OrderStatus;
-  listItem: any;
+  taobaoDeliveryId?: string;
+  status?: OrderStatus;
+  listItem?: any;
   updatedBy?: string;
   meta?: any;
 }
@@ -35,5 +36,6 @@ export interface IOrder {
   wareHouseAddress: string;
   total: number;
   orderHistories: OrderHistoryDetail[];
+  taobaoDeliveryId: string;
 }
 export interface IOrderDocument extends IOrder, BaseDocument {}
