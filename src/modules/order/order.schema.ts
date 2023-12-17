@@ -15,7 +15,7 @@ const DetailItem = {
   rate: { type: Number, required: true },
   vnCost: { type: Number, required: true },
   currency: { type: String, required: true, default: 'CNY' },
-  propId: { type: String, required: false },
+  skuId: { type: String, required: false },
   propName: { type: String, required: false },
   cartId: { type: String, required: false },
   image: { type: String, required: true },
@@ -23,6 +23,7 @@ const DetailItem = {
 
 const OrderHistoryDetail = {
   status: { type: String, required: false },
+  taobaoDeliveryId: { type: String, required: false },
   listItem: { type: Object, required: false },
   updatedBy: { type: String, required: false },
   meta: { type: Object, required: false },
@@ -37,4 +38,5 @@ IOrderSchema.add({
   wareHouseAddress: { type: String, required: false },
   total: { type: Number, required: true },
   orderHistories: { type: [OrderHistoryDetail], required: true, default: [] },
+  taobaoDeliveryId: { type: String, required: false },
 });

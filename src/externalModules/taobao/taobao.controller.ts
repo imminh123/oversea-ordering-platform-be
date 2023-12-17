@@ -90,8 +90,8 @@ export class TaobaoController {
   @ApiConsumes('multipart/form-data')
   @ApiOperation({
     operationId: 'searchItemByImage',
-    description: 'searchItemByImage',
-    summary: 'User change doctor image',
+    description: 'Search Item By Image',
+    summary: 'Search Item By Image',
   })
   @ApiBody({
     description: 'File upload',

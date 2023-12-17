@@ -6,7 +6,11 @@ import {
   Logger,
   forwardRef,
 } from '@nestjs/common';
-import { CompletePurchaseDto, PurchaseDto } from './payment.dto';
+import {
+  AdminIndexPaymentDto,
+  CompletePurchaseDto,
+  PurchaseDto,
+} from './payment.dto';
 import { ITransaction, ITransactionDocument } from './payment.interface';
 import {
   PaymentStatus,
@@ -15,7 +19,7 @@ import {
 } from './payment.enum';
 import { VnpayService } from '../../externalModules/vnpay/vnpay.service';
 import { TransactionRepository } from './payment.repository';
-import { db2api, isAfter } from '../../shared/helpers';
+import { buildFilterDateParam, db2api, isAfter } from '../../shared/helpers';
 import {
   getSignature,
   sortObject,
@@ -47,6 +51,7 @@ export class PaymentService {
   async purchase(
     createPurchaseDto: PurchaseDto,
     userId: string,
+    userName?: string,
   ): Promise<{ transaction: ITransaction; paymentGatewayUrl: string }> {
     const { order, findExitsTransaction } =
       await this.verifyOrderBeforePurchase(createPurchaseDto.referenceId);
@@ -57,6 +62,7 @@ export class PaymentService {
     ) {
       const transactionPayload = {
         userId,
+        userName,
         referenceId: createPurchaseDto.referenceId,
         amount: order.total,
         orderInfo: `Pay for order ${order.id}`,
@@ -185,7 +191,10 @@ export class PaymentService {
     };
   }
 
-  async indexPaymentTransactions(userId: string, pagination: IPagination) {
+  async clientIndexPaymentTransactions(
+    userId: string,
+    pagination: IPagination,
+  ) {
     const transactions = await this.transactionRepository.find(
       { userId },
       {
@@ -196,6 +205,43 @@ export class PaymentService {
     );
 
     const listLength = await this.transactionRepository.count({ userId });
+    const responseHeader = getHeaders(pagination, listLength);
+
+    return {
+      items: db2api<ITransactionDocument[], ITransaction[]>(transactions),
+      headers: responseHeader,
+    };
+  }
+
+  async adminIndexPaymentTransactions(
+    indexOrderDto: AdminIndexPaymentDto,
+    pagination: IPagination,
+  ) {
+    const findParam: any = {};
+    if (indexOrderDto.userId) {
+      findParam.userId = indexOrderDto.userId;
+    }
+    if (indexOrderDto.status) {
+      findParam.status = indexOrderDto.status;
+    }
+    if (indexOrderDto.timeFrom) {
+      findParam.createdAt = buildFilterDateParam(
+        indexOrderDto.timeFrom,
+        indexOrderDto.timeTo,
+      );
+    }
+    if (indexOrderDto.userName) {
+      findParam.userName = {
+        $regex: new RegExp(indexOrderDto.userName, 'i'),
+      };
+    }
+    const transactions = await this.transactionRepository.find(findParam, {
+      skip: pagination.startIndex,
+      limit: pagination.perPage,
+      sort: { createdAt: -1 },
+    });
+
+    const listLength = await this.transactionRepository.count(findParam);
     const responseHeader = getHeaders(pagination, listLength);
 
     return {

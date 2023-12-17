@@ -10,6 +10,7 @@ import { VariablesModule } from '../variables/variables.module';
 import { PaymentModule } from '../payment/payment.module';
 import { CartModule } from '../cart/cart.module';
 import { AddressModule } from '../address/address.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AddressModule } from '../address/address.module';
     CartModule,
     AddressModule,
     forwardRef(() => PaymentModule),
+    ScheduleModule.forRoot(),
   ],
   controllers: [OrderController],
   providers: [OrderService, OrderRepository],

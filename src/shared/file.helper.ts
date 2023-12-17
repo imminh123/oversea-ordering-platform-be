@@ -8,7 +8,6 @@ import {
 @Injectable()
 export class FileValidationPipe implements PipeTransform {
   transform(value: Express.Multer.File, metadata: ArgumentMetadata) {
-    console.log(value);
     // "value" is an object containing the file's attributes and metadata
     if (value.size > tenMb) {
       throw new BadRequestException('Ảnh phải nhỏ hơn 10mb');
