@@ -158,9 +158,13 @@ export class PaymentService {
         this.transactionRepository.updateById(transaction.id, {
           ...payload,
         }),
-        this.orderService.updateOrderStatus(transaction.referenceId, {
-          status: incomingStatus,
-        }),
+        this.orderService.updateOrderStatus(
+          transaction.referenceId,
+          {
+            status: incomingStatus,
+          },
+          true,
+        ),
         this.cartService.delete(ids),
       ]);
       return { RspCode: '00', Message: 'success' };

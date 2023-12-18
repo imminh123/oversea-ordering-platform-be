@@ -279,12 +279,14 @@ export class OrderService {
       updatedBy?: string;
       meta?: any;
     },
+    isWebhook = false,
   ) {
     const order = await this.getOrderById(id);
     if (order.status === status) {
       return order;
     }
     if (
+      !isWebhook &&
       [OrderStatus.CANCELLED, OrderStatus.FAILED, OrderStatus.TIMEOUT].includes(
         order.status,
       )
@@ -422,7 +424,7 @@ export class OrderService {
   async handleOrderCron() {
     const findParam: any = {};
     findParam.createdAt = {
-      $lte: addTime(new Date(), orderTimeOutInMinutes, 'minute'),
+      $lte: addTime(new Date(), -1 * orderTimeOutInMinutes, 'minute'),
     };
     findParam.status = {
       $in: [OrderStatus.CREATED, OrderStatus.PENDING_PAYMENT],
