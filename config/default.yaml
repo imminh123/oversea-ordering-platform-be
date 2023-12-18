@@ -1,0 +1,30 @@
+# Default config
+service:
+  name: api-oversea-ordering
+  descriptions: Api Oversea Ordering Backend
+  baseUrl: /api/oversea-ordering
+  docsBaseUrl: /docs/oversea-ordering
+  apiVersion: 0.0.1
+  appVersion: 0.0.1
+
+server:
+  host: localhost
+  port: 3113
+  hostname: localhost:3113
+  swaggerSchema: http
+
+mongodb:
+  uri: mongodb://localhost:27017/oversea-ordering
+
+jwtPrivateKey: privateKey
+
+tmApiToken: ''
+rapidApiToken: ''
+vnpay:
+  merchantCode:
+  hash:
+  endpoint:
+  returnUrl: https://app.mby.vn/order-success.html
+
+orderTimeoutInMinutes: 5
+setConfigCacheTime: 24

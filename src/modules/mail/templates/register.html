@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <title>Register MBY Logistics</title>
+    <link href="http://fonts.cdnfonts.com/css/sf-pro-display" rel="stylesheet" />
+
+    <style>
+      .container {
+        background-color: #fff;
+        box-shadow: -4px 0px 12px rgba(16, 30, 49, 0.04);
+        border-radius: 78px;
+        font-family: 'SF Pro Text', sans-serif;
+        padding: 78px 147px 94px;
+        text-align: center;
+      }
+      .logo {
+        margin-bottom: 30px;
+        color: #dd7f91;
+      }
+      .greeting {
+        color: #243858;
+        font-size: 31px;
+        font-weight: 700;
+        line-height: 47px;
+        margin-bottom: 14px;
+      }
+      .greeting div,
+      .greeting a {
+        color: #dd7f91 !important;
+        font-weight: 400;
+        text-decoration: none;
+      }
+      .head-message {
+        color: #243858;
+        font-size: 31px;
+        font-weight: 700;
+        line-height: 47px;
+        margin-bottom: 48px;
+      }
+      .sub-message {
+        color: #505f7a;
+        font-size: 24px;
+        font-weight: 400;
+        line-height: 35px;
+      }
+      .btn-reset-password {
+        align-items: center;
+        background-color: #505f7a;
+        border: 1px solid #979797;
+        border-radius: 11px;
+        color: #fff !important;
+        cursor: pointer;
+        display: inline-block;
+        font-size: 14px;
+        font-weight: 700;
+        justify-content: center;
+        line-height: 17px;
+        margin-top: 66px;
+        padding-bottom: 20px;
+        padding-top: 20px;
+        text-decoration: none;
+        width: 512px;
+      }
+    </style>
+  </head>
+
+  <body style="background-color: #dde1e8; padding: 30px; width: 800px">
+    <div class="container">
+      <div class="logo">
+        <h1>MBY Logistics</h1>
+      </div>
+
+      <div class="greeting">
+        Hello,
+        <div>{{{email}}}</div>
+      </div>
+
+      <div class="head-message">Verify your email to register.</div>
+
+      <a class="btn-reset-password" href="{{registerLink}}" target="_blank"> Register </a>
+    </div>
+  </body>
+</html>
