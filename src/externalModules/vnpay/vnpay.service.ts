@@ -24,7 +24,7 @@ export class VnpayService {
     request.vnp_TmnCode = tmnCode;
     request.vnp_Locale = LocaleCode.VN;
     request.vnp_CurrCode = CurrencyCode.VND;
-    request.vnp_TxnRef = params.orderId;
+    request.vnp_TxnRef = params.referenceId;
     request.vnp_OrderInfo = params.orderInfo || '';
     request.vnp_Amount = new Decimal(params.amount).mul(100).toDP(0).toString();
     request.vnp_OrderType = 'other';
