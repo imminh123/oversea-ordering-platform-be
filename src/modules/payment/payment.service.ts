@@ -122,7 +122,10 @@ export class PaymentService {
       const order = await this.orderService.getOrderById(
         transaction.referenceId,
       );
-      if (order.status !== OrderStatus.PENDING_PAYMENT) {
+      if (
+        order.status !== OrderStatus.PENDING_PAYMENT &&
+        order.status !== OrderStatus.TIMEOUT
+      ) {
         throw new HttpException(
           {
             RspCode: '02',
