@@ -300,6 +300,7 @@ export class OrderService {
       meta,
     });
     order.orderHistories = orderHistories;
+    order.status = status;
 
     order.save();
     return order;
