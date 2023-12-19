@@ -302,7 +302,7 @@ export class OrderService {
     order.orderHistories = orderHistories;
     order.status = status;
 
-    order.save();
+    order.save({ validateModifiedOnly: true });
     return order;
   }
 
