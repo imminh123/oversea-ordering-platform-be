@@ -139,22 +139,34 @@ export class CartService {
     return Promise.all(listUpdateVoid);
   }
 
-  async getSummaryCart(ids: string[]) {
+  async getSummaryCart(
+    userId: string,
+    ids: string[],
+    haveCountingFee: boolean,
+  ) {
     const arr = [];
     ids.forEach((id) => {
       if (isValidObjectId(id)) {
         arr.push(new ObjectId(id));
       }
     });
-    const listItem = await this.cartRepository.find({ _id: { $in: arr } });
-    if (listItem.length === 0) {
+    const groupItemByShop = await this.cartRepository.getClientCart(
+      userId,
+      arr,
+    );
+    const countShop = groupItemByShop.length;
+    if (countShop === 0) {
       return 0;
     }
+    let countItem = 0;
     let res = new Decimal(0);
-    for (const item of listItem) {
-      if (item.isActive) {
-        const num = new Decimal(item.price).mul(item.quantity);
-        res = res.add(num);
+    for (const { listItem } of groupItemByShop) {
+      for (const item of listItem) {
+        if (item.isActive) {
+          countItem++;
+          const num = new Decimal(item.price).mul(item.quantity);
+          res = res.add(num);
+        }
       }
     }
     const rate = await this.variablesService.getVariable(
@@ -163,10 +175,30 @@ export class CartService {
     if (!rate) {
       throw new NotFoundException('Can not get exchange rate');
     }
+    const totalInVND = res.mul(rate).toDP(3);
+    const feeVariable =
+      (await this.variablesService.getVariable(Variables.FEE)) || 0;
+    const fee = new Decimal(feeVariable).mul(rate).toDP(3);
+    const totalFeeOrder = fee.mul(countShop).toDP(3);
+    const countingFeeVarieble =
+      (await this.variablesService.getVariable(Variables.FEE)) || 0;
+    const countingFee = haveCountingFee
+      ? new Decimal(countingFeeVarieble).mul(rate).toDP(3)
+      : new Decimal(0);
+    const totalCountingFee = countingFee.mul(countItem).toDP(3);
+    const finalTotal = totalInVND.add(totalFeeOrder).add(totalCountingFee);
+
     return {
       totalInCNY: res.toDP(2),
       exchangeRate: rate,
-      totalInVND: res.mul(rate).toDP(3),
+      totalInVND,
+      feePerOrder: fee,
+      countOrder: countShop,
+      totalFeeOrder,
+      countingFee,
+      countItem,
+      totalCountingFee,
+      finalTotal,
     };
   }
 

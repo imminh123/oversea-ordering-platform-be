@@ -19,12 +19,12 @@ export class VariablesService {
     private readonly variableRepository: VariableRepository,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
-  async createNewVariable({ name, value }: AddVariableDto) {
+  async createNewVariable({ name, value, description }: AddVariableDto) {
     const variable = await this.variableRepository.findOne({ name });
     if (variable) {
       throw new BadRequestException('Variable with this name exits');
     }
-    return this.variableRepository.create({ name, value });
+    return this.variableRepository.create({ name, value, description });
   }
 
   async indexVariable(

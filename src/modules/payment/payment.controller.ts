@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Post,
   Query,
   Res,
@@ -109,5 +110,16 @@ export class PaymentController {
       userId,
       pagination,
     );
+  }
+
+  @Get(':id')
+  @Roles(Role.Client, ...WebAdminRole)
+  @ApiOperation({
+    operationId: 'userGetPaymentById',
+    description: 'User get payment by id',
+    summary: 'User get payment by id',
+  })
+  async clientGetOrderById(@Param('id') id: string) {
+    return this.paymentService.userGetOrderById(id);
   }
 }

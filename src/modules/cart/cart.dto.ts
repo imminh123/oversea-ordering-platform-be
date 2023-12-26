@@ -74,6 +74,16 @@ export class GetSummaryCartDto {
     required: false,
   })
   ids: string[];
+
+  @IsBoolean()
+  @IsNotEmpty()
+  @IsOptional()
+  @ApiProperty({
+    type: Boolean,
+    example: false,
+    required: false,
+  })
+  haveCountingFee?: boolean;
 }
 
 export class UpdateCartItemDto {

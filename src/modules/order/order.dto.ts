@@ -38,6 +38,16 @@ export class CreateOrderDto {
     example: '',
   })
   wareHouseAddress?: string;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  @IsOptional()
+  @ApiProperty({
+    type: Boolean,
+    example: false,
+    required: false,
+  })
+  haveCountingFee?: boolean;
 }
 
 export class ReCreateOrderDto {

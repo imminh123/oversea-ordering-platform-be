@@ -41,6 +41,7 @@ import { AuthenticationService } from '../authentication/authentication.service'
 import { MailService } from '../mail/mail.service';
 import { Readable } from 'stream';
 import { stringify } from 'csv-stringify';
+import { isValidObjectId } from 'mongoose';
 
 @Injectable()
 export class PaymentService {
@@ -355,6 +356,28 @@ export class PaymentService {
       throw new BadRequestException('Order đã hết hạn thanh toán');
     }
     return { order, findExitsTransaction };
+  }
+
+  async userGetOrderById(id: string) {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('Id must be objectId');
+    }
+    const transaction = await this.transactionRepository.findById(id);
+    if (!transaction) {
+      throw new BadRequestException('Không tìm thấy giao dịch');
+    }
+    return db2api<ITransactionDocument, ITransactionDocument>(transaction, [
+      'webhookResponse',
+    ]);
+  }
+
+  async updateTransactionTimeout(listOrderId: string[]) {
+    return this.transactionRepository.update(
+      {
+        referenceId: { $in: listOrderId },
+      },
+      { status: PaymentStatus.FAILED },
+    );
   }
 
   private checkInvalidSignature(completePurchaseDto: CompletePurchaseDto) {

@@ -518,9 +518,17 @@ export class OrderService {
     findParam.status = {
       $in: [OrderStatus.CREATED, OrderStatus.PENDING_PAYMENT],
     };
-    return this.orderRepository.update(findParam, {
-      status: OrderStatus.TIMEOUT,
-      updatedBy: UpdatedByUser.SYSTEM,
-    });
+    const listOrder = await this.orderRepository.find(findParam);
+    const listOrderId = [];
+    for (const order of listOrder) {
+      listOrderId.push(order.id);
+    }
+    return Promise.all([
+      this.orderRepository.update(findParam, {
+        status: OrderStatus.TIMEOUT,
+        updatedBy: UpdatedByUser.SYSTEM,
+      }),
+      this.paymentService.updateTransactionTimeout(listOrderId),
+    ]);
   }
 }
