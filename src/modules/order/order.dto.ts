@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, OmitType, PartialType } from '@nestjs/swagger';
 import {
   ArrayNotEmpty,
   IsArray,
@@ -98,6 +98,18 @@ export class ClientIndexOrderDto {
   })
   onlyCount?: boolean;
 }
+
+export class AdminIndexOrderDto extends PartialType(ClientIndexOrderDto) {
+  @ApiProperty({
+    type: String,
+    required: false,
+  })
+  taobaoDeliveryId?: string;
+}
+
+export class AdminDownloadListOrderDto extends OmitType(AdminIndexOrderDto, [
+  'onlyCount',
+] as const) {}
 export class UpdateStatusOrderDto {
   @IsString()
   @IsEnum(OrderStatus)
@@ -129,14 +141,14 @@ export class UpdateOrderDetailDto {
   })
   listItem: UpdateListItemOrder[];
 
-  @IsString()
-  @IsNotEmpty()
+  @IsArray()
+  @ArrayNotEmpty()
   @IsOptional()
   @ApiProperty({
-    type: String,
+    type: Array,
     example: '',
   })
-  taobaoDeliveryId: string;
+  taobaoDeliveryIds: string[];
 
   @IsObject()
   @IsOptional()

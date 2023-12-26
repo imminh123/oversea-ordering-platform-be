@@ -4,6 +4,8 @@ import {
   Get,
   Post,
   Query,
+  Res,
+  StreamableFile,
   UseInterceptors,
 } from '@nestjs/common';
 import { PaymentService } from './payment.service';
@@ -20,6 +22,7 @@ import { PaginationInterceptor } from '../../interceptors/pagination.filter';
 import { IPagination } from '../../adapters/pagination/pagination.interface';
 import { Pagination } from '../../decorators/pagination.decorator';
 import { Role, WebAdminRole } from '../../shared/constant';
+import { Response } from 'express';
 
 @Controller('payment')
 @ApiTags('payment')
@@ -67,6 +70,26 @@ export class PaymentController {
       indexOrderDto,
       pagination,
     );
+  }
+
+  @Get('admin/download')
+  @Roles(...WebAdminRole)
+  @ApiOperation({
+    operationId: 'adminDownloadListOrder',
+    description: 'Admin Download list order',
+    summary: 'Admin Download list order',
+  })
+  async adminDownloadListOrder(
+    @Query() indexPaymentDto: AdminIndexPaymentDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const data = await this.paymentService.downloadListOrders(indexPaymentDto);
+    const current = new Date();
+    res.set({
+      'Content-Type': 'application/csv',
+      'Content-Disposition': `attachment; filename="Payment ${current.getTime()}.csv"`,
+    });
+    return new StreamableFile(data);
   }
 
   @Get('clientIndexPayment')

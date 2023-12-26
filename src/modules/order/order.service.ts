@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { OrderRepository } from './order.repository';
 import {
-  ClientIndexOrderDto,
+  AdminIndexOrderDto,
   CreateOrderDto,
   ReCreateOrderDto,
   UpdateListItemOrder,
@@ -15,7 +15,12 @@ import Decimal from 'decimal.js';
 import { OrderStatus, UpdatedByUser } from './order.enum';
 import { Variables } from '../variables/variables.helper';
 import { isValidObjectId } from 'mongoose';
-import { addTime, buildFilterDateParam, db2api } from '../../shared/helpers';
+import {
+  addTime,
+  buildFilterDateParam,
+  createTimeStringWithFormat,
+  db2api,
+} from '../../shared/helpers';
 import { PaymentService } from '../payment/payment.service';
 import { PurchaseDto } from '../payment/payment.dto';
 import { IPagination } from '../../adapters/pagination/pagination.interface';
@@ -26,6 +31,8 @@ import { IAddress } from '../address/address.interface';
 import { ICartDocument } from '../cart/cart.interface';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { orderTimeOutInMinutes } from '../payment/payment.enum';
+import { stringify } from 'csv-stringify';
+import { Readable } from 'stream';
 
 @Injectable()
 export class OrderService {
@@ -197,7 +204,7 @@ export class OrderService {
   }
 
   async indexOrders(
-    indexOrderDto: ClientIndexOrderDto,
+    indexOrderDto: AdminIndexOrderDto,
     pagination: IPagination,
     userId?: string,
   ) {
@@ -215,14 +222,20 @@ export class OrderService {
       );
     }
     if (indexOrderDto.userName) {
-      findParam.userName = indexOrderDto.userName;
+      findParam.userName = { $regex: new RegExp(indexOrderDto.userName, 'i') };
     }
     if (indexOrderDto.itemName) {
       findParam['listItem.itemName'] = indexOrderDto.itemName;
     }
+    if (indexOrderDto.taobaoDeliveryId) {
+      findParam.taobaoDeliveryIds = {
+        $regex: new RegExp(indexOrderDto.taobaoDeliveryId, 'i'),
+      };
+    }
     if (indexOrderDto.onlyCount) {
       return this.orderRepository.count(findParam);
     }
+
     const orders = await this.orderRepository.find(findParam, {
       skip: pagination.startIndex,
       limit: pagination.perPage,
@@ -236,6 +249,81 @@ export class OrderService {
       items: db2api<IOrderDocument[], IOrder[]>(orders),
       headers: responseHeader,
     };
+  }
+
+  async downloadListOrders(indexOrderDto: AdminIndexOrderDto, userId?: string) {
+    const findParam: any = {};
+    if (userId) {
+      findParam.userId = userId;
+    }
+    if (indexOrderDto.status) {
+      findParam.status = indexOrderDto.status;
+    }
+    if (indexOrderDto.timeFrom) {
+      findParam.createdAt = buildFilterDateParam(
+        indexOrderDto.timeFrom,
+        indexOrderDto.timeTo,
+      );
+    }
+    if (indexOrderDto.userName) {
+      findParam.userName = { $regex: new RegExp(indexOrderDto.userName, 'i') };
+    }
+    if (indexOrderDto.itemName) {
+      findParam['listItem.itemName'] = indexOrderDto.itemName;
+    }
+    if (indexOrderDto.taobaoDeliveryId) {
+      findParam.taobaoDeliveryIds = {
+        $regex: new RegExp(indexOrderDto.taobaoDeliveryId, 'i'),
+      };
+    }
+
+    const orders = await this.orderRepository.find(findParam, {
+      sort: { createdAt: -1 },
+      batchSize: 100000,
+    });
+
+    const csvStream = stringify({
+      columns: ['product', 'status', 'address', 'total', 'createdAt'],
+    });
+    csvStream.on('error', (err) => console.log(JSON.stringify(err)));
+    csvStream.write([
+      'Sản phẩm',
+      'Trạng thái',
+      'Địa chỉ',
+      'Tổng tiền',
+      'Thời gian tạo',
+    ]);
+
+    for await (const {
+      listItem,
+      status,
+      address,
+      total,
+      createdAt,
+    } of orders) {
+      const product = [];
+      for (const item of listItem) {
+        product.push(item.itemName || '');
+        product.push(item.propName || '');
+      }
+      const customerAddress = [
+        address.name,
+        address.phone,
+        address.address,
+        address.ward,
+        address.city,
+        address.province,
+      ];
+      csvStream.write({
+        product: product.join('\n'),
+        status,
+        address: customerAddress.join(', '),
+        total,
+        createdAt: createTimeStringWithFormat(createdAt, 'mm:ss DD-MM-YYYY'),
+      });
+    }
+    csvStream.end();
+    return Readable.from(csvStream);
   }
 
   async getOrderById(id: string) {
@@ -309,12 +397,12 @@ export class OrderService {
   async updateOrderDetail(
     id: string,
     {
-      taobaoDeliveryId,
+      taobaoDeliveryIds,
       listItem,
       updatedBy,
       meta = {},
     }: {
-      taobaoDeliveryId: string;
+      taobaoDeliveryIds: string[];
       listItem?: UpdateListItemOrder[];
       updatedBy?: string;
       meta?: any;
@@ -360,18 +448,18 @@ export class OrderService {
       order.total = refundAmount.sub(order.total).abs().toDP(2).toNumber();
       meta.refundAmount = refundAmount.toDP(2).toNumber();
     }
-    if (taobaoDeliveryId && order.taobaoDeliveryId !== taobaoDeliveryId) {
-      order.taobaoDeliveryId = taobaoDeliveryId;
+    if (taobaoDeliveryIds) {
+      order.taobaoDeliveryIds = taobaoDeliveryIds;
     }
     const orderHistories = order.orderHistories || [];
     orderHistories.push({
-      taobaoDeliveryId,
+      taobaoDeliveryIds: taobaoDeliveryIds.join(','),
       listItem,
       updatedBy,
       meta,
     });
     order.orderHistories = orderHistories;
-    order.save();
+    order.save({ validateModifiedOnly: true });
     return order;
   }
 

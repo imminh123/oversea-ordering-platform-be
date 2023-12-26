@@ -7,10 +7,15 @@ import {
   UseInterceptors,
   Query,
   Put,
+  Res,
+  StreamableFile,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { OrderService } from './order.service';
 import { User, UserDataJwtProperties } from '../../decorators/user.decorator';
 import {
+  AdminDownloadListOrderDto,
+  AdminIndexOrderDto,
   ClientIndexOrderDto,
   CreateOrderDto,
   ReCreateOrderDto,
@@ -131,9 +136,29 @@ export class OrderController {
   })
   async adminIndexOrder(
     @Pagination() pagination: IPagination,
-    @Query() indexOrderDto: ClientIndexOrderDto,
+    @Query() indexOrderDto: AdminIndexOrderDto,
   ) {
     return this.orderService.indexOrders(indexOrderDto, pagination);
+  }
+
+  @Get('admin/download')
+  @Roles(...WebAdminRole)
+  @ApiOperation({
+    operationId: 'adminDownloadListOrder',
+    description: 'Admin Download list order',
+    summary: 'Admin Download list order',
+  })
+  async adminDownloadListOrder(
+    @Query() indexOrderDto: AdminDownloadListOrderDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const data = await this.orderService.downloadListOrders(indexOrderDto);
+    const current = new Date();
+    res.set({
+      'Content-Type': 'application/csv',
+      'Content-Disposition': `attachment; filename="Order ${current.getTime()}.csv"`,
+    });
+    return new StreamableFile(data);
   }
 
   @Get('admin/:id')

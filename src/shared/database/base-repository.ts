@@ -4,12 +4,18 @@ import {
   Document,
   ClientSession,
   UpdateWriteOpResult,
+  Cursor,
+  QueryOptions,
 } from 'mongoose';
 import { FindOptions } from './database.helpers';
 import { slice, merge } from 'lodash';
 import { ObjectId } from 'bson';
 import { DeleteResult, TransactionOptions } from 'mongodb';
 
+export interface CursorOptions {
+  batchSize?: number;
+  sort?: any;
+}
 export interface Repository<T extends Document> {
   aggregate(aggregations?: any[]): Promise<any[]>;
 
@@ -97,6 +103,16 @@ export class BaseRepository<T extends Document> implements Repository<T> {
       query.sort(sort);
     }
     return query.exec();
+  }
+
+  async findWithCursor(
+    conditions,
+    options?: CursorOptions,
+  ): Promise<Cursor<T, QueryOptions<T>>> {
+    return this.model
+      .find(conditions)
+      .sort(options.sort)
+      .cursor({ batchSize: options?.batchSize });
   }
 
   async count(conditions: any): Promise<number> {
