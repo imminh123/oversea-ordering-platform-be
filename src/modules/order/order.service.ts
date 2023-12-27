@@ -83,8 +83,12 @@ export class OrderService {
     { orderId }: ReCreateOrderDto,
     { userId, userName }: { userId: string; userName: string },
   ) {
-    const { address, listItem, wareHouseAddress } =
-      await this.orderRepository.findById(orderId);
+    const {
+      address,
+      listItem,
+      wareHouseAddress,
+      haveCountingFee = false,
+    } = await this.orderRepository.findById(orderId);
     return this.createOrderAndPay(
       {
         wareHouseAddress,
@@ -92,6 +96,7 @@ export class OrderService {
         listItem,
         userId,
         userName,
+        haveCountingFee,
       },
       true,
     );
@@ -101,13 +106,14 @@ export class OrderService {
     { orderId }: ReCreateOrderDto,
     { userId, userName }: { userId: string; userName: string },
   ) {
-    const { address, listItem, wareHouseAddress } =
+    const { address, listItem, wareHouseAddress, haveCountingFee } =
       await this.orderRepository.findById(orderId);
     return this.createOrder(
       {
         wareHouseAddress,
         address,
         listItem,
+        haveCountingFee,
       },
       { userId, userName },
       true,
@@ -121,17 +127,19 @@ export class OrderService {
       userId,
       userName,
       wareHouseAddress,
+      haveCountingFee = false,
     }: {
       address: IAddress;
       listItem: ICartDocument[] | any[];
       userId: string;
       userName: string;
       wareHouseAddress?: string;
+      haveCountingFee?: boolean;
     },
     isReCreate = false,
   ) {
     const order = await this.createOrder(
-      { wareHouseAddress, address, listItem },
+      { wareHouseAddress, address, listItem, haveCountingFee },
       { userId, userName },
       isReCreate,
     );
@@ -154,20 +162,24 @@ export class OrderService {
       listItem,
       address,
       wareHouseAddress,
+      haveCountingFee = false,
     }: {
       listItem: ICartDocument[] | any[];
       address: IAddress;
       wareHouseAddress?: string;
+      haveCountingFee?: boolean;
     },
     { userId, userName }: { userId: string; userName: string },
     isReCreate = false,
   ) {
     const listProduct = [];
-    let total = new Decimal(0);
     const rate = await this.variablesService.getVariable(
       Variables.EXCHANGE_RATE,
     );
     const current = new Date();
+    let countItem = 0;
+    let totalInCNY = new Decimal(0);
+    const uniqueShopSet = new Set<string>();
     for (const item of listItem) {
       const tbItem = await this.tbService.getItemDetailByIdV3(
         item.itemId,
@@ -186,10 +198,30 @@ export class OrderService {
         volume: item.quantity,
         rate,
       });
+      uniqueShopSet.add(orderItem.shopId);
       orderItem.cartId = isReCreate ? '' : item?.id;
+      countItem++;
       listProduct.push(orderItem);
-      total = total.add(orderItem.vnCost);
+      totalInCNY = totalInCNY.add(orderItem.cnyCost);
     }
+    totalInCNY = totalInCNY.toDP(2);
+    const feeVariable =
+      (await this.variablesService.getVariable(Variables.FEE)) || 0;
+    const feePerOrder = new Decimal(feeVariable).mul(rate).toDP(3);
+    const countingFeeVarieble =
+      (await this.variablesService.getVariable(Variables.FEE)) || 0;
+    const countingFee = haveCountingFee
+      ? new Decimal(countingFeeVarieble).mul(rate).toDP(3)
+      : new Decimal(0);
+
+    const breakdownDetail = await this.cartService.calculateBreakdownDetail({
+      totalInCNY,
+      rate,
+      feePerOrder,
+      countShop: uniqueShopSet.size,
+      countingFee,
+      countItem,
+    });
     const order = {
       listItem: listProduct,
       userId,
@@ -197,7 +229,9 @@ export class OrderService {
       status: OrderStatus.CREATED,
       address,
       wareHouseAddress,
-      total: total.toDP(2).toNumber(),
+      breakdownDetail,
+      haveCountingFee,
+      total: breakdownDetail.finalTotal.toDP(2).toNumber(),
       orderHistories: [{ status: OrderStatus.CREATED, updatedBy: userId }],
     } as IOrder;
     return this.orderRepository.create(order);
@@ -379,7 +413,9 @@ export class OrderService {
         order.status,
       )
     ) {
-      return order;
+      throw new BadRequestException(
+        'Không thể cập nhật đơn hàng với trạng thái hiện tại',
+      );
     }
     const orderHistories = order.orderHistories || [];
     orderHistories.push({
@@ -417,7 +453,9 @@ export class OrderService {
         OrderStatus.TIMEOUT,
       ].includes(order.status)
     ) {
-      return order;
+      throw new BadRequestException(
+        'Không thể cập nhật đơn hàng với trạng thái hiện tại',
+      );
     }
     if (listItem && listItem.length > 0) {
       let refundAmount = new Decimal(0);
@@ -487,6 +525,7 @@ export class OrderService {
         `Số lượng hàng còn lại không đủ. Hiện tại trền sàn còn ${item.quantity}`,
       );
     }
+    const cnyCost = new Decimal(item.sale_price).mul(volume).toDP(2);
     return {
       itemId: item.item_id,
       itemName: item.title,
@@ -498,11 +537,8 @@ export class OrderService {
       rate: new Decimal(rate).toDP(2).toNumber(),
       price: new Decimal(item.sale_price).toDP(2).toNumber(),
       currency: item.currency,
-      vnCost: new Decimal(item.sale_price)
-        .mul(volume)
-        .mul(rate)
-        .toDP(2)
-        .toNumber(),
+      cnyCost: cnyCost.toNumber(),
+      vnCost: cnyCost.mul(rate).toDP(2).toNumber(),
       skuId: item.skuid,
       propName: item.props_names,
       image: item.main_imgs[0],

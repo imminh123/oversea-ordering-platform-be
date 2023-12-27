@@ -39,4 +39,6 @@ IOrderSchema.add({
   total: { type: Number, required: true },
   orderHistories: { type: [OrderHistoryDetail], required: true, default: [] },
   taobaoDeliveryIds: { type: [String], required: false },
+  haveCountingFee: { type: Boolean, required: false },
+  breakdownDetail: { type: Object, required: true },
 });
