@@ -12,6 +12,7 @@ import { CartService } from './cart.service';
 import {
   AddItemToCartDto,
   CartListingFilter,
+  ClientGetCartV2Dto,
   GetSummaryCartDto,
   UpdateCartItemDto,
 } from './cart.dto';
@@ -74,21 +75,10 @@ export class CartController {
   })
   clientGetCartV2(
     @User(UserDataJwtProperties.USERID) userId: string,
-    @Query() clientGetCartV2Dto: GetSummaryCartDto,
+    @Query() clientGetCartV2Dto: ClientGetCartV2Dto,
   ) {
     return this.cartService.clientGetCartV2(clientGetCartV2Dto, userId);
   }
-
-  // @Get('getTbItem')
-  // @Roles(Role.Client)
-  // @ApiOperation({
-  //   operationId: 'clientGetTaobaoItem',
-  //   description: 'Client get detail taobao item',
-  //   summary: 'Client get detail taobao item',
-  // })
-  // clientGetTaobaoItem(@Query() getDetailTaobaoItemDto: GetDetailTaobaoItemDto) {
-  //   return this.cartService.clientGetDetailTaobaoItem(getDetailTaobaoItemDto);
-  // }
 
   @Put('refreshCart')
   @Roles(Role.Client)
