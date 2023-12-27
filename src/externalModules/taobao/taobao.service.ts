@@ -138,7 +138,7 @@ export class TaobaoService {
     }
     main_imgs.push(...item.ImageUrls.map((url) => `https:${url}`));
     const propName = [];
-    if (skuItem.SpecAttributes) {
+    if (skuItem?.SpecAttributes) {
       for (const [key, value] of Object.entries(skuItem.SpecAttributes)) {
         propName.push(`${key}: ${value}`);
       }
