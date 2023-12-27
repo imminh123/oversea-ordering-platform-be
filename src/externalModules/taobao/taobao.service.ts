@@ -157,8 +157,11 @@ export class TaobaoService {
       },
       props_names: propName.join('; '),
       props_ids: skuItem?.Key,
-      quantity: skuItem?.AmountOnSale,
-      sale_price: skuItem?.Price || skuItem?.original_price,
+      quantity: skuItem?.AmountOnSale || item?.AmountOnSale,
+      sale_price:
+        skuItem?.Price ||
+        skuItem?.original_price ||
+        item?.PriceRangeInfos[0]?.Price,
       main_imgs,
       skuid: skuItem?.SkuId,
     };

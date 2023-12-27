@@ -70,7 +70,11 @@ export class CartService {
     const cart = await this.cartRepository.find(findParam, {
       sort: { createdAt: -1 },
     });
-    this.refreshClientCart(userId, setConfigCacheTime).then().catch();
+    this.refreshClientCart(userId, setConfigCacheTime)
+      .then()
+      .catch((err) => {
+        console.log(err);
+      });
     const rate = await this.variablesService.getVariable(
       Variables.EXCHANGE_RATE,
     );
@@ -112,7 +116,7 @@ export class CartService {
         cartItem.skuId,
         mockTime,
       );
-      if (!item) {
+      if (!item || item.quantity === 0) {
         if (isUpdate) {
           listUpdateVoid.push(
             this.cartRepository.updateById(cartItem.id, {
@@ -285,7 +289,11 @@ export class CartService {
     if (!rate) {
       throw new NotFoundException('Không thể lấy giá nhân dân tệ');
     }
-    this.refreshClientCart(userId, 1).then().catch();
+    this.refreshClientCart(userId, 1)
+      .then()
+      .catch((err) => {
+        console.log(err);
+      });
     for (const { listItem } of cart) {
       for (const cartItem of listItem) {
         cartItem.vnPrice = new Decimal(cartItem.price)
@@ -313,7 +321,7 @@ export class CartService {
       shopId: item.shop_info.shop_id,
       shopName: item.shop_info.shop_name,
       shopUrl: item.shop_info.shop_url,
-      quantity: volume,
+      quantity: Math.min(volume, item.quantity),
       price: new Decimal(item.sale_price).toDP(2).toNumber(),
       image: item.main_imgs,
       currency: item.currency,
