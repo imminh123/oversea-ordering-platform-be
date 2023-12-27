@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { OrderRepository } from './order.repository';
 import {
-  ClientIndexOrderDto,
+  AdminIndexOrderDto,
   CreateOrderDto,
   ReCreateOrderDto,
   UpdateListItemOrder,
@@ -15,7 +15,12 @@ import Decimal from 'decimal.js';
 import { OrderStatus, UpdatedByUser } from './order.enum';
 import { Variables } from '../variables/variables.helper';
 import { isValidObjectId } from 'mongoose';
-import { addTime, buildFilterDateParam, db2api } from '../../shared/helpers';
+import {
+  addTime,
+  buildFilterDateParam,
+  createTimeStringWithFormat,
+  db2api,
+} from '../../shared/helpers';
 import { PaymentService } from '../payment/payment.service';
 import { PurchaseDto } from '../payment/payment.dto';
 import { IPagination } from '../../adapters/pagination/pagination.interface';
@@ -26,6 +31,8 @@ import { IAddress } from '../address/address.interface';
 import { ICartDocument } from '../cart/cart.interface';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { orderTimeOutInMinutes } from '../payment/payment.enum';
+import { stringify } from 'csv-stringify';
+import { Readable } from 'stream';
 
 @Injectable()
 export class OrderService {
@@ -76,8 +83,12 @@ export class OrderService {
     { orderId }: ReCreateOrderDto,
     { userId, userName }: { userId: string; userName: string },
   ) {
-    const { address, listItem, wareHouseAddress } =
-      await this.orderRepository.findById(orderId);
+    const {
+      address,
+      listItem,
+      wareHouseAddress,
+      haveCountingFee = false,
+    } = await this.orderRepository.findById(orderId);
     return this.createOrderAndPay(
       {
         wareHouseAddress,
@@ -85,6 +96,7 @@ export class OrderService {
         listItem,
         userId,
         userName,
+        haveCountingFee,
       },
       true,
     );
@@ -94,13 +106,14 @@ export class OrderService {
     { orderId }: ReCreateOrderDto,
     { userId, userName }: { userId: string; userName: string },
   ) {
-    const { address, listItem, wareHouseAddress } =
+    const { address, listItem, wareHouseAddress, haveCountingFee } =
       await this.orderRepository.findById(orderId);
     return this.createOrder(
       {
         wareHouseAddress,
         address,
         listItem,
+        haveCountingFee,
       },
       { userId, userName },
       true,
@@ -114,17 +127,19 @@ export class OrderService {
       userId,
       userName,
       wareHouseAddress,
+      haveCountingFee = false,
     }: {
       address: IAddress;
       listItem: ICartDocument[] | any[];
       userId: string;
       userName: string;
       wareHouseAddress?: string;
+      haveCountingFee?: boolean;
     },
     isReCreate = false,
   ) {
     const order = await this.createOrder(
-      { wareHouseAddress, address, listItem },
+      { wareHouseAddress, address, listItem, haveCountingFee },
       { userId, userName },
       isReCreate,
     );
@@ -147,20 +162,24 @@ export class OrderService {
       listItem,
       address,
       wareHouseAddress,
+      haveCountingFee = false,
     }: {
       listItem: ICartDocument[] | any[];
       address: IAddress;
       wareHouseAddress?: string;
+      haveCountingFee?: boolean;
     },
     { userId, userName }: { userId: string; userName: string },
     isReCreate = false,
   ) {
     const listProduct = [];
-    let total = new Decimal(0);
     const rate = await this.variablesService.getVariable(
       Variables.EXCHANGE_RATE,
     );
     const current = new Date();
+    let countItem = 0;
+    let totalInCNY = new Decimal(0);
+    const uniqueShopSet = new Set<string>();
     for (const item of listItem) {
       const tbItem = await this.tbService.getItemDetailByIdV3(
         item.itemId,
@@ -179,10 +198,30 @@ export class OrderService {
         volume: item.quantity,
         rate,
       });
+      uniqueShopSet.add(orderItem.shopId);
       orderItem.cartId = isReCreate ? '' : item?.id;
+      countItem++;
       listProduct.push(orderItem);
-      total = total.add(orderItem.vnCost);
+      totalInCNY = totalInCNY.add(orderItem.cnyCost);
     }
+    totalInCNY = totalInCNY.toDP(2);
+    const feeVariable =
+      (await this.variablesService.getVariable(Variables.FEE)) || 0;
+    const feePerOrder = new Decimal(feeVariable).mul(rate).toDP(3);
+    const countingFeeVarieble =
+      (await this.variablesService.getVariable(Variables.FEE)) || 0;
+    const countingFee = haveCountingFee
+      ? new Decimal(countingFeeVarieble).mul(rate).toDP(3)
+      : new Decimal(0);
+
+    const breakdownDetail = await this.cartService.calculateBreakdownDetail({
+      totalInCNY,
+      rate,
+      feePerOrder,
+      countShop: uniqueShopSet.size,
+      countingFee,
+      countItem,
+    });
     const order = {
       listItem: listProduct,
       userId,
@@ -190,14 +229,16 @@ export class OrderService {
       status: OrderStatus.CREATED,
       address,
       wareHouseAddress,
-      total: total.toDP(2).toNumber(),
+      breakdownDetail,
+      haveCountingFee,
+      total: breakdownDetail.finalTotal.toDP(2).toNumber(),
       orderHistories: [{ status: OrderStatus.CREATED, updatedBy: userId }],
     } as IOrder;
     return this.orderRepository.create(order);
   }
 
   async indexOrders(
-    indexOrderDto: ClientIndexOrderDto,
+    indexOrderDto: AdminIndexOrderDto,
     pagination: IPagination,
     userId?: string,
   ) {
@@ -215,14 +256,20 @@ export class OrderService {
       );
     }
     if (indexOrderDto.userName) {
-      findParam.userName = indexOrderDto.userName;
+      findParam.userName = { $regex: new RegExp(indexOrderDto.userName, 'i') };
     }
     if (indexOrderDto.itemName) {
       findParam['listItem.itemName'] = indexOrderDto.itemName;
     }
+    if (indexOrderDto.taobaoDeliveryId) {
+      findParam.taobaoDeliveryIds = {
+        $regex: new RegExp(indexOrderDto.taobaoDeliveryId, 'i'),
+      };
+    }
     if (indexOrderDto.onlyCount) {
       return this.orderRepository.count(findParam);
     }
+
     const orders = await this.orderRepository.find(findParam, {
       skip: pagination.startIndex,
       limit: pagination.perPage,
@@ -236,6 +283,81 @@ export class OrderService {
       items: db2api<IOrderDocument[], IOrder[]>(orders),
       headers: responseHeader,
     };
+  }
+
+  async downloadListOrders(indexOrderDto: AdminIndexOrderDto, userId?: string) {
+    const findParam: any = {};
+    if (userId) {
+      findParam.userId = userId;
+    }
+    if (indexOrderDto.status) {
+      findParam.status = indexOrderDto.status;
+    }
+    if (indexOrderDto.timeFrom) {
+      findParam.createdAt = buildFilterDateParam(
+        indexOrderDto.timeFrom,
+        indexOrderDto.timeTo,
+      );
+    }
+    if (indexOrderDto.userName) {
+      findParam.userName = { $regex: new RegExp(indexOrderDto.userName, 'i') };
+    }
+    if (indexOrderDto.itemName) {
+      findParam['listItem.itemName'] = indexOrderDto.itemName;
+    }
+    if (indexOrderDto.taobaoDeliveryId) {
+      findParam.taobaoDeliveryIds = {
+        $regex: new RegExp(indexOrderDto.taobaoDeliveryId, 'i'),
+      };
+    }
+
+    const orders = await this.orderRepository.find(findParam, {
+      sort: { createdAt: -1 },
+      batchSize: 100000,
+    });
+
+    const csvStream = stringify({
+      columns: ['product', 'status', 'address', 'total', 'createdAt'],
+    });
+    csvStream.on('error', (err) => console.log(JSON.stringify(err)));
+    csvStream.write([
+      'Sản phẩm',
+      'Trạng thái',
+      'Địa chỉ',
+      'Tổng tiền',
+      'Thời gian tạo',
+    ]);
+
+    for await (const {
+      listItem,
+      status,
+      address,
+      total,
+      createdAt,
+    } of orders) {
+      const product = [];
+      for (const item of listItem) {
+        product.push(item.itemName || '');
+        product.push(item.propName || '');
+      }
+      const customerAddress = [
+        address.name,
+        address.phone,
+        address.address,
+        address.ward,
+        address.city,
+        address.province,
+      ];
+      csvStream.write({
+        product: product.join('\n'),
+        status,
+        address: customerAddress.join(', '),
+        total,
+        createdAt: createTimeStringWithFormat(createdAt, 'mm:ss DD-MM-YYYY'),
+      });
+    }
+    csvStream.end();
+    return Readable.from(csvStream);
   }
 
   async getOrderById(id: string) {
@@ -291,7 +413,9 @@ export class OrderService {
         order.status,
       )
     ) {
-      return order;
+      throw new BadRequestException(
+        'Không thể cập nhật đơn hàng với trạng thái hiện tại',
+      );
     }
     const orderHistories = order.orderHistories || [];
     orderHistories.push({
@@ -300,20 +424,21 @@ export class OrderService {
       meta,
     });
     order.orderHistories = orderHistories;
+    order.status = status;
 
-    order.save();
+    order.save({ validateModifiedOnly: true });
     return order;
   }
 
   async updateOrderDetail(
     id: string,
     {
-      taobaoDeliveryId,
+      taobaoDeliveryIds,
       listItem,
       updatedBy,
       meta = {},
     }: {
-      taobaoDeliveryId: string;
+      taobaoDeliveryIds: string[];
       listItem?: UpdateListItemOrder[];
       updatedBy?: string;
       meta?: any;
@@ -328,7 +453,9 @@ export class OrderService {
         OrderStatus.TIMEOUT,
       ].includes(order.status)
     ) {
-      return order;
+      throw new BadRequestException(
+        'Không thể cập nhật đơn hàng với trạng thái hiện tại',
+      );
     }
     if (listItem && listItem.length > 0) {
       let refundAmount = new Decimal(0);
@@ -359,18 +486,18 @@ export class OrderService {
       order.total = refundAmount.sub(order.total).abs().toDP(2).toNumber();
       meta.refundAmount = refundAmount.toDP(2).toNumber();
     }
-    if (taobaoDeliveryId && order.taobaoDeliveryId !== taobaoDeliveryId) {
-      order.taobaoDeliveryId = taobaoDeliveryId;
+    if (taobaoDeliveryIds) {
+      order.taobaoDeliveryIds = taobaoDeliveryIds;
     }
     const orderHistories = order.orderHistories || [];
     orderHistories.push({
-      taobaoDeliveryId,
+      taobaoDeliveryIds: taobaoDeliveryIds.join(','),
       listItem,
       updatedBy,
       meta,
     });
     order.orderHistories = orderHistories;
-    order.save();
+    order.save({ validateModifiedOnly: true });
     return order;
   }
 
@@ -398,6 +525,7 @@ export class OrderService {
         `Số lượng hàng còn lại không đủ. Hiện tại trền sàn còn ${item.quantity}`,
       );
     }
+    const cnyCost = new Decimal(item.sale_price).mul(volume).toDP(2);
     return {
       itemId: item.item_id,
       itemName: item.title,
@@ -409,11 +537,8 @@ export class OrderService {
       rate: new Decimal(rate).toDP(2).toNumber(),
       price: new Decimal(item.sale_price).toDP(2).toNumber(),
       currency: item.currency,
-      vnCost: new Decimal(item.sale_price)
-        .mul(volume)
-        .mul(rate)
-        .toDP(2)
-        .toNumber(),
+      cnyCost: cnyCost.toNumber(),
+      vnCost: cnyCost.mul(rate).toDP(2).toNumber(),
       skuId: item.skuid,
       propName: item.props_names,
       image: item.main_imgs[0],
@@ -429,9 +554,17 @@ export class OrderService {
     findParam.status = {
       $in: [OrderStatus.CREATED, OrderStatus.PENDING_PAYMENT],
     };
-    return this.orderRepository.update(findParam, {
-      status: OrderStatus.TIMEOUT,
-      updatedBy: UpdatedByUser.SYSTEM,
-    });
+    const listOrder = await this.orderRepository.find(findParam);
+    const listOrderId = [];
+    for (const order of listOrder) {
+      listOrderId.push(order.id);
+    }
+    return Promise.all([
+      this.orderRepository.update(findParam, {
+        status: OrderStatus.TIMEOUT,
+        updatedBy: UpdatedByUser.SYSTEM,
+      }),
+      this.paymentService.updateTransactionTimeout(listOrderId),
+    ]);
   }
 }

@@ -70,7 +70,11 @@ export class CartService {
     const cart = await this.cartRepository.find(findParam, {
       sort: { createdAt: -1 },
     });
-    this.refreshClientCart(userId, setConfigCacheTime).then().catch();
+    this.refreshClientCart(userId, setConfigCacheTime)
+      .then()
+      .catch((err) => {
+        console.log(err);
+      });
     const rate = await this.variablesService.getVariable(
       Variables.EXCHANGE_RATE,
     );
@@ -112,7 +116,7 @@ export class CartService {
         cartItem.skuId,
         mockTime,
       );
-      if (!item) {
+      if (!item || item.quantity === 0) {
         if (isUpdate) {
           listUpdateVoid.push(
             this.cartRepository.updateById(cartItem.id, {
@@ -139,22 +143,34 @@ export class CartService {
     return Promise.all(listUpdateVoid);
   }
 
-  async getSummaryCart(ids: string[]) {
+  async getSummaryCart(
+    userId: string,
+    ids: string[],
+    haveCountingFee: boolean,
+  ) {
     const arr = [];
     ids.forEach((id) => {
       if (isValidObjectId(id)) {
         arr.push(new ObjectId(id));
       }
     });
-    const listItem = await this.cartRepository.find({ _id: { $in: arr } });
-    if (listItem.length === 0) {
+    const groupItemByShop = await this.cartRepository.getClientCart(
+      userId,
+      arr,
+    );
+    const countShop = groupItemByShop.length;
+    if (countShop === 0) {
       return 0;
     }
-    let res = new Decimal(0);
-    for (const item of listItem) {
-      if (item.isActive) {
-        const num = new Decimal(item.price).mul(item.quantity);
-        res = res.add(num);
+    let countItem = 0;
+    let totalInCNY = new Decimal(0);
+    for (const { listItem } of groupItemByShop) {
+      for (const item of listItem) {
+        if (item.isActive) {
+          countItem++;
+          const num = new Decimal(item.price).mul(item.quantity);
+          totalInCNY = totalInCNY.add(num);
+        }
       }
     }
     const rate = await this.variablesService.getVariable(
@@ -163,10 +179,59 @@ export class CartService {
     if (!rate) {
       throw new NotFoundException('Can not get exchange rate');
     }
+    totalInCNY = totalInCNY.toDP(2);
+    const feeVariable =
+      (await this.variablesService.getVariable(Variables.FEE)) || 0;
+    const feePerOrder = new Decimal(feeVariable).mul(rate).toDP(3);
+    const countingFeeVarieble =
+      (await this.variablesService.getVariable(Variables.FEE)) || 0;
+    const countingFee = haveCountingFee
+      ? new Decimal(countingFeeVarieble).mul(rate).toDP(3)
+      : new Decimal(0);
+
+    return this.calculateBreakdownDetail({
+      totalInCNY,
+      rate,
+      feePerOrder,
+      countShop,
+      countingFee,
+      countItem,
+    });
+  }
+
+  async calculateBreakdownDetail({
+    totalInCNY,
+    rate,
+    feePerOrder,
+    countShop,
+    countingFee,
+    countItem,
+  }: {
+    totalInCNY: Decimal;
+    rate: string | number | Decimal;
+    feePerOrder: Decimal;
+    countShop: number;
+    countingFee: Decimal;
+    countItem: number;
+  }) {
+    const totalInVND = totalInCNY.mul(rate).toDP(3);
+    const totalFeeOrder = feePerOrder.mul(countShop).toDP(3);
+    const totalCountingFee = countingFee.mul(countItem).toDP(3);
+    const finalTotal = totalInVND
+      .add(totalFeeOrder)
+      .add(totalCountingFee)
+      .toDP(3);
     return {
-      totalInCNY: res.toDP(2),
+      totalInCNY,
       exchangeRate: rate,
-      totalInVND: res.mul(rate).toDP(3),
+      totalInVND,
+      feePerOrder,
+      countOrder: countShop,
+      totalFeeOrder,
+      countingFee,
+      countItem,
+      totalCountingFee,
+      finalTotal,
     };
   }
 
@@ -224,7 +289,11 @@ export class CartService {
     if (!rate) {
       throw new NotFoundException('Không thể lấy giá nhân dân tệ');
     }
-    this.refreshClientCart(userId, 1).then().catch();
+    this.refreshClientCart(userId, 1)
+      .then()
+      .catch((err) => {
+        console.log(err);
+      });
     for (const { listItem } of cart) {
       for (const cartItem of listItem) {
         cartItem.vnPrice = new Decimal(cartItem.price)
@@ -252,7 +321,7 @@ export class CartService {
       shopId: item.shop_info.shop_id,
       shopName: item.shop_info.shop_name,
       shopUrl: item.shop_info.shop_url,
-      quantity: volume,
+      quantity: Math.min(volume, item.quantity),
       price: new Decimal(item.sale_price).toDP(2).toNumber(),
       image: item.main_imgs,
       currency: item.currency,

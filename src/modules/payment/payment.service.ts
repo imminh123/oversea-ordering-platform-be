@@ -3,7 +3,6 @@ import {
   HttpException,
   Inject,
   Injectable,
-  Logger,
   forwardRef,
 } from '@nestjs/common';
 import {
@@ -19,7 +18,12 @@ import {
 } from './payment.enum';
 import { VnpayService } from '../../externalModules/vnpay/vnpay.service';
 import { TransactionRepository } from './payment.repository';
-import { buildFilterDateParam, db2api, isAfter } from '../../shared/helpers';
+import {
+  buildFilterDateParam,
+  createTimeStringWithFormat,
+  db2api,
+  isAfter,
+} from '../../shared/helpers';
 import {
   getSignature,
   sortObject,
@@ -35,6 +39,9 @@ import { getHeaders } from '../../adapters/pagination/pagination.helper';
 import { CartService } from '../cart/cart.service';
 import { AuthenticationService } from '../authentication/authentication.service';
 import { MailService } from '../mail/mail.service';
+import { Readable } from 'stream';
+import { stringify } from 'csv-stringify';
+import { isValidObjectId } from 'mongoose';
 
 @Injectable()
 export class PaymentService {
@@ -53,6 +60,10 @@ export class PaymentService {
     userId: string,
     userName?: string,
   ): Promise<{ transaction: ITransaction; paymentGatewayUrl: string }> {
+    if (!userName) {
+      const user = await this.authenticationService.getUserById(userId);
+      userName = user.fullname;
+    }
     const { order, findExitsTransaction } =
       await this.verifyOrderBeforePurchase(createPurchaseDto.referenceId);
     let transaction;
@@ -65,7 +76,7 @@ export class PaymentService {
         userName,
         referenceId: createPurchaseDto.referenceId,
         amount: order.total,
-        orderInfo: `Pay for order ${order.id}`,
+        orderInfo: `Tra tien cho don dat hang ${order.id}`,
         status: PaymentStatus.PENDING,
       } as ITransaction;
       transaction = await this.transactionRepository.create(transactionPayload);
@@ -77,7 +88,7 @@ export class PaymentService {
       await this.vnpayService.getVnpayPaymentGatewayRequest({
         ...createPurchaseDto,
         amount: order.total,
-        orderInfo: `Pay for order ${order.id}`,
+        orderInfo: `Tra tien cho don dat hang ${order.id}`,
       });
     if (order.status === OrderStatus.CREATED) {
       await this.orderService.updateOrderStatus(createPurchaseDto.referenceId, {
@@ -122,7 +133,10 @@ export class PaymentService {
       const order = await this.orderService.getOrderById(
         transaction.referenceId,
       );
-      if (order.status !== OrderStatus.PENDING_PAYMENT) {
+      if (
+        order.status !== OrderStatus.PENDING_PAYMENT &&
+        order.status !== OrderStatus.TIMEOUT
+      ) {
         throw new HttpException(
           {
             RspCode: '02',
@@ -253,6 +267,73 @@ export class PaymentService {
       headers: responseHeader,
     };
   }
+
+  async downloadListOrders(indexOrderDto: AdminIndexPaymentDto) {
+    const findParam: any = {};
+    if (indexOrderDto.userId) {
+      findParam.userId = indexOrderDto.userId;
+    }
+    if (indexOrderDto.status) {
+      findParam.status = indexOrderDto.status;
+    }
+    if (indexOrderDto.timeFrom) {
+      findParam.createdAt = buildFilterDateParam(
+        indexOrderDto.timeFrom,
+        indexOrderDto.timeTo,
+      );
+    }
+    if (indexOrderDto.userName) {
+      findParam.userName = {
+        $regex: new RegExp(indexOrderDto.userName, 'i'),
+      };
+    }
+
+    const orders = await this.transactionRepository.find(findParam, {
+      sort: { createdAt: -1 },
+      batchSize: 100000,
+    });
+
+    const csvStream = stringify({
+      columns: [
+        'userName',
+        'status',
+        'orderInfo',
+        'amount',
+        'vnpayTranNo',
+        'createdAt',
+      ],
+    });
+    csvStream.on('error', (err) => console.log(JSON.stringify(err)));
+    csvStream.write([
+      'Tên khách hàng',
+      'Trạng thái',
+      'Thông tin thanh toán',
+      'Tổng tiền',
+      'Mã tra cứu VN Pay',
+      'Thời gian thanh toán',
+    ]);
+
+    for await (const {
+      userName,
+      status,
+      orderInfo,
+      amount,
+      createdAt,
+      vnpayTranNo,
+    } of orders) {
+      csvStream.write({
+        userName,
+        status,
+        orderInfo,
+        amount,
+        vnpayTranNo,
+        createdAt: createTimeStringWithFormat(createdAt, 'mm:ss DD-MM-YYYY'),
+      });
+    }
+    csvStream.end();
+    return Readable.from(csvStream);
+  }
+
   private async verifyOrderBeforePurchase(orderId: string) {
     const order = await this.orderService.getOrderById(orderId);
     const findExitsTransaction = await this.transactionRepository.findOne({
@@ -275,6 +356,28 @@ export class PaymentService {
       throw new BadRequestException('Order đã hết hạn thanh toán');
     }
     return { order, findExitsTransaction };
+  }
+
+  async userGetOrderById(id: string) {
+    if (!isValidObjectId(id)) {
+      throw new BadRequestException('Id must be objectId');
+    }
+    const transaction = await this.transactionRepository.findById(id);
+    if (!transaction) {
+      throw new BadRequestException('Không tìm thấy giao dịch');
+    }
+    return db2api<ITransactionDocument, ITransactionDocument>(transaction, [
+      'webhookResponse',
+    ]);
+  }
+
+  async updateTransactionTimeout(listOrderId: string[]) {
+    return this.transactionRepository.update(
+      {
+        referenceId: { $in: listOrderId },
+      },
+      { status: PaymentStatus.FAILED },
+    );
   }
 
   private checkInvalidSignature(completePurchaseDto: CompletePurchaseDto) {

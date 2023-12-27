@@ -15,13 +15,14 @@ export interface DetailItem {
   skuId?: string;
   propName?: string;
   vnCost: number;
+  cnyCost: number;
   cartId?: string;
   image: string;
   id?: string;
 }
 
 export interface OrderHistoryDetail {
-  taobaoDeliveryId?: string;
+  taobaoDeliveryIds?: string;
   status?: OrderStatus;
   listItem?: any;
   updatedBy?: string;
@@ -36,6 +37,8 @@ export interface IOrder {
   wareHouseAddress: string;
   total: number;
   orderHistories: OrderHistoryDetail[];
-  taobaoDeliveryId: string;
+  taobaoDeliveryIds: string[];
+  haveCountingFee: boolean;
+  breakdownDetail: any;
 }
 export interface IOrderDocument extends IOrder, BaseDocument {}

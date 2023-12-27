@@ -123,8 +123,11 @@ export class CartController {
     description: 'Calculate summary cart',
     summary: 'Calculate summary cart',
   })
-  getSummaryCart(@Query() { ids }: GetSummaryCartDto) {
-    return this.cartService.getSummaryCart(ids);
+  getSummaryCart(
+    @User(UserDataJwtProperties.USERID) userId: string,
+    @Query() { ids, haveCountingFee }: GetSummaryCartDto,
+  ) {
+    return this.cartService.getSummaryCart(userId, ids, haveCountingFee);
   }
 
   @Delete('')
