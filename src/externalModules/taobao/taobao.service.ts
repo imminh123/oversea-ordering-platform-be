@@ -153,7 +153,7 @@ export class TaobaoService {
         shop_id: item?.ShopId,
         seller_id: item?.UserId,
         shop_name: item?.ShopName,
-        shop_url: `https://${item.ShopUrl}.taobao.com`,
+        shop_url: `${item.ShopUrl}.taobao.com`,
       },
       props_names: propName.join('; '),
       props_ids: skuItem?.Key,
@@ -329,8 +329,10 @@ export class TaobaoService {
     const pvInRightOrderArr = [];
     const parseArr = pvid.map((x) => x.split(':')[0]);
     for (const prop of item.SkuProps) {
-      const id = prop.Value.value.split(':')[0];
-      const index = parseArr.findIndex((findItem) => findItem === id);
+      const id = prop.Value[0].value.split(':')[0];
+      const index = parseArr.findIndex((findItem) => {
+        return findItem === id;
+      });
       pvInRightOrderArr.push(pvid[index]);
     }
     return pvInRightOrderArr.join(';');
