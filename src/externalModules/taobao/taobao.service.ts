@@ -119,14 +119,14 @@ export class TaobaoService {
     if (item.SkuMaps && item.SkuProps) {
       if (skuId) {
         skuItem = item.SkuMaps.find((value) => {
-          return value.SkuId === skuId;
+          return value?.SkuId === skuId;
         });
       } else if (pvid) {
         const pvInRightOrder = Array.isArray(pvid)
           ? this.getPvIdInRightOrderV3(pvid, item)
           : pvid;
         skuItem = item.SkuMaps.find((value) => {
-          return value.Key === pvInRightOrder;
+          return value?.Key === pvInRightOrder;
         });
       }
       if ((skuId || pvid) && !skuItem) {
@@ -145,22 +145,22 @@ export class TaobaoService {
     }
 
     return {
-      item_id: item.OfferId,
-      product_url: `https://item.taobao.com/item.htm?id=${item.OfferId}`,
-      title: item.Subject,
-      video_url: item.MainImageVideo,
+      item_id: item?.OfferId,
+      product_url: `https://item.taobao.com/item.htm?id=${item?.OfferId}`,
+      title: item?.Subject,
+      video_url: item?.MainImageVideo,
       shop_info: {
-        shop_id: item.ShopId,
-        seller_id: item.UserId,
-        shop_name: item.ShopName,
+        shop_id: item?.ShopId,
+        seller_id: item?.UserId,
+        shop_name: item?.ShopName,
         shop_url: `https://${item.ShopUrl}.taobao.com`,
       },
       props_names: propName.join('; '),
-      props_ids: skuItem.Key,
-      quantity: skuItem.AmountOnSale,
-      sale_price: skuItem.Price || skuItem.original_price,
+      props_ids: skuItem?.Key,
+      quantity: skuItem?.AmountOnSale,
+      sale_price: skuItem?.Price || skuItem?.original_price,
       main_imgs,
-      skuid: skuItem.SkuId,
+      skuid: skuItem?.SkuId,
     };
   }
 
