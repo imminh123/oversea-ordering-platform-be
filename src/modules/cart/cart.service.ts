@@ -159,13 +159,13 @@ export class CartService {
       return 0;
     }
     let countItem = 0;
-    let res = new Decimal(0);
+    let totalInCNY = new Decimal(0);
     for (const { listItem } of groupItemByShop) {
       for (const item of listItem) {
         if (item.isActive) {
           countItem++;
           const num = new Decimal(item.price).mul(item.quantity);
-          res = res.add(num);
+          totalInCNY = totalInCNY.add(num);
         }
       }
     }
@@ -175,24 +175,53 @@ export class CartService {
     if (!rate) {
       throw new NotFoundException('Can not get exchange rate');
     }
-    const totalInVND = res.mul(rate).toDP(3);
+    totalInCNY = totalInCNY.toDP(2);
     const feeVariable =
       (await this.variablesService.getVariable(Variables.FEE)) || 0;
-    const fee = new Decimal(feeVariable).mul(rate).toDP(3);
-    const totalFeeOrder = fee.mul(countShop).toDP(3);
+    const feePerOrder = new Decimal(feeVariable).mul(rate).toDP(3);
     const countingFeeVarieble =
       (await this.variablesService.getVariable(Variables.FEE)) || 0;
     const countingFee = haveCountingFee
       ? new Decimal(countingFeeVarieble).mul(rate).toDP(3)
       : new Decimal(0);
-    const totalCountingFee = countingFee.mul(countItem).toDP(3);
-    const finalTotal = totalInVND.add(totalFeeOrder).add(totalCountingFee);
 
+    return this.calculateBreakdownDetail({
+      totalInCNY,
+      rate,
+      feePerOrder,
+      countShop,
+      countingFee,
+      countItem,
+    });
+  }
+
+  async calculateBreakdownDetail({
+    totalInCNY,
+    rate,
+    feePerOrder,
+    countShop,
+    countingFee,
+    countItem,
+  }: {
+    totalInCNY: Decimal;
+    rate: string | number | Decimal;
+    feePerOrder: Decimal;
+    countShop: number;
+    countingFee: Decimal;
+    countItem: number;
+  }) {
+    const totalInVND = totalInCNY.mul(rate).toDP(3);
+    const totalFeeOrder = feePerOrder.mul(countShop).toDP(3);
+    const totalCountingFee = countingFee.mul(countItem).toDP(3);
+    const finalTotal = totalInVND
+      .add(totalFeeOrder)
+      .add(totalCountingFee)
+      .toDP(3);
     return {
-      totalInCNY: res.toDP(2),
+      totalInCNY,
       exchangeRate: rate,
       totalInVND,
-      feePerOrder: fee,
+      feePerOrder,
       countOrder: countShop,
       totalFeeOrder,
       countingFee,

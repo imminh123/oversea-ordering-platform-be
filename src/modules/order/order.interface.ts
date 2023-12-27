@@ -15,6 +15,7 @@ export interface DetailItem {
   skuId?: string;
   propName?: string;
   vnCost: number;
+  cnyCost: number;
   cartId?: string;
   image: string;
   id?: string;
@@ -37,5 +38,7 @@ export interface IOrder {
   total: number;
   orderHistories: OrderHistoryDetail[];
   taobaoDeliveryIds: string[];
+  haveCountingFee: boolean;
+  breakdownDetail: any;
 }
 export interface IOrderDocument extends IOrder, BaseDocument {}

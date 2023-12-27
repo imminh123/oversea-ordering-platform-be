@@ -156,7 +156,7 @@ export class UpdateOrderDetailDto {
   @IsOptional()
   @ApiProperty({
     type: Array,
-    example: '',
+    example: [],
   })
   taobaoDeliveryIds: string[];
 
