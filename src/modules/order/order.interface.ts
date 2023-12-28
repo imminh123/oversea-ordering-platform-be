@@ -26,6 +26,7 @@ export interface OrderHistoryDetail {
   status?: OrderStatus;
   listItem?: any;
   updatedBy?: string;
+  createdAt?: Date;
   meta?: any;
 }
 export interface IOrder {

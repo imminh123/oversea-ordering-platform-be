@@ -422,6 +422,7 @@ export class OrderService {
       status,
       updatedBy,
       meta,
+      createdAt: new Date(),
     });
     order.orderHistories = orderHistories;
     order.status = status;
@@ -492,9 +493,11 @@ export class OrderService {
     const orderHistories = order.orderHistories || [];
     orderHistories.push({
       taobaoDeliveryIds: taobaoDeliveryIds.join(','),
+      status: order.status,
       listItem,
       updatedBy,
       meta,
+      createdAt: new Date(),
     });
     order.orderHistories = orderHistories;
     order.save({ validateModifiedOnly: true });

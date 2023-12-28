@@ -27,6 +27,7 @@ const OrderHistoryDetail = {
   listItem: { type: Object, required: false },
   updatedBy: { type: String, required: false },
   meta: { type: Object, required: false },
+  createdAt: { type: Date, required: false },
 };
 
 IOrderSchema.add({
