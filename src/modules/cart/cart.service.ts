@@ -34,13 +34,14 @@ export class CartService {
     { id, pvid, volume, skuId }: AddItemToCartDto,
     userId: string,
   ): Promise<ICart> {
-    const item = await this.tbService.getItemDetailById(id, pvid, skuId);
+    const item = await this.tbService.getItemDetailByIdV3(id, pvid, skuId);
     if (!item) {
       throw new BadRequestException({
         ...Errors.TAOBAO_ITEM_WITH_GIVEN_ID_NOT_EXITS,
         method: `${CartService.name}:${this.addItemToClientCart.name}`,
       });
     }
+    console.log(item);
     const cartItem = this.convertResponseFromTaobaoItem({
       item,
       volume,
@@ -50,6 +51,7 @@ export class CartService {
       { userId, itemId: cartItem.itemId, skuId: cartItem.skuId },
       { sort: { createdAt: -1 } },
     );
+    console.log(cartItem);
 
     if (!findItem) {
       return this.cartRepository.create(cartItem);

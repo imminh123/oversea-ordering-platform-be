@@ -17,6 +17,7 @@ export class AddItemToCartDto {
   @IsNumber()
   @IsNotEmpty()
   @Transform((x) => {
+    console.log(x);
     if (!Boolean(Number(x.value))) {
       throw new BadRequestException('Id không hợp lệ');
     }
@@ -84,6 +85,21 @@ export class GetSummaryCartDto {
     required: false,
   })
   haveCountingFee?: boolean;
+}
+
+export class ClientGetCartV2Dto {
+  @IsArray()
+  @IsNotEmpty()
+  @Transform((x) => {
+    return x.value.split(',');
+  })
+  @IsOptional()
+  @ApiProperty({
+    type: String,
+    example: '64bd70033bffa3a83b0a9b57',
+    required: false,
+  })
+  ids: string[];
 }
 
 export class UpdateCartItemDto {
