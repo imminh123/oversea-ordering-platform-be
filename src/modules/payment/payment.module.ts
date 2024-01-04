@@ -24,6 +24,6 @@ import { MailModule } from '../mail/mail.module';
   ],
   controllers: [PaymentController],
   providers: [PaymentService, TransactionRepository],
-  exports: [PaymentService],
+  exports: [PaymentService, TransactionRepository],
 })
 export class PaymentModule {}

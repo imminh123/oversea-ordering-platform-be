@@ -302,3 +302,13 @@ export function getParamsFromArrayQuery(input: string) {
   }
   return input;
 }
+
+export const StartOfDay = (currentTime?: Date) =>
+  new Date(
+    moment(currentTime).tz(DEFAULT_TIMEZONE).startOf('day').utc().format(),
+  );
+
+export const StartOfMonth = (currentTime?: Date) =>
+  new Date(
+    moment(currentTime).tz(DEFAULT_TIMEZONE).startOf('month').utc().format(),
+  );
