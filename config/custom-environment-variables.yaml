@@ -50,3 +50,6 @@ mail:
 
 orderTimeoutInMinutes: ORDER_TIMEOUT_IN_MINUTES
 setConfigCacheTime: SET_CONFIG_CACHE_TIME
+
+novuConfig:
+  apiToken: NOVU_API_TOKEN

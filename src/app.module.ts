@@ -13,6 +13,7 @@ import { AddressModule } from './modules/address/address.module';
 import { TaobaoModule } from './externalModules/taobao/taobao.module';
 import { MailModule } from './modules/mail/mail.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { NovuModule } from './externalModules/novu/novu.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     TaobaoModule,
     MailModule,
     DashboardModule,
+    NovuModule,
   ],
   providers: [
     {

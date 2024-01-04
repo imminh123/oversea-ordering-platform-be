@@ -33,6 +33,8 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { orderTimeOutInMinutes } from '../payment/payment.enum';
 import { stringify } from 'csv-stringify';
 import { Readable } from 'stream';
+import { NovuService } from '../../externalModules/novu/novu.service';
+import { NotificationEvent } from '../../externalModules/novu/novu.enum';
 
 @Injectable()
 export class OrderService {
@@ -43,6 +45,7 @@ export class OrderService {
     private readonly paymentService: PaymentService,
     private readonly addressService: AddressService,
     private readonly cartService: CartService,
+    private readonly notificationService: NovuService,
   ) {}
   async clientCreateOrderAndPay(
     createOrderDto: CreateOrderDto,
@@ -172,69 +175,92 @@ export class OrderService {
     { userId, userName }: { userId: string; userName: string },
     isReCreate = false,
   ) {
-    const listProduct = [];
-    const rate = await this.variablesService.getVariable(
-      Variables.EXCHANGE_RATE,
-    );
-    const current = new Date();
-    let countItem = 0;
-    let totalInCNY = new Decimal(0);
-    const uniqueShopSet = new Set<string>();
-    for (const item of listItem) {
-      const tbItem = await this.tbService.getItemDetailByIdV3(
-        item.itemId,
-        undefined,
-        item.skuId,
-        current,
+    try {
+      const listProduct = [];
+      const rate = await this.variablesService.getVariable(
+        Variables.EXCHANGE_RATE,
       );
-      if (!tbItem) {
-        throw new BadRequestException({
-          ...Errors.TAOBAO_ITEM_WITH_GIVEN_ID_NOT_EXITS,
-          method: `${OrderService.name}:${this.createOrder.name}`,
+      const current = new Date();
+      let countItem = 0;
+      let totalInCNY = new Decimal(0);
+      const uniqueShopSet = new Set<string>();
+      for (const item of listItem) {
+        const tbItem = await this.tbService.getItemDetailByIdV3(
+          item.itemId,
+          undefined,
+          item.skuId,
+          current,
+        );
+        if (!tbItem) {
+          throw new BadRequestException({
+            ...Errors.TAOBAO_ITEM_WITH_GIVEN_ID_NOT_EXITS,
+            method: `${OrderService.name}:${this.createOrder.name}`,
+          });
+        }
+        const orderItem = this.convertResponseFromTaobaoItem({
+          item: tbItem,
+          volume: item.quantity,
+          rate,
         });
+        uniqueShopSet.add(orderItem.shopId);
+        orderItem.cartId = isReCreate ? '' : item?.id;
+        countItem++;
+        listProduct.push(orderItem);
+        totalInCNY = totalInCNY.add(orderItem.cnyCost);
       }
-      const orderItem = this.convertResponseFromTaobaoItem({
-        item: tbItem,
-        volume: item.quantity,
-        rate,
-      });
-      uniqueShopSet.add(orderItem.shopId);
-      orderItem.cartId = isReCreate ? '' : item?.id;
-      countItem++;
-      listProduct.push(orderItem);
-      totalInCNY = totalInCNY.add(orderItem.cnyCost);
-    }
-    totalInCNY = totalInCNY.toDP(2);
-    const feeVariable =
-      (await this.variablesService.getVariable(Variables.FEE)) || 0;
-    const feePerOrder = new Decimal(feeVariable).mul(rate).toDP(3);
-    const countingFeeVarieble =
-      (await this.variablesService.getVariable(Variables.FEE)) || 0;
-    const countingFee = haveCountingFee
-      ? new Decimal(countingFeeVarieble).mul(rate).toDP(3)
-      : new Decimal(0);
+      totalInCNY = totalInCNY.toDP(2);
+      const feeVariable =
+        (await this.variablesService.getVariable(Variables.FEE)) || 0;
+      const feePerOrder = new Decimal(feeVariable).mul(rate).toDP(3);
+      const countingFeeVarieble =
+        (await this.variablesService.getVariable(Variables.FEE)) || 0;
+      const countingFee = haveCountingFee
+        ? new Decimal(countingFeeVarieble).mul(rate).toDP(3)
+        : new Decimal(0);
 
-    const breakdownDetail = await this.cartService.calculateBreakdownDetail({
-      totalInCNY,
-      rate,
-      feePerOrder,
-      countShop: uniqueShopSet.size,
-      countingFee,
-      countItem,
-    });
-    const order = {
-      listItem: listProduct,
-      userId,
-      userName,
-      status: OrderStatus.CREATED,
-      address,
-      wareHouseAddress,
-      breakdownDetail,
-      haveCountingFee,
-      total: breakdownDetail.finalTotal.toDP(2).toNumber(),
-      orderHistories: [{ status: OrderStatus.CREATED, updatedBy: userId }],
-    } as IOrder;
-    return this.orderRepository.create(order);
+      const breakdownDetail = await this.cartService.calculateBreakdownDetail({
+        totalInCNY,
+        rate,
+        feePerOrder,
+        countShop: uniqueShopSet.size,
+        countingFee,
+        countItem,
+      });
+      const order = {
+        listItem: listProduct,
+        userId,
+        userName,
+        status: OrderStatus.CREATED,
+        address,
+        wareHouseAddress,
+        breakdownDetail,
+        haveCountingFee,
+        total: breakdownDetail.finalTotal.toDP(2).toNumber(),
+        orderHistories: [{ status: OrderStatus.CREATED, updatedBy: userId }],
+      } as IOrder;
+      const orderResult = await this.orderRepository.create(order);
+      this.notificationService.triggerNotification({
+        event: NotificationEvent.CreateOrderSuccess,
+        userId,
+        data: {
+          date: createTimeStringWithFormat(
+            orderResult.createdAt,
+            'HH:mm:ss DD-MM-YYYY',
+          ),
+          orderId: orderResult.id,
+        },
+      });
+      return orderResult;
+    } catch (error) {
+      console.log(error);
+      this.notificationService.triggerNotification({
+        event: NotificationEvent.CreateOrderSuccess,
+        userId,
+        data: {
+          date: createTimeStringWithFormat(new Date(), 'HH:mm:ss DD-MM-YYYY'),
+        },
+      });
+    }
   }
 
   async indexOrders(
@@ -353,7 +379,7 @@ export class OrderService {
         status,
         address: customerAddress.join(', '),
         total,
-        createdAt: createTimeStringWithFormat(createdAt, 'mm:ss DD-MM-YYYY'),
+        createdAt: createTimeStringWithFormat(createdAt, 'HH:mm:ss DD-MM-YYYY'),
       });
     }
     csvStream.end();
@@ -428,6 +454,17 @@ export class OrderService {
     order.status = status;
 
     order.save({ validateModifiedOnly: true });
+    this.notificationService.triggerNotification({
+      event: NotificationEvent.UpdateOrder,
+      userId: order.userId,
+      data: {
+        date: createTimeStringWithFormat(
+          order.updatedAt,
+          'HH:mm:ss DD-MM-YYYY',
+        ),
+        orderId: order.id,
+      },
+    });
     return order;
   }
 
@@ -501,6 +538,17 @@ export class OrderService {
     });
     order.orderHistories = orderHistories;
     order.save({ validateModifiedOnly: true });
+    this.notificationService.triggerNotification({
+      event: NotificationEvent.UpdateOrder,
+      userId: order.userId,
+      data: {
+        date: createTimeStringWithFormat(
+          order.updatedAt,
+          'HH:mm:ss DD-MM-YYYY',
+        ),
+        orderId: order.id,
+      },
+    });
     return order;
   }
 
@@ -548,6 +596,16 @@ export class OrderService {
     };
   }
 
+  async updateOrderTimeout(listOrder: IOrderDocument[]) {
+    return listOrder.map(
+      async (order) =>
+        await this.updateOrderStatus(order.id, {
+          status: OrderStatus.TIMEOUT,
+          updatedBy: UpdatedByUser.SYSTEM,
+        }),
+    );
+  }
+
   @Cron(CronExpression.EVERY_MINUTE)
   async handleOrderCron() {
     const findParam: any = {};
@@ -563,10 +621,7 @@ export class OrderService {
       listOrderId.push(order.id);
     }
     return Promise.all([
-      this.orderRepository.update(findParam, {
-        status: OrderStatus.TIMEOUT,
-        updatedBy: UpdatedByUser.SYSTEM,
-      }),
+      this.updateOrderTimeout(listOrder),
       this.paymentService.updateTransactionTimeout(listOrderId),
     ]);
   }

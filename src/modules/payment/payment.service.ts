@@ -327,7 +327,7 @@ export class PaymentService {
         orderInfo,
         amount,
         vnpayTranNo,
-        createdAt: createTimeStringWithFormat(createdAt, 'mm:ss DD-MM-YYYY'),
+        createdAt: createTimeStringWithFormat(createdAt, 'HH:mm:ss DD-MM-YYYY'),
       });
     }
     csvStream.end();

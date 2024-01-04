@@ -18,4 +18,22 @@ export class TransactionRepository
   async onApplicationBootstrap(): Promise<void> {
     await this.createCollection();
   }
+
+  async getSumOfAmount(findParam: any) {
+    return this.model
+      .aggregate([
+        {
+          $match: findParam,
+        },
+        {
+          $group: {
+            _id: null,
+            sum: {
+              $sum: '$amount',
+            },
+          },
+        },
+      ])
+      .exec();
+  }
 }
