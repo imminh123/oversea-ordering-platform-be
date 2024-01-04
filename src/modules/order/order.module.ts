@@ -11,6 +11,7 @@ import { PaymentModule } from '../payment/payment.module';
 import { CartModule } from '../cart/cart.module';
 import { AddressModule } from '../address/address.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { NovuModule } from '../../externalModules/novu/novu.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     AddressModule,
     forwardRef(() => PaymentModule),
     ScheduleModule.forRoot(),
+    NovuModule,
   ],
   controllers: [OrderController],
   providers: [OrderService, OrderRepository],

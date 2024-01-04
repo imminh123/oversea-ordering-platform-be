@@ -28,3 +28,6 @@ vnpay:
 
 orderTimeoutInMinutes: 5
 setConfigCacheTime: 24
+
+novuConfig:
+  apiToken:
