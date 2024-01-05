@@ -62,18 +62,20 @@ export class DashboardService {
           ],
         },
       }),
-      totalMoneyEarnedFromBeginOfDay: [
-        ...(await this.transactionRepository.getSumOfAmount({
-          createdAt: { $gte: startOfDay },
-          status: PaymentStatus.SUCCEEDED,
-        })),
-      ][0].sum,
-      totalMoneyEarnedFromBeginOfMonth: [
-        ...(await this.transactionRepository.getSumOfAmount({
-          createdAt: { $gte: startOfMonth },
-          status: PaymentStatus.SUCCEEDED,
-        })),
-      ][0].sum,
+      totalMoneyEarnedFromBeginOfDay:
+        [
+          ...(await this.transactionRepository.getSumOfAmount({
+            createdAt: { $gte: startOfDay },
+            status: PaymentStatus.SUCCEEDED,
+          })),
+        ][0]?.sum || 0,
+      totalMoneyEarnedFromBeginOfMonth:
+        [
+          ...(await this.transactionRepository.getSumOfAmount({
+            createdAt: { $gte: startOfMonth },
+            status: PaymentStatus.SUCCEEDED,
+          })),
+        ][0]?.sum || 0,
     };
   }
 }
