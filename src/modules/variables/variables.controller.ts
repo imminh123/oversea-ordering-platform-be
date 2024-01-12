@@ -41,7 +41,6 @@ export class VariablesController {
   }
 
   @Get()
-  @Roles(Role.Admin, Role.Root, Role.Client)
   @CommonQueryRequest()
   @UseInterceptors(PaginationInterceptor)
   @ApiOperation({
