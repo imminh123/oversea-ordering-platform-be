@@ -16,9 +16,9 @@ const emptyResult = {
 };
 
 const emptyResultV2 = {
-  items: [],
+  itemsArray: [],
   page: 1,
-  total_items_count: 0,
+  pageSize: 0,
 };
 @Injectable()
 export class ApiTaobaoService {
@@ -94,7 +94,12 @@ export class ApiTaobaoService {
     try {
       Logger.log(`Get taobao item with id ${id}`);
       const { data } = await axios.request(options);
-      if ([404, 409, 429, 503, 504, 505].includes(data.status)) {
+      if ([404, 409, 429, 503, 504, 505, 4009].includes(data.status)) {
+        Logger.error(
+          `Get taobao item with id ${id} failed with error: ${JSON.stringify(
+            data,
+          )}`,
+        );
         return null;
       }
       Logger.log(`Get taobao item with id ${id} successful`);
@@ -169,8 +174,9 @@ export class ApiTaobaoService {
       },
     };
     try {
+      Logger.debug(options);
       const { data } = await axios.request(options);
-      if (data.status === 404) {
+      if ([404, 500].includes(data.status)) {
         return emptyResultV2;
       }
       return data;

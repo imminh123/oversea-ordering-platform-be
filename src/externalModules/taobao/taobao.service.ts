@@ -206,18 +206,28 @@ export class TaobaoService {
 
   async directSearchItemTaobaoV3(searchDto: SearchItemDtoV3) {
     const listItems = await this.apiTaobaoService.searchItemTaobaoV3(searchDto);
-    const { items, page, max_page, total_items_count: listLength } = listItems;
+    const { itemsArray: items, page } = listItems;
     const responseHeader = getHeaders(
       { page: page, perPage: items.length },
-      listLength,
+      page.totalResults,
     );
-    if (responseHeader['x-pages-count'] > max_page) {
-      responseHeader['x-pages-count'] = max_page;
+    const result = [];
+    items.map((item) => {
+      result.push({
+        ...item,
+        num_iid: item.item_id,
+        original_price: item.view_price,
+        price: item.view_price,
+        quantity: item.view_sales,
+      });
+    });
+    if (responseHeader['x-pages-count'] > page?.totalPages) {
+      responseHeader['x-pages-count'] = page?.totalPages;
       responseHeader['x-next-page'] -= 1;
     }
 
     return {
-      items,
+      items: result,
       headers: responseHeader,
     };
   }
@@ -253,8 +263,8 @@ export class TaobaoService {
     searchDto: SearchByImage,
   ) {
     try {
-      const { buffer, mimetype } = image;
-      const type = mimetype === 'image/png' ? 'png' : 'jpg';
+      const { buffer } = image;
+      const type = 'png';
       const endpoint = `http://${getHost()}${getConfig().get(
         'service.baseUrl',
       )}/taobao/image/${type}/${userId}`;
@@ -268,31 +278,43 @@ export class TaobaoService {
         });
       }
 
-      return new Promise((resolve) => {
+      return await new Promise((resolve, reject) => {
         fs.writeFile(path, buffer, async (err) => {
-          if (err) throw err;
-          const listItems = await this.apiTaobaoService.searchItemByImageTaobao(
-            endpoint,
-            searchDto,
-          );
-          const {
-            items,
-            page,
-            max_page,
-            total_items_count: listLength,
-          } = listItems;
-          const responseHeader = getHeaders(
-            { page: page, perPage: items.length },
-            listLength,
-          );
-          if (responseHeader['x-pages-count'] > max_page) {
-            responseHeader['x-pages-count'] = max_page;
-            responseHeader['x-next-page'] -= 1;
+          try {
+            if (err) throw err;
+            const listItems =
+              await this.apiTaobaoService.searchItemByImageTaobao(
+                endpoint,
+                searchDto,
+              );
+            const { itemsArray: items, pageSize } = listItems;
+            const result = [];
+            items.map((item) => {
+              result.push({
+                ...item,
+                detail_url: `//item.taobao.com/item.htm?id=${item.item_id}&ns=1&abbucket=0#detail`,
+                pic_url: String(item.pic_path).slice(5),
+                num_iid: item.item_id,
+                original_price: item.price,
+                price: item.priceWap,
+                quantity: item.sold,
+              });
+            });
+            const responseHeader = getHeaders(
+              { page: Number(searchDto.page), perPage: pageSize },
+              pageSize,
+            );
+            if (responseHeader['x-pages-count'] > 1) {
+              responseHeader['x-pages-count'] = 1;
+              responseHeader['x-next-page'] -= 1;
+            }
+            resolve({
+              items: result,
+              headers: responseHeader,
+            });
+          } catch (error) {
+            reject(error);
           }
-          resolve({
-            items,
-            headers: responseHeader,
-          });
         });
       });
     } catch (error) {

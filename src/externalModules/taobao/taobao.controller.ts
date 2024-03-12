@@ -74,16 +74,16 @@ export class TaobaoController {
     return this.taobaoService.directGetDetailItemV3(+id);
   }
 
-  @Get('v2/:id')
-  @Roles(Role.Client, ...WebAdminRole)
-  @ApiOperation({
-    operationId: 'getTaobaoDetailItemV2',
-    description: 'Get taobao item by id v2',
-    summary: 'Get taobao item by id v2',
-  })
-  async getAddressByIdV2(@Param('id') id: string) {
-    return this.taobaoService.directGetDetailItemV2(id);
-  }
+  // @Get('v2/:id')
+  // @Roles(Role.Client, ...WebAdminRole)
+  // @ApiOperation({
+  //   operationId: 'getTaobaoDetailItemV2',
+  //   description: 'Get taobao item by id v2',
+  //   summary: 'Get taobao item by id v2',
+  // })
+  // async getAddressByIdV2(@Param('id') id: string) {
+  //   return this.taobaoService.directGetDetailItemV2(id);
+  // }
 
   @Roles(Role.Client, ...WebAdminRole)
   @UseInterceptors(FileInterceptor('file'))
