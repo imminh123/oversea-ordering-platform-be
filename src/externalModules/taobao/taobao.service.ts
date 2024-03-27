@@ -100,7 +100,7 @@ export class TaobaoService {
         return null;
       }
     }
-    main_imgs.push(...item.item_imgs.map((img) => `https:${img.url}`));
+    main_imgs.push(...item.item_imgs.map((img) => `${img.url}`));
     const props_names = [];
     if (skuItem?.properties_name && skuItem?.properties) {
       const pvId = skuItem.properties.split(';');
@@ -118,7 +118,7 @@ export class TaobaoService {
       shop_info: {
         shop_id: item?.shop_id,
         seller_id: item?.seller_id,
-        shop_name: item?.shop_title,
+        shop_name: item?.seller_info?.shop_name,
         shop_url: item?.seller_info?.zhuy,
       },
       props_names: props_names.join(';'),
@@ -285,7 +285,7 @@ export class TaobaoService {
       throw new BadRequestException('Không thể tìm thấy hàng hóa trên taobao');
     }
     const main_imgs = [];
-    main_imgs.push(...item.item_imgs.map((img) => `https:${img.url}`));
+    main_imgs.push(...item.item_imgs.map((img) => `${img.url}`));
     const SkuProps = [];
     const props_list = Object.entries(
       item.props_list as Record<string, string>,
@@ -355,7 +355,7 @@ export class TaobaoService {
       SkuMaps: item?.skus?.sku,
       AmountOnSale: item?.price && item?.num ? item.num : 0,
       Detail: `https://item.taobao.com/item.htm?id=${item?.num_iid}`,
-      ShopName: item?.shop_title,
+      ShopName: item?.seller_info?.shop_name,
       ShopUrl: item?.seller_info?.zhuy,
     };
   }
