@@ -37,6 +37,7 @@ mongodb:
 tmApiToken: TM_API_TOKEN
 
 rapidApiToken: RAPID_API_TOKEN
+rapidApiToken2: RAPID_API_TOKEN_2
 
 vnpay:
   merchantCode: MERCHANT_CODE

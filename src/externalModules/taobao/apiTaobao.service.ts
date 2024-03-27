@@ -8,6 +8,7 @@ import { SearchByImage, SearchItemDtoV2, SearchItemDtoV3 } from './tabao.dto';
 const config = getConfig();
 const tmApiToken = config.get('tmApiToken');
 const rapidApiKey = config.get('rapidApiToken');
+const rapidApiKey2 = config.get('rapidApiToken2');
 const emptyResult = {
   result: {
     resultList: [],
@@ -68,7 +69,7 @@ export class ApiTaobaoService {
       url: EndpointEnum.GetItemDetailV2,
       params: { num_id: id, provider: 'taobao' },
       headers: {
-        'X-RapidAPI-Key': '0c00ca073dmsh997e85e0d82646fp105b66jsn2aa8965c8b36',
+        'X-RapidAPI-Key': rapidApiKey2,
         'X-RapidAPI-Host': 'taobao-tmall-16882.p.rapidapi.com',
       },
     };
