@@ -66,15 +66,23 @@ export class ApiTaobaoService {
     const options = {
       method: 'GET',
       url: EndpointEnum.GetItemDetailV2,
-      params: { num_iid: id, api: 'item_detail' },
+      params: { num_id: id, provider: 'taobao' },
       headers: {
-        'X-RapidAPI-Key': rapidApiKey,
-        'X-RapidAPI-Host': 'taobao-advanced.p.rapidapi.com',
+        'X-RapidAPI-Key': '0c00ca073dmsh997e85e0d82646fp105b66jsn2aa8965c8b36',
+        'X-RapidAPI-Host': 'taobao-tmall-16882.p.rapidapi.com',
       },
     };
     try {
       const { data } = await axios.request(options);
-      return data.result.item;
+      if ([404, 409, 429, 503, 504, 505, 4009].includes(data.status)) {
+        Logger.error(
+          `Get taobao item with id ${id} failed with error: ${JSON.stringify(
+            data,
+          )}`,
+        );
+        return null;
+      }
+      return data.item;
     } catch (error) {
       Logger.error(error);
       return null;

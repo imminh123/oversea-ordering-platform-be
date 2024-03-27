@@ -71,7 +71,7 @@ export class TaobaoController {
     summary: 'Get taobao item by id',
   })
   async getAddressByIdV1(@Param('id') id: string) {
-    return this.taobaoService.directGetDetailItemV3(+id);
+    return this.taobaoService.directGetDetailItemV2(id);
   }
 
   // @Get('v2/:id')

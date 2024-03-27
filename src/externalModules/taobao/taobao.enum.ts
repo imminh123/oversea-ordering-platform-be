@@ -1,6 +1,6 @@
 export enum EndpointEnum {
   GetItemDetail = 'http://api.tmapi.top/taobao/item_detail',
-  GetItemDetailV2 = 'https://taobao-advanced.p.rapidapi.com/api',
+  GetItemDetailV2 = 'https://taobao-tmall-16882.p.rapidapi.com/item_get',
   GetItemDetailV3 = 'https://taobao-tmall-tao-bao-data-service.p.rapidapi.com/item/itemInfoV3',
   SearchItem = 'https://taobao-advanced.p.rapidapi.com/item_search_p',
   SearchItemV2 = 'https://taobao-api.p.rapidapi.com/api',

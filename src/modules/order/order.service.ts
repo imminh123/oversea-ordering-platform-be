@@ -185,7 +185,7 @@ export class OrderService {
       let totalInCNY = new Decimal(0);
       const uniqueShopSet = new Set<string>();
       for (const item of listItem) {
-        const tbItem = await this.tbService.getItemDetailByIdV3(
+        const tbItem = await this.tbService.getItemDetailByIdV2(
           item.itemId,
           undefined,
           item.skuId,

@@ -34,7 +34,7 @@ export class CartService {
     { id, pvid, volume, skuId }: AddItemToCartDto,
     userId: string,
   ): Promise<ICart> {
-    const item = await this.tbService.getItemDetailByIdV3(id, pvid, skuId);
+    const item = await this.tbService.getItemDetailByIdV2(id, pvid, skuId);
     if (!item) {
       throw new BadRequestException({
         ...Errors.TAOBAO_ITEM_WITH_GIVEN_ID_NOT_EXITS,
@@ -112,7 +112,7 @@ export class CartService {
     const mockTime = addTime(new Date(), -1 * cacheTimeInHour, 'hour');
     for (const cartItem of cart) {
       const isUpdate = isAfter(mockTime, cartItem.updatedAt, 0);
-      const item = await this.tbService.getItemDetailByIdV3(
+      const item = await this.tbService.getItemDetailByIdV2(
         cartItem.itemId,
         undefined,
         cartItem.skuId,

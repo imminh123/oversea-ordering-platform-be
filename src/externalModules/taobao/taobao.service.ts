@@ -4,7 +4,7 @@ import {
   Injectable,
   StreamableFile,
 } from '@nestjs/common';
-import { ItemDetailInfo } from './taobao.interface';
+import { ISearchDetail, ItemDetailInfo } from './taobao.interface';
 import { ApiTaobaoService } from './apiTaobao.service';
 import { getHeaders } from '../../adapters/pagination/pagination.helper';
 import { SearchByImage, SearchItemDtoV2, SearchItemDtoV3 } from './tabao.dto';
@@ -60,34 +60,73 @@ export class TaobaoService {
     itemId: number,
     pvid?: string[] | string,
     skuId?: string,
+    date?: Date,
   ): Promise<ItemDetailInfo> {
-    const item = await this.apiTaobaoService.getItemDetailFromTaobaoV2(
-      String(itemId),
-    );
+    let item;
+    const findParams: any = { itemId };
+    if (date) {
+      findParams.createdAt = buildFilterDateParam(date);
+    }
+    const cacheItem = await this.cacheItemRepository.findOne(findParams, {
+      sort: { createdAt: -1 },
+    });
+    if (cacheItem) {
+      item = cacheItem.detail;
+    } else {
+      item = await this.apiTaobaoService.getItemDetailFromTaobaoV2(
+        String(itemId),
+      );
+      if (!item) {
+        return null;
+      }
+      await this.cacheItemRepository.create({ itemId, detail: item });
+    }
     let skuItem;
-    if (item.skus && item.sku_props) {
+    const main_imgs = [];
+    if (item?.skus?.sku) {
       if (skuId) {
-        skuItem = item.skus.find((value) => {
-          return value.skuid === skuId;
+        skuItem = item.skus.sku.find((value) => {
+          return value.sku_id === skuId;
         });
       } else if (pvid) {
         const pvInRightOrder = Array.isArray(pvid)
           ? this.getPvIdInRightOrder(pvid, item)
           : pvid;
         skuItem = item.skus.find((value) => {
-          return value.props_ids === pvInRightOrder;
+          return value.properties === pvInRightOrder;
         });
       }
       if ((skuId || pvid) && !skuItem) {
-        throw new BadRequestException(
-          'Không thể tìm thấy hàng hóa trên taobao',
-        );
+        return null;
       }
     }
+    main_imgs.push(...item.item_imgs.map((img) => `https:${img.url}`));
+    const props_names = [];
+    if (skuItem?.properties_name && skuItem?.properties) {
+      const pvId = skuItem.properties.split(';');
+      const rawName = item.properties_name.split(';');
+      for (let i = 0; i < pvId.length; i++) {
+        props_names.push(rawName.split(`${pvId}:`));
+      }
+    }
+
     return {
-      ...item,
-      sale_price: item.skus[0].price,
-      ...skuItem,
+      item_id: item?.num_iid,
+      product_url: `https://item.taobao.com/item.htm?id=${item?.num_iid}`,
+      title: item?.title,
+      video_url: item?.video?.url,
+      shop_info: {
+        shop_id: item?.shop_id,
+        seller_id: item?.seller_id,
+        shop_name: item?.shop_title,
+        shop_url: item?.seller_info?.zhuy,
+      },
+      props_names: props_names.join(';'),
+      props_ids: skuItem?.properties,
+      quantity: skuItem?.price && skuItem?.quantity ? skuItem?.quantity : 0,
+      sale_price: skuItem?.price,
+      main_imgs,
+      skuid: skuItem?.sku_id,
     };
   }
 
@@ -240,12 +279,74 @@ export class TaobaoService {
     return item;
   }
 
-  async directGetDetailItemV2(id: string) {
+  async directGetDetailItemV2(id: string): Promise<ISearchDetail> {
     const item = await this.apiTaobaoService.getItemDetailFromTaobaoV2(id);
     if (!item) {
       throw new BadRequestException('Không thể tìm thấy hàng hóa trên taobao');
     }
-    return item;
+    const main_imgs = [];
+    main_imgs.push(...item.item_imgs.map((img) => `https:${img.url}`));
+    const SkuProps = [];
+    const props_list = Object.entries(
+      item.props_list as Record<string, string>,
+    );
+    let props_detail = [];
+    let prevKey;
+    for (let index = 0; index < props_list.length; index++) {
+      const [key, value] = props_list[index];
+      const splitKey = key.split(':');
+      if (
+        index === props_list.length - 1 ||
+        (prevKey && splitKey[0] !== prevKey)
+      ) {
+        if (index === props_list.length - 1) {
+          props_detail.push({ value: splitKey[1], name: value, imageUrl: '' });
+        }
+        SkuProps.push({
+          IsImg: false,
+          Prop: prevKey || splitKey[0],
+          Value: props_detail,
+        });
+        props_detail = [];
+      }
+      props_detail.push({ value: splitKey[1], name: value, imageUrl: '' });
+      prevKey = splitKey[0];
+    }
+    const ProductFeatures: any = {};
+    (item.props as Array<{ name: string; value: string }>).forEach(
+      ({ name, value }) => {
+        ProductFeatures[`${name}`] = value;
+      },
+    );
+    return {
+      CategoryId: item?.num_iid,
+      OfferId: item?.num_iid,
+      Subject: item?.title,
+      ImageUrls: main_imgs,
+      MainImageVideo: item?.video?.url,
+      PriceRangeInfos: [
+        {
+          Price: item.price,
+          ConvertPrice: item.price,
+        },
+      ],
+      OriginalPriceRangeInfos: [
+        {
+          Price: item.orginal_price,
+          ConvertPrice: item.orginal_price,
+        },
+      ],
+      ProductFeatures,
+      Delivery: {},
+      ShopInfo: item.seller_info,
+      ShopId: item?.shop_id,
+      SkuProps,
+      SkuMaps: item?.skus?.sku,
+      AmountOnSale: item?.price && item?.num ? item.num : 0,
+      Detail: `https://item.taobao.com/item.htm?id=${item?.num_iid}`,
+      ShopName: item?.shop_title,
+      ShopUrl: item?.seller_info?.zhuy,
+    };
   }
 
   async directGetDetailItemV3(id: number) {
