@@ -292,25 +292,36 @@ export class TaobaoService {
     );
     let props_detail = [];
     let prevKey;
+    let prevName;
     for (let index = 0; index < props_list.length; index++) {
       const [key, value] = props_list[index];
       const splitKey = key.split(':');
+      const splitValue = value.split(':');
       if (
         index === props_list.length - 1 ||
         (prevKey && splitKey[0] !== prevKey)
       ) {
         if (index === props_list.length - 1) {
-          props_detail.push({ value: splitKey[1], name: value, imageUrl: '' });
+          props_detail.push({
+            value: splitKey[1],
+            name: splitValue[1],
+            imageUrl: '',
+          });
         }
         SkuProps.push({
           IsImg: false,
-          Prop: prevKey || splitKey[0],
+          Prop: prevName || splitValue[0],
           Value: props_detail,
         });
         props_detail = [];
       }
-      props_detail.push({ value: splitKey[1], name: value, imageUrl: '' });
+      props_detail.push({
+        value: splitKey[1],
+        name: splitValue[1],
+        imageUrl: '',
+      });
       prevKey = splitKey[0];
+      prevName = splitValue[0];
     }
     const ProductFeatures: any = {};
     (item.props as Array<{ name: string; value: string }>).forEach(
