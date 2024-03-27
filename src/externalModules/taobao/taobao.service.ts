@@ -92,7 +92,8 @@ export class TaobaoService {
         const pvInRightOrder = Array.isArray(pvid)
           ? this.getPvIdInRightOrder(pvid, item)
           : pvid;
-        skuItem = item.skus.find((value) => {
+        console.log(pvInRightOrder);
+        skuItem = item.skus.sku.find((value) => {
           return value.properties === pvInRightOrder;
         });
       }
@@ -303,7 +304,7 @@ export class TaobaoService {
       ) {
         if (index === props_list.length - 1) {
           props_detail.push({
-            value: splitKey[1],
+            value: key,
             name: splitValue[1],
             imageUrl: '',
           });
@@ -316,7 +317,7 @@ export class TaobaoService {
         props_detail = [];
       }
       props_detail.push({
-        value: splitKey[1],
+        value: key,
         name: splitValue[1],
         imageUrl: '',
       });
@@ -452,7 +453,10 @@ export class TaobaoService {
   private getPvIdInRightOrder(pvid: string[], item): string {
     const pvInRightOrderArr = [];
     const parseArr = pvid.map((x) => x.split(':')[0]);
-    for (const id of item.sku_props) {
+    if (parseArr.length === 1) {
+      return parseArr[0];
+    }
+    for (const id of item.skus.sku) {
       const index = parseArr.findIndex((item) => item === id.pid);
       pvInRightOrderArr.push(pvid[index]);
     }
