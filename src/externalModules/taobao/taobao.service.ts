@@ -105,9 +105,9 @@ export class TaobaoService {
     const props_names = [];
     if (skuItem?.properties_name && skuItem?.properties) {
       const pvId = skuItem.properties.split(';');
-      const rawName = item.properties_name.split(';');
+      const rawName = skuItem.properties_name.split(';');
       for (let i = 0; i < pvId.length; i++) {
-        props_names.push(rawName.split(`${pvId}:`));
+        props_names.push(rawName[i].split(`${pvId}:`));
       }
     }
 
@@ -451,16 +451,7 @@ export class TaobaoService {
   }
 
   private getPvIdInRightOrder(pvid: string[], item): string {
-    const pvInRightOrderArr = [];
-    const parseArr = pvid.map((x) => x.split(':')[0]);
-    if (parseArr.length === 1) {
-      return parseArr[0];
-    }
-    for (const id of item.skus.sku) {
-      const index = parseArr.findIndex((item) => item === id.pid);
-      pvInRightOrderArr.push(pvid[index]);
-    }
-    return pvInRightOrderArr.join(';');
+    return pvid.sort().join(';');
   }
 
   private getPvIdInRightOrderV3(pvid: string[], item): string {
