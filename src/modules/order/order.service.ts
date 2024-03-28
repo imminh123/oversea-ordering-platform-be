@@ -72,6 +72,7 @@ export class OrderService {
       createOrderDto.addressId,
       createOrderDto.listItemId,
     );
+    console.log(listItem);
     return this.createOrder(
       {
         ...createOrderDto,
@@ -252,7 +253,6 @@ export class OrderService {
       });
       return orderResult;
     } catch (error) {
-      console.log(error);
       this.notificationService.triggerNotification({
         event: NotificationEvent.CreateOrderSuccess,
         userId,
@@ -260,6 +260,7 @@ export class OrderService {
           date: createTimeStringWithFormat(new Date(), 'HH:mm:ss DD-MM-YYYY'),
         },
       });
+      throw error;
     }
   }
 

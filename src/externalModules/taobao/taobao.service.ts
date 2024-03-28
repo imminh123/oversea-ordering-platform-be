@@ -86,7 +86,7 @@ export class TaobaoService {
     if (item?.skus?.sku) {
       if (skuId) {
         skuItem = item.skus.sku.find((value) => {
-          return value.sku_id === skuId;
+          return value.sku_id == skuId;
         });
       } else if (pvid) {
         const pvInRightOrder = Array.isArray(pvid)
