@@ -94,6 +94,22 @@ export class PurchaseDto {
   referenceId: string;
 }
 
+export class GetQrDto {
+  @ApiProperty({
+    type: Number,
+    example: 0,
+    required: true,
+  })
+  amount: number;
+
+  @ApiProperty({
+    type: String,
+    example: '',
+    required: true,
+  })
+  addInfo: string;
+}
+
 export class AdminIndexPaymentDto {
   @ApiProperty({
     type: String,

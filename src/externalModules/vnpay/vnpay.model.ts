@@ -1,7 +1,13 @@
 import { PlainLiteralObject } from '@nestjs/common';
 import { toPlainObject } from 'lodash';
-import { getSignature, sortObject } from './vnpay.helper';
+import {
+  getMerchantBankAccount,
+  getSignature,
+  sortObject,
+} from './vnpay.helper';
 import { SignatureType } from './vnpay.enum';
+import { GenQRCodeBase64Request, VietQrResponse } from './vnpay.interface';
+import { VnpayService } from './vnpay.service';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const querystring = require('qs');
 
@@ -56,5 +62,66 @@ export class GatewayServiceRequest {
     return querystring.stringify(sortObject(this, 'vnp_SecureHash'), {
       encode: false,
     });
+  }
+}
+
+export class VietQrGenerateRequest implements GenQRCodeBase64Request {
+  accountNumber: string;
+  accountName: string;
+  bank: number;
+  amount: number;
+  memo: string;
+  template: string;
+  private vietQrResponse: VietQrResponse;
+
+  static empty(): VietQrGenerateRequest {
+    const { accountNo, accountName, acqId } = getMerchantBankAccount();
+    return new VietQrGenerateRequest({
+      accountNumber: accountNo,
+      accountName,
+      bank: acqId,
+      amount: 0,
+      memo: '',
+      template: 'compact',
+    });
+  }
+
+  constructor(props: Partial<VietQrGenerateRequest>) {
+    if (typeof props === 'object') {
+      Object.assign(this, props);
+    }
+  }
+
+  setAmount(amount: number) {
+    this.amount = amount;
+  }
+
+  setInfo(addInfo: string) {
+    this.memo = addInfo;
+  }
+
+  toObject(): GenQRCodeBase64Request {
+    return {
+      accountNumber: this.accountNumber,
+      accountName: this.accountName,
+      bank: this.bank,
+      amount: this.amount,
+      memo: this.memo,
+      template: this.template,
+    };
+  }
+
+  async execute() {
+    this.vietQrResponse = await VnpayService.vietQR
+      .genQRCodeBase64(this.toObject())
+      .then(({ data }) => data)
+      .catch((error) => ({
+        code: '500',
+        desc: error.message || JSON.stringify(error),
+      }));
+  }
+
+  getVietQrResponse(): VietQrResponse {
+    return this.vietQrResponse;
   }
 }

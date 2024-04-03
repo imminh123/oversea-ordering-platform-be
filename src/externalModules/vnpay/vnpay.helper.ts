@@ -3,6 +3,7 @@ import { createHash, createHmac } from 'crypto';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const querystring = require('qs');
 import { getConfig } from '../../shared/config/config.provider';
+import { InternalServerErrorException } from '@nestjs/common';
 
 const secretKey = getConfig().get('vnpay.hash');
 export function signatureSha256(source: string): string {
@@ -46,3 +47,16 @@ export function sortObject(obj: any, priority?: string): any {
 }
 
 export const returnUrl = getConfig().get('vnpay.returnUrl');
+export function getMerchantBankAccount() {
+  const accountNo = getConfig().get('merchantBankAccount.accountNo');
+  const accountName = getConfig().get('merchantBankAccount.accountName');
+  const acqId = Number(getConfig().get('merchantBankAccount.acqId'));
+  if (!accountNo || !accountName || !acqId) {
+    throw new InternalServerErrorException('Can not get merchant bank account');
+  }
+  return {
+    accountNo,
+    accountName,
+    acqId,
+  };
+}

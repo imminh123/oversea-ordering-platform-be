@@ -54,3 +54,12 @@ setConfigCacheTime: SET_CONFIG_CACHE_TIME
 
 novuConfig:
   apiToken: NOVU_API_TOKEN
+
+vietQr:
+  clientId: VIETQR_CLIENT_ID
+  apiKey: VIETQR_API_KEY
+
+merchantBankAccount:
+  accountNo: MERCHANT_ACCOUNT_NUMBER
+  accountName: MERCHANT_ACCOUNT_NAME
+  acqId: MERCHANT_BANK_ID

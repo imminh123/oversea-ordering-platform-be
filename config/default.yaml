@@ -32,3 +32,12 @@ setConfigCacheTime: 24
 
 novuConfig:
   apiToken:
+
+vietQr:
+  clientId:
+  apiKey:
+
+merchantBankAccount:
+  accountNo:
+  accountName:
+  acqId:

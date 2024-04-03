@@ -59,7 +59,8 @@
     "reflect-metadata": "^0.1.13",
     "response-time": "^2.3.2",
     "rxjs": "^7.8.1",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "vietqr": "^1.1.9"
   },
   "devDependencies": {
     "@nestjs/cli": "^9.0.0",

@@ -1,6 +1,6 @@
 /* istanbul ignore file */
 import { Injectable } from '@nestjs/common';
-import { GatewayServiceRequest } from './vnpay.model';
+import { GatewayServiceRequest, VietQrGenerateRequest } from './vnpay.model';
 import { getConfig } from '../../shared/config/config.provider';
 import Decimal from 'decimal.js';
 import { createTimeStringWithFormat } from '../../shared/helpers';
@@ -11,9 +11,18 @@ import {
   maskRequestVnpay,
 } from './vnpay.enum';
 import { returnUrl } from './vnpay.helper';
+import { VietQR } from 'vietqr';
+import { VietQrInstance, VietQrResponse } from './vnpay.interface';
 
 @Injectable()
 export class VnpayService {
+  static vietQR: VietQrInstance;
+  constructor() {
+    VnpayService.vietQR = new VietQR({
+      clientID: getConfig().get('vietQr.clientId'),
+      apiKey: getConfig().get('vietQr.apiKey'),
+    });
+  }
   async getVnpayPaymentGatewayRequest(
     params: any,
   ): Promise<GatewayServiceRequest> {
@@ -36,5 +45,16 @@ export class VnpayService {
     );
     request.updateSignature();
     return request;
+  }
+
+  async getQrFromVietQr(params: {
+    amount: number;
+    addInfo: string;
+  }): Promise<VietQrResponse> {
+    const request = VietQrGenerateRequest.empty();
+    request.setAmount(params.amount);
+    request.setInfo(params.addInfo);
+    await request.execute();
+    return request.getVietQrResponse();
   }
 }

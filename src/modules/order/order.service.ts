@@ -72,7 +72,6 @@ export class OrderService {
       createOrderDto.addressId,
       createOrderDto.listItemId,
     );
-    console.log(listItem);
     return this.createOrder(
       {
         ...createOrderDto,

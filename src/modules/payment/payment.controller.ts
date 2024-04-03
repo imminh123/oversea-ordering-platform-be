@@ -15,6 +15,7 @@ import { User, UserDataJwtProperties } from '../../decorators/user.decorator';
 import {
   AdminIndexPaymentDto,
   CompletePurchaseDto,
+  GetQrDto,
   PurchaseDto,
 } from './payment.dto';
 import { Roles } from '../../decorators/authorization.decorator';
@@ -110,6 +111,28 @@ export class PaymentController {
       userId,
       pagination,
     );
+  }
+
+  @Get('listBank')
+  @Roles(...WebAdminRole)
+  @ApiOperation({
+    operationId: 'adminGetListBank',
+    description: 'Admin get list bank',
+    summary: 'Admin get list bank',
+  })
+  async adminGetListBank() {
+    return this.paymentService.getListBankSupportedVietQr();
+  }
+
+  @Get('getQr')
+  @Roles(Role.Client, ...WebAdminRole)
+  @ApiOperation({
+    operationId: 'userGetQR',
+    description: 'User get QR',
+    summary: 'User get QR',
+  })
+  async adminGetQR(@Query() getQrDto: GetQrDto) {
+    return this.paymentService.getQr(getQrDto);
   }
 
   @Get(':id')

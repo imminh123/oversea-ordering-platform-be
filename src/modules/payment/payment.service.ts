@@ -8,6 +8,7 @@ import {
 import {
   AdminIndexPaymentDto,
   CompletePurchaseDto,
+  GetQrDto,
   PurchaseDto,
 } from './payment.dto';
 import { ITransaction, ITransactionDocument } from './payment.interface';
@@ -42,6 +43,8 @@ import { MailService } from '../mail/mail.service';
 import { Readable } from 'stream';
 import { stringify } from 'csv-stringify';
 import { isValidObjectId } from 'mongoose';
+import { VietQR } from 'vietqr';
+import { VietQrResponse } from '../../externalModules/vnpay/vnpay.interface';
 
 @Injectable()
 export class PaymentService {
@@ -378,6 +381,24 @@ export class PaymentService {
       },
       { status: PaymentStatus.FAILED },
     );
+  }
+
+  async getListBankSupportedVietQr(): Promise<VietQrResponse> {
+    try {
+      const result = await VnpayService.vietQR.getBanks();
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getQr(getQrDto: GetQrDto): Promise<VietQrResponse> {
+    try {
+      const result = await this.vnpayService.getQrFromVietQr(getQrDto);
+      return result;
+    } catch (error) {
+      throw error;
+    }
   }
 
   private checkInvalidSignature(completePurchaseDto: CompletePurchaseDto) {
