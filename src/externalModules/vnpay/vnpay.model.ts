@@ -82,7 +82,7 @@ export class VietQrGenerateRequest implements GenQRCodeBase64Request {
       bank: acqId,
       amount: 0,
       memo: '',
-      template: 'compact',
+      template: 'compact2',
     });
   }
 
