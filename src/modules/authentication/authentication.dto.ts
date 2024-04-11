@@ -92,7 +92,7 @@ export class ChangePasswordDto {
 
 export class UpdateAuthDto {
   @IsString()
-  @IsNotEmpty()
+  // @IsNotEmpty()
   @ApiProperty({
     type: String,
     example: 'def',
@@ -101,7 +101,7 @@ export class UpdateAuthDto {
   fullname: string;
 
   @IsString()
-  @IsNotEmpty()
+  // @IsNotEmpty()
   @ApiProperty({
     type: String,
     example: '84',
@@ -110,7 +110,7 @@ export class UpdateAuthDto {
   phone: string;
 
   @IsString()
-  @IsNotEmpty()
+  // @IsNotEmpty()
   @ApiProperty({
     type: String,
     example: 'dd/mm/yyyy',
@@ -126,7 +126,7 @@ export class UpdateAuthDto {
   gender: string;
 
   @IsString()
-  @IsNotEmpty()
+  // @IsNotEmpty()
   @ApiProperty({
     type: String,
     example: 'def',
@@ -135,7 +135,7 @@ export class UpdateAuthDto {
   address: string;
 
   @IsString()
-  @IsNotEmpty()
+  // @IsNotEmpty()
   @ApiProperty({
     type: String,
     example: 'def',
@@ -144,7 +144,7 @@ export class UpdateAuthDto {
   province: string;
 
   @IsString()
-  @IsNotEmpty()
+  // @IsNotEmpty()
   @ApiProperty({
     type: String,
     example: 'def',
@@ -153,7 +153,7 @@ export class UpdateAuthDto {
   city: string;
 
   @IsString()
-  @IsNotEmpty()
+  // @IsNotEmpty()
   @ApiProperty({
     type: String,
     example: 'def',

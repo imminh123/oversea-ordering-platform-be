@@ -438,21 +438,26 @@ export class AuthenticationService {
 
   async updateAuthInfo(updateAuthDto: UpdateAuthDto, userId: string) {
     const user = await this.authenticationRepository.findById(userId);
-
     if (!user) {
       throw new BadRequestException('Không tìm thấy ngừoi dùng');
     }
+    let updatedUser;
 
-    const updatedUser = await this.authenticationRepository.updateById(userId, {
-      ...updateAuthDto,
-    });
-    await this.addressService.createAddress(
-      {
-        name: updatedUser.fullname,
-        ...updatedUser,
-      },
-      userId,
-    );
+    try {
+      updatedUser = await this.authenticationRepository.updateById(userId, {
+        ...updateAuthDto,
+      });
+
+      await this.addressService.createAddress(
+        {
+          name: updatedUser.fullname,
+          ...updatedUser.toJSON(),
+        },
+        userId,
+      );
+    } catch (err) {
+      console.log('🚀 ~ AuthenticationService ~ updateAuthInfo ~ err:', err);
+    }
     return updatedUser;
   }
 
