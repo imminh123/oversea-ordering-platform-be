@@ -41,7 +41,7 @@ export class TaobaoController {
     summary: 'Search taobao item',
   })
   clientIndexAddress(@Query() searchDto: SearchItemDtoV3) {
-    return this.taobaoService.directSearchItemTaobaoV3(searchDto);
+    return this.taobaoService.directSearchItemTaobaoV4(searchDto);
   }
 
   @Get('image/:type/:fileName')
@@ -104,7 +104,7 @@ export class TaobaoController {
     @User(UserDataJwtProperties.USERID) userId: string,
     @Query() searchDto: SearchByImage,
   ) {
-    return this.taobaoService.searchItemByImage(
+    return this.taobaoService.searchItemByImagev2(
       userId,
       imageChangeDto,
       searchDto,

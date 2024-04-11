@@ -147,7 +147,7 @@ export class ApiTaobaoService {
   async searchItemTaobaoV3(params: SearchItemDtoV3) {
     const options = {
       method: 'GET',
-      url: EndpointEnum.SearchItemV3,
+      url: EndpointEnum.SearchItemV4,
       params: {
         ...params,
         query: params.q,
@@ -155,6 +155,32 @@ export class ApiTaobaoService {
       headers: {
         'X-RapidAPI-Key': rapidApiKey,
         'X-RapidAPI-Host': 'taobao-tmall-Tao-Bao-data-service.p.rapidapi.com',
+      },
+    };
+    try {
+      const { data } = await axios.request(options);
+      if (data.status === 404) {
+        return emptyResultV2;
+      }
+      return data;
+    } catch (error) {
+      Logger.error(error);
+      return emptyResultV2;
+    }
+  }
+
+  async searchItemTaobaoV4(params: SearchItemDtoV3) {
+    const options = {
+      method: 'GET',
+      url: EndpointEnum.SearchItemV4,
+      params: {
+        ...params,
+        keyword: params.q,
+        provider: 'taobao' 
+      },
+      headers: {
+        'X-RapidAPI-Key': rapidApiKey2,
+        'X-RapidAPI-Host': 'taobao-tmall-16882.p.rapidapi.com',
       },
     };
     try {
@@ -178,7 +204,7 @@ export class ApiTaobaoService {
         imageUrl,
       },
       headers: {
-        'X-RapidAPI-Key': rapidApiKey,
+        'X-RapidAPI-Key': rapidApiKey2,
         'X-RapidAPI-Host': 'taobao-tmall-Tao-Bao-data-service.p.rapidapi.com',
       },
     };

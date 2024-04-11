@@ -272,6 +272,36 @@ export class TaobaoService {
     };
   }
 
+  async directSearchItemTaobaoV4(searchDto: SearchItemDtoV3) {
+    const listItems = await this.apiTaobaoService.searchItemTaobaoV4(searchDto);
+    const { items } = listItems;
+    const {page, total_results, page_size} = items
+    const responseHeader = getHeaders(
+      { page: page, perPage: page_size },
+      total_results
+    );
+
+    const result = [];
+    items?.item.map((item) => {
+      result.push({
+        ...item,
+        num_iid: item.num_iid,
+        original_price: item.orginal_price,
+        price: item.price,
+        // quantity: item.view_sales,
+      });
+    });
+    if (responseHeader['x-pages-count'] > page?.totalPages) {
+      responseHeader['x-pages-count'] = page?.totalPages;
+      responseHeader['x-next-page'] -= 1;
+    }
+
+    return {
+      items: result,
+      headers: responseHeader,
+    };
+  }
+
   async directGetDetailItemV1(id: number) {
     const item = await this.apiTaobaoService.getItemDetailFromTaobao(id);
     if (!item) {
@@ -401,6 +431,74 @@ export class TaobaoService {
                 searchDto,
               );
             const { itemsArray: items, pageSize } = listItems;
+            const result = [];
+            items.map((item) => {
+              result.push({
+                ...item,
+                detail_url: `//item.taobao.com/item.htm?id=${item.item_id}&ns=1&abbucket=0#detail`,
+                pic_url: String(item.pic_path).slice(5),
+                num_iid: item.item_id,
+                original_price: item.price,
+                price: item.priceWap,
+                quantity: item.sold,
+              });
+            });
+            const responseHeader = getHeaders(
+              { page: Number(searchDto.page), perPage: pageSize },
+              pageSize,
+            );
+            if (responseHeader['x-pages-count'] > 1) {
+              responseHeader['x-pages-count'] = 1;
+              responseHeader['x-next-page'] -= 1;
+            }
+            resolve({
+              items: result,
+              headers: responseHeader,
+            });
+          } catch (error) {
+            reject(error);
+          }
+        });
+      });
+    } catch (error) {
+      console.log(
+        `Tìm kiếm theo ảnh thất bại do lỗi: ${JSON.stringify(error)}`,
+      );
+      throw error;
+    }
+  }
+
+  async searchItemByImagev2(
+    userId: string,
+    image: Express.Multer.File,
+    searchDto: SearchByImage,
+  ) {
+    try {
+      const { buffer } = image;
+      const type = 'png';
+      const endpoint = `http://${getHost()}${getConfig().get(
+        'service.baseUrl',
+      )}/taobao/image/${type}/${userId}`;
+      const path = `${process.cwd()}/searchImages/${userId}.${type}`;
+      if (fs.existsSync(path)) {
+        fs.unlink(path, (err) => {
+          if (err) {
+            throw err;
+          }
+          console.log(`Delete old image search of user ${userId} success`);
+        });
+      }
+
+      return await new Promise((resolve, reject) => {
+        fs.writeFile(path, buffer, async (err) => {
+          try {
+            if (err) throw err;
+            const listItems =
+              await this.apiTaobaoService.searchItemByImageTaobao(
+                endpoint,
+                searchDto,
+              );
+            const { itemsArray: items, pageSize } = listItems.data;
             const result = [];
             items.map((item) => {
               result.push({
