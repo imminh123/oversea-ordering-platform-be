@@ -92,11 +92,28 @@ export class TaobaoService {
         const pvInRightOrder = Array.isArray(pvid)
           ? this.getPvIdInRightOrder(pvid, item)
           : pvid;
+
+        const pvInReversedOrder = Array.isArray(pvid)
+          ? this.getPvIdInRightOrder(pvid, item, true)
+          : pvid;
+
         console.log(pvInRightOrder);
         skuItem = item.skus.sku.find((value) => {
-          return value.properties === pvInRightOrder;
+          return value.properties === pvInRightOrder || value.properties === pvInReversedOrder;
         });
+
+
+        console.log('🚀 ~ TaobaoService ~ pvInRightOrder:', pvInRightOrder);
+        console.log(
+          '🚀 ~ TaobaoService ~ skuItem=item.skus.sku.find ~ skuItem:',
+          item.skus.sku,
+        );
+        console.log(
+          '🚀 ~ TaobaoService ~ skuItem=item.skus.sku.find ~ skuItem:',
+          skuItem,
+        );
       }
+
       if ((skuId || pvid) && !skuItem) {
         return null;
       }
@@ -275,10 +292,10 @@ export class TaobaoService {
   async directSearchItemTaobaoV4(searchDto: SearchItemDtoV3) {
     const listItems = await this.apiTaobaoService.searchItemTaobaoV4(searchDto);
     const { items } = listItems;
-    const {page, total_results, page_size} = items
+    const { page, total_results, page_size } = items;
     const responseHeader = getHeaders(
       { page: page, perPage: page_size },
-      total_results
+      total_results,
     );
 
     const result = [];
@@ -548,8 +565,9 @@ export class TaobaoService {
     return new StreamableFile(file);
   }
 
-  private getPvIdInRightOrder(pvid: string[], item): string {
-    return pvid.sort().join(';');
+  private getPvIdInRightOrder(pvid: string[], item, reverse = false): string {
+    if (!reverse) return pvid.sort().join(';');
+    return pvid.sort().reverse().join(';');
   }
 
   private getPvIdInRightOrderV3(pvid: string[], item): string {
